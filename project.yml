@@ -36,6 +36,21 @@ targets:
     dependencies:
       - package: StudyHelperCore
         product: StudyCore
+      - package: StudyHelperCore
+        product: StudyImport
+      - package: StudyHelperCore
+        product: StudyData
+    info:
+      path: StudyHelper/Resources/Info.plist
+      properties:
+        # "Öffnen in StudyHelper" for PDFs (replaces the share extension, see docs/DECISIONS.md D-013).
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: PDF-Dokument
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.adobe.pdf]
+        LSSupportsOpeningDocumentsInPlace: false
+        NSCameraUsageDescription: StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelper

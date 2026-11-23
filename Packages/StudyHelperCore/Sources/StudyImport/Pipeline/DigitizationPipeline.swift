@@ -110,8 +110,10 @@ public struct DigitizationPipeline: Sendable {
     /// Only one page is held in memory by the pipeline at a time; the next page starts when `onPage` returns.
     /// A failing page is reported as `.failure`, the run continues. Cancellation (checked between pages and
     /// between ink layers) stops early with `CancellationError`.
+    /// - Parameter pageIndices: 0-based pages to process; nil means all pages. Other pages are skipped without any
+    ///   work, and `pagesDone`/`pageCount` in `onPage` count only the processed pages. Indices outside the document are ignored.
     public func digitizePDFPages(
-        data: Data, reducedPDF: Data? = nil,
+        data: Data, reducedPDF: Data? = nil, pageIndices: Set<Int>? = nil,
         onPage: (_ result: PageResult, _ pagesDone: Int, _ pageCount: Int) async throws -> Void
     ) async throws {
         guard let document = PDFDocument(data: data) else { throw DigitizationError.notAPDF }
@@ -133,7 +135,8 @@ public struct DigitizationPipeline: Sendable {
             }
         }
 
-        for index in 0..<document.pageCount {
+        let wanted = (0..<document.pageCount).filter { pageIndices?.contains($0) ?? true }
+        for (position, index) in wanted.enumerated() {
             try Task.checkCancellation()
             let result: PageResult
             do {
@@ -155,7 +158,7 @@ public struct DigitizationPipeline: Sendable {
             } catch {
                 result = .failure(Self.failure(for: error, pageIndex: index))
             }
-            try await onPage(result, index + 1, document.pageCount)
+            try await onPage(result, position + 1, wanted.count)
         }
     }
 

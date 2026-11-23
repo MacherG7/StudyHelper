@@ -199,6 +199,26 @@ struct PipelineRobustnessTests {
         #expect(DigitizationPipeline.pageCount(ofPDF: data) == 3)
     }
 
+    @Test("pageIndices: nur die gewünschten Seiten werden verarbeitet, Fortschritt zählt nur sie")
+    func onlyRequestedPagesAreProcessed() async throws {
+        let data = try fixtureData(GoodnotesFixture.fotosyntheseReduced.url)
+        let recognizer = CountingRecognizer { number, _, _ in mockOutput(mockLine("Seite \(number)")) }
+        var seen: [(page: Int, done: Int, total: Int)] = []
+        try await pipeline(recognizer).digitizePDFPages(data: data, pageIndices: [1, 7]) { result, done, total in
+            if case .success(let page) = result { seen.append((page.pageIndex, done, total)) }
+        }
+        #expect(recognizer.callCount == 1, "nur Seite 2 wurde erkannt, die Seiten davor nicht")
+        #expect(seen.count == 1 && seen[0].page == 1 && seen[0].done == 1 && seen[0].total == 1)
+
+        let all = CountingRecognizer()
+        var count = 0
+        try await pipeline(all).digitizePDFPages(data: data, pageIndices: nil) { _, _, total in
+            count += 1
+            #expect(total == 3)
+        }
+        #expect(count == 3 && all.callCount == 3, "ohne pageIndices werden alle Seiten verarbeitet")
+    }
+
     @Test("Abbruch stoppt zwischen den Seiten")
     func cancellationStopsEarly() async throws {
         let data = try fixtureData(GoodnotesFixture.fotosyntheseReduced.url)

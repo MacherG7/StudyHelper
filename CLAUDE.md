@@ -79,7 +79,11 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   eingebetteter Text, `DigitizationPipeline` mit Seitenfehlern/Abbruch), `StudyData` (SwiftData
   `SchemaV1`, `StudyRepository`, Korrekturen für Text und Hervorhebungen, stabile Zeilen-IDs).
   Echte-Vision-Tests mit `SKIP_VISION_TESTS=1` überspringbar.
-- **Nächster Schritt:** 1b (Fächer, Import-UI, Prüfansicht, „Öffnen in“ statt Share-Extension –
-  nur kostenloser Developer-Account), dann 1c (manuelle Strukturierung). Hinweise für die UI:
-  vor Neuerkennung `prepareReRecognition`, `digitizePDFPages` seitenweise speichern,
-  `isDamaged`/ungematchte Korrekturen anzeigen.
+- **1b committet:** App-Rahmen (`App/`), Fächer, Import (Fotos, Kamera, Scanner, PDF, „Öffnen in“,
+  Goodnotes-Zuordnung), `ImportCoordinator` (Pipeline hinter `DigitizingPipeline`, seitenweise
+  speichern, Abbruch), Prüfansicht (Bild/Text, Korrektur, Hervorhebungen, Versionen, Neu erkennen),
+  Einstellungen (Mehrfacherkennung). 26 App-Unit-Tests, 7 UI-Tests (`-uiTestInMemory -uiTestSeed`).
+- **Nächster Schritt:** 1c (manuelle Strukturierung: Themen pro Fach, Editor mit fester Struktur,
+  Quellen und Übernahme aus dem Text, Zusammenlegen/Aufteilen, Bestätigen; Platzhalter „Themen“ in
+  `SubjectDetailView` ersetzen), danach Abschluss-Review Phase 1. Agenten nacheinander starten und
+  danach auf zurückgelassene Prozesse prüfen.

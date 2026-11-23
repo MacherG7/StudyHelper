@@ -75,6 +75,14 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.27 | Textmarker an echten Exporten | Markierte Wörter korrekt zugeordnet, nur gestreifte Nachbarwörter nicht; runde Strichenden oder andere Deckkraft ändern das Ergebnis nicht | |
 | MT-1.28 | Unterstreichungen, doppelte Unterstreichungen, Kreise in echter Handschrift | Werden erkannt; kurze Unterstreichungen als „unsicher“; aus mehreren Strichen zusammengesetzte Linien und Zickzack notieren | |
 | MT-1.29 | Gedrehte Seiten (`/Rotate`) in Goodnotes-Exporten | Verhalten notieren (Drehung wird derzeit nicht berücksichtigt) | |
+| MT-1.30 | PDF über „Dateien“ importieren, dazu das reduzierte Goodnotes-PDF als zweite Datei | Zuordnungsdialog nennt beide Seitenzahlen; bei Abweichung Erklärung und Import ohne Zuordnung | |
+| MT-1.31 | Import während der Erkennung abbrechen, App neu öffnen | Bereits erkannte Seiten bleiben; offene Seiten zeigen „Jetzt erkennen“ | |
+| MT-1.32 | Prüfansicht auf iPhone und iPad, hell und dunkel | Markierungen liegen exakt auf den Zeilen (auch gezoomt); Textmarker, Unterstreichung, unsicher/unleserlich in beiden Modi gut erkennbar | |
+| MT-1.33 | VoiceOver in der Prüfansicht | Zeilen werden mit Status („unsicher“, „korrigiert“) und Hervorhebung („Textmarker“, „Überschrift“) angesagt | |
+| MT-1.34 | „Neu erkennen“ für eine Seite und für den ganzen Import | Hinweis auf erhaltene Korrekturen; alte Version unter „Versionen“ wiederherstellbar; nicht zuordenbare Korrekturen werden angezeigt | |
+| MT-1.35 | Zwei PDFs nacheinander per „Öffnen in“ teilen (bearbeitbar, dann reduziert) | Beide erscheinen nacheinander im Import-Blatt; keine Datei geht verloren | |
+| MT-1.36 | Dokumentenscanner abbrechen bzw. Fehler provozieren | Verständliche deutsche Meldung, App bleibt bedienbar | |
+| MT-1.37 | VoiceOver während eines Imports | Start, Fortschritt (25/50/75 %) und Ende werden angesagt | |
 
 ---
 

@@ -130,6 +130,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** In Phase 1 erkennt die App bei Goodnotes Farbe, Textmarker, Unterstreichung, doppelte Unterstreichung und Kreis an Annotationen bzw. Strichform; bei eingebettetem PDF-Text Fett, Farbe und Unterstreichung. Hervorhebungen lassen sich in Phase 1 grundlegend bearbeiten (Art, Farbe, Bedeutung, löschen, neu anlegen); Farblegende, KI-Transkription und Bildanalyse folgen in Phase 3. Vision-Mehrfacherkennung (zweiter Durchlauf mit 0,7-facher Auflösung) ist standardmäßig **aus**.
 - **Konsequenzen:** Umrandungen (Rechtecke) werden noch nicht erkannt. Schwellen der Formerkennung sind an synthetischen Strichen kalibriert und an echten Exporten zu prüfen.
 
+## D-017 Eingang für „Öffnen in“ und App-Oberfläche Phase 1b
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen
+- **Kontext:** Per „Öffnen in“ übergebene PDFs dürfen weder verloren gehen noch Speicher belegen; die Prüfansicht muss bei großen Importen flüssig bleiben.
+- **Entscheidung:** Eingehende PDFs werden in `Application Support/StudyHelper/Inbox` übernommen (aus dem eigenen `Documents/Inbox` verschoben, sonst kopiert). Beim Start wird der App-Eingang geleert; in `Documents/Inbox` bleiben nur Dateien jünger als 60 s (Kaltstart über „Öffnen in“). Das Import-Blatt für eingehende Dateien lässt sich nicht wegwischen; Verwerfen fragt nach. Ein Fach mit laufendem Import kann nicht gelöscht werden. Dekodierte Zeilen/Hervorhebungen werden in der UI zwischengespeichert (`DerivedValue`) statt bei jedem Rendern neu gelesen. Die Pipeline steckt in der App hinter dem Protokoll `DigitizingPipeline`, damit `ImportCoordinator` mit einem Mock getestet werden kann.
+- **Konsequenzen:** Wird die App während eines offenen Imports beendet, ist die eingehende Datei beim nächsten Start weg und muss erneut geteilt werden. `TestFixtures` lässt sich in App-Tests nicht linken (Ressourcen-Bundle scheitert an der Signierung); App-Tests bauen Testdaten selbst.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

@@ -1,14 +1,35 @@
+import StudyData
+import SwiftData
 import SwiftUI
 
 /// Entry point of StudyHelper.
 ///
-/// Phase 0 shows a placeholder only. The SwiftData container is added in
-/// Phase 1 together with the data model (see docs/PHASES.md).
+/// Launch arguments for UI tests:
+/// - `-uiTestInMemory`: use an in-memory store (no data on disk)
+/// - `-uiTestSeed`: additionally fill it with demo data (`UITestSeeder`)
+/// - `-uiTestSeedVersions`: with `-uiTestSeed`, the demo page has a second version
 @main
 struct StudyHelperApp: App {
+    @State private var environment = AppEnvironment.make()
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            Group {
+                switch environment {
+                case .ready(let app):
+                    RootView()
+                        .modelContainer(app.container)
+                        .environment(\.studyRepository, app.repository)
+                        .environment(app.incomingFiles)
+                        .onOpenURL { url in Task { await app.incomingFiles.receive(url) } }
+                case .failed(let message):
+                    ContentUnavailableView(
+                        "Daten konnten nicht geladen werden",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(message)
+                    )
+                }
+            }
         }
     }
 }
