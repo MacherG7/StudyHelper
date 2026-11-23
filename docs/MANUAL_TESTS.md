@@ -23,7 +23,7 @@ Pro Prüfpunkt in der Spalte „Ergebnis“ eintragen: `Datum · Gerät · iOS-V
 
 ---
 
-## Phase 1 – Goodnotes-Exporte, Share-Extension, Vision
+## Phase 1 – Goodnotes-Exporte, „Öffnen in“, Vision
 
 Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ und als „reduziertes PDF“, abgelegt in `LocalSamples/`.
 
@@ -54,7 +54,7 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 |---|---|---|---|
 | MT-1.12 | Beide Exporte derselben Notiz importieren | App erkennt beide Formate, schlägt Zuordnung vor (gleiche Seitenzahl/-größe), Bestätigungsdialog erscheint | |
 | MT-1.13 | Exporte verschiedener Notizen importieren | Keine automatische Zuordnung ohne Bestätigung; Ablehnen möglich | |
-| MT-1.14 | Share-Extension: Goodnotes → „Teilen → Exportieren → PDF“ | StudyHelper erscheint in der Auswahl; PDF wird übernommen und importiert | |
+| MT-1.14 | „Öffnen in“: Goodnotes → „Teilen → Exportieren → PDF“ → „In StudyHelper öffnen“ (keine Share-Extension, siehe D-013) | StudyHelper erscheint im Teilen-Menü; PDF wird übernommen, Fach-Auswahl erscheint, Import startet | |
 | MT-1.15 | Notiz mit mehreren Seitengrößen | Import und Zuordnung verhalten sich nachvollziehbar (Warnung statt Absturz) | |
 | MT-1.16 | Sehr lange Notiz (z. B. 50+ Seiten) | Import und Digitalisierung laufen ohne Absturz; Fortschritt sichtbar; Zeit und Speicher notieren | |
 | MT-1.17 | `.goodnotes`-Datei teilen/öffnen | Wird sauber abgelehnt mit verständlicher Meldung | |
@@ -70,6 +70,11 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.22 | Kamera-Import (Foto) | Funktioniert nur auf Gerät; Berechtigungsdialog deutsch | |
 | MT-1.23 | Dokumentenscanner (VisionKit) | Mehrseitiger Scan wird als Quellen importiert; nur auf Gerät | |
 | MT-1.24 | Fotomediathek-Import | Auswahl mehrerer Fotos, Reihenfolge bleibt erhalten | |
+| MT-1.25 | App per Xcode neu installieren (z. B. nach Ablauf des 7-Tage-Profils) | Fächer, Importe, Digitalisierungen, Korrekturen und Themen sind noch vorhanden | |
+| MT-1.26 | Reduziertes PDF allein importieren | Wird als reduziertes Goodnotes-PDF erkannt (unsichtbare Textebene, Render-Modus 3?) und nicht als normales PDF | |
+| MT-1.27 | Textmarker an echten Exporten | Markierte Wörter korrekt zugeordnet, nur gestreifte Nachbarwörter nicht; runde Strichenden oder andere Deckkraft ändern das Ergebnis nicht | |
+| MT-1.28 | Unterstreichungen, doppelte Unterstreichungen, Kreise in echter Handschrift | Werden erkannt; kurze Unterstreichungen als „unsicher“; aus mehreren Strichen zusammengesetzte Linien und Zickzack notieren | |
+| MT-1.29 | Gedrehte Seiten (`/Rotate`) in Goodnotes-Exporten | Verhalten notieren (Drehung wird derzeit nicht berücksichtigt) | |
 
 ---
 

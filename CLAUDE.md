@@ -24,6 +24,7 @@ scripts/build.sh            # App für den iOS-Simulator bauen (--ipad: iPad-Zie
 scripts/test.sh             # Secret-Check, Package-Tests (Mac + Simulator), App-Unit-Tests
 scripts/test.sh --core      # nur Secret-Check + Package-Tests auf dem Mac (schnell, ohne XcodeGen)
 scripts/test.sh --ui        # zusätzlich XCTest-UI-Tests
+SKIP_VISION_TESTS=1 scripts/test.sh   # ohne Tests mit echter Vision-Texterkennung
 scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 ```
@@ -72,6 +73,13 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
 - **Fertig:** Phase 0 – XcodeGen-Projekt (iOS 18, iPhone + iPad), Core-Package
   (`StudyCore`, `TestFixtures`, `make-fixtures`), 4 synthetische Goodnotes-PDFs mit
   Ground Truth und 36 Strukturtests, Skripte, Doku. `scripts/test.sh --ui` grün.
-- **In Arbeit:** –
-- **Nächster Schritt:** Phase 1 planen (Datenmodell, Import, Vision-Digitalisierung,
-  Prüfansicht, manuelle Strukturierung). Offene Spec-Unklarheiten sammeln, bevor geplant wird.
+- **In Arbeit:** Phase 1 (Plan: `/Users/milogotz/.claude/plans/lernstoff-ein-fotos-von-tranquil-crane-of-b35b397e-3b8c-4b8f-94df-35f61c6a4591.md`).
+  1a committet: `StudyCore` (Ergebnistypen, Tokenizer, Abgleich, Markdown, Korrektur-Merger),
+  `StudyImport` (Goodnotes-Parser, Farbebenen, Hervorhebungen, Abgleich reduziertes PDF, Vision,
+  eingebetteter Text, `DigitizationPipeline` mit Seitenfehlern/Abbruch), `StudyData` (SwiftData
+  `SchemaV1`, `StudyRepository`, Korrekturen für Text und Hervorhebungen, stabile Zeilen-IDs).
+  Echte-Vision-Tests mit `SKIP_VISION_TESTS=1` überspringbar.
+- **Nächster Schritt:** 1b (Fächer, Import-UI, Prüfansicht, „Öffnen in“ statt Share-Extension –
+  nur kostenloser Developer-Account), dann 1c (manuelle Strukturierung). Hinweise für die UI:
+  vor Neuerkennung `prepareReRecognition`, `digitizePDFPages` seitenweise speichern,
+  `isDamaged`/ungematchte Korrekturen anzeigen.

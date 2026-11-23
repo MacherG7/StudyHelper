@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "Core %@" : {
+
+    },
+    "Hier erscheinen bald deine Fächer und dein Lernstoff." : {
+
+    },
+    "Noch keine Fächer" : {
+
+    },
+    "StudyHelper" : {
+
+    }
   },
   "version" : "1.0"
 }

@@ -14,12 +14,24 @@ let package = Package(
     ],
     products: [
         .library(name: "StudyCore", targets: ["StudyCore"]),
+        .library(name: "StudyImport", targets: ["StudyImport"]),
+        .library(name: "StudyData", targets: ["StudyData"]),
         // Test-only: synthetic Goodnotes PDFs and their ground truth. Never linked into the app.
         .library(name: "TestFixtures", targets: ["TestFixtures"]),
         .executable(name: "make-fixtures", targets: ["make-fixtures"]),
     ],
     targets: [
         .target(name: "StudyCore"),
+        // PDF/Goodnotes parsing, Vision recognition, digitization pipeline.
+        .target(
+            name: "StudyImport",
+            dependencies: ["StudyCore"]
+        ),
+        // SwiftData models and persistence operations.
+        .target(
+            name: "StudyData",
+            dependencies: ["StudyCore"]
+        ),
         .target(
             name: "TestFixtures",
             resources: [.copy("Resources")]
@@ -31,6 +43,14 @@ let package = Package(
         .testTarget(
             name: "StudyCoreTests",
             dependencies: ["StudyCore"]
+        ),
+        .testTarget(
+            name: "StudyImportTests",
+            dependencies: ["StudyImport", "TestFixtures"]
+        ),
+        .testTarget(
+            name: "StudyDataTests",
+            dependencies: ["StudyData"]
         ),
         .testTarget(
             name: "TestFixturesTests",

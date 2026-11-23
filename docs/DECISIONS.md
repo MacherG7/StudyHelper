@@ -90,11 +90,49 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Keys nur in der Keychain. `scripts/check-secrets.sh` (Key-Muster in getrackten Dateien) läuft in `scripts/test.sh`. `LocalSamples/` (gitignored) für eigene echte Exporte; ebenfalls ignoriert: `*.goodnotes`, `*.env`, `Secrets*.xcconfig`, Zertifikate.
 - **Konsequenzen:** Das Muster-Grep ist eine Heuristik, kein Ersatz für Sorgfalt. Tests nutzen nur Mock-Modelle.
 
+## D-012 SwiftData-Modelle im Package (`StudyData`), versioniertes Schema
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen
+- **Kontext:** Persistenz soll ohne Simulator testbar sein; die App wird per Sideloading regelmäßig neu installiert und später aktualisiert.
+- **Entscheidung:** Alle `@Model`-Typen liegen im Package-Target `StudyData` (`SchemaV1` als `VersionedSchema`, leerer `StudyMigrationPlan`). Zeilen, Hervorhebungen, Metadaten, Quellenverweise und Tabellen werden als JSON-`Data` mit typisierten Accessoren gespeichert. Bilder und PDFs per `.externalStorage`. Store in `Application Support/StudyHelper/` im normalen App-Container.
+- **Konsequenzen:** `swift test` prüft Persistenz auf dem Mac. JSON-Felder sind nicht in Predicates filterbar (Filtern im Speicher). Schemaänderungen nur über neue Schema-Versionen.
+
+## D-013 Kein Share-Extension, stattdessen „Öffnen in StudyHelper“
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen (Abweichung von SPEC §1)
+- **Kontext:** Nur kostenloser Apple-Developer-Account (Personal Team), Installation ausschließlich per Sideloading aus Xcode. App Groups lassen sich damit nicht signieren; eine Share-Extension könnte Dateien nicht an die App übergeben.
+- **Entscheidung:** Die App meldet PDF als Dokumenttyp an und übernimmt Dateien per `onOpenURL` (sofort in den eigenen Container kopiert). In Goodnotes: „Teilen → Exportieren → PDF“ → „In StudyHelper öffnen“. Keine Capabilities, die ein Personal Team nicht signieren kann (App Groups, iCloud, Push, Associated Domains).
+- **Konsequenzen:** Profile laufen nach 7 Tagen ab; Daten müssen eine Neuinstallation mit gleicher Bundle-ID überstehen (MANUAL_TESTS). Mit einem bezahlten Account kann die Share-Extension später ergänzt werden.
+
+## D-014 Erkennung: Vision-Textzeilen als Quelle, Dokument-API nur für Struktur
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen
+- **Kontext:** `RecognizeDocumentsRequest` (ab iOS 26) liefert Absätze, Listen und Tabellen, aber auf Handschrift niedrigere Sicherheitswerte und verschluckte Kurzzeilen.
+- **Entscheidung:** Text, Sicherheit, Kandidaten und Wortboxen kommen immer aus `VNRecognizeTextRequest` (genau, Revision 3, de-DE, Sprachkorrektur an). Die Dokument-API ergänzt ab iOS 26 nur die Blockart (Liste, Tabelle, Titel); bei Goodnotes-Farbebenen wird sie übersprungen. Unsicher heißt: Sicherheit < 0,5.
+- **Konsequenzen:** Unter iOS 18–25 fehlt nur die Blockart. Metadaten speichern Methode, Revision, OS-Version und Gerät pro Erkennung.
+
+## D-015 `customWords`: immer übergeben, aber nicht darauf verlassen
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen
+- **Kontext:** SPEC verlangt, die Wirkung zu testen. Experiment: `docs/experiments/customWords.md`.
+- **Entscheidung:** Bestätigte Fachbegriffe des Fachs werden immer als `customWords` übergeben (wirkt nur mit Sprachkorrektur). Wirkung auf dem Mac klein, aber positiv, ohne Nebenwirkungen; Umlautfehler (ü→a) werden nicht behoben.
+- **Konsequenzen:** Unsichere Stellen bleiben über Sicherheitswerte und den Abgleich mit dem reduzierten PDF markiert. Auf dem Gerät erneut prüfen (MANUAL_TESTS).
+
+## D-016 Phase-1-Umfang bei Hervorhebungen und Mehrfacherkennung
+
+- **Datum:** 2026-11-23
+- **Status:** angenommen
+- **Kontext:** SPEC teilt Hervorhebungen auf Phase 1 und 3 auf und lässt den Standard der Mehrfacherkennung offen.
+- **Entscheidung:** In Phase 1 erkennt die App bei Goodnotes Farbe, Textmarker, Unterstreichung, doppelte Unterstreichung und Kreis an Annotationen bzw. Strichform; bei eingebettetem PDF-Text Fett, Farbe und Unterstreichung. Hervorhebungen lassen sich in Phase 1 grundlegend bearbeiten (Art, Farbe, Bedeutung, löschen, neu anlegen); Farblegende, KI-Transkription und Bildanalyse folgen in Phase 3. Vision-Mehrfacherkennung (zweiter Durchlauf mit 0,7-facher Auflösung) ist standardmäßig **aus**.
+- **Konsequenzen:** Umrandungen (Rechtecke) werden noch nicht erkannt. Schwellen der Formerkennung sind an synthetischen Strichen kalibriert und an echten Exporten zu prüfen.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).
-- **Wirkung von `customWords` bei Vision:** testen und dokumentieren (Phase 1).
 - **Vision-Verhalten unter iOS 27 auf echten Geräten:** berichtete Verschlechterung des genauen Modus nur auf Geräten; Messung und Dokumentation (Phase 1, später Qualitätstest Phase 8).
 - **Apple Foundation Models:** Bilder erst ab iOS 27; `tokenCount(for:)` und `contextSize` ab iOS 26.4; Verhalten auf iOS 26.0–26.3 klären (Phase 2, Phase 8).
-- **Ort der SwiftData-Modelle (Package `StudyData` vs. App-Target):** final in Phase 1 entscheiden, inkl. Auswirkung auf Share-Extension und Tests.
 - **Format-Erkennung echter Goodnotes-Exporte:** Reicht `/Producer` bzw. `/Creator`, oder sind strukturelle Merkmale nötig? (Phase 1; Daten aus `docs/MANUAL_TESTS.md`). Die Fixtures tragen bewusst einen synthetischen `/Producer`; die Erkennung muss daher primär strukturell arbeiten (Ink-/FreeText-/Stamp-Annotationen vs. Textebene ohne Annotationen).

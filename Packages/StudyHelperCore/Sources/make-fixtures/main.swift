@@ -11,6 +11,10 @@ let defaultDirectory = URL(fileURLWithPath: #filePath)
 let outputDirectory = CommandLine.arguments.count > 1
     ? URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
     : defaultDirectory
+// The digital worksheet lives next to the Goodnotes folder (or in the same custom directory).
+let digitalDirectory = CommandLine.arguments.count > 1
+    ? outputDirectory
+    : defaultDirectory.deletingLastPathComponent().appendingPathComponent("DigitalWorksheet", isDirectory: true)
 
 // The committed fixtures must be made with the real handwriting font. With the fallback font the outlines (and
 // therefore every committed file) would change silently, so refuse to write anything.
@@ -40,6 +44,13 @@ do {
             : "no annotations, \(truth.items(ofKind: .ocrWord).count) text-layer words, \(truth.ocrErrors.count) deliberate errors"
         print("\(fixture.fileName): \(truth.variant), \(truth.pageCount) page(s), \(annotations), \(result.pdfData.count / 1024) KB")
     }
+
+    try FileManager.default.createDirectory(at: digitalDirectory, withIntermediateDirectories: true)
+    let digital = try DigitalWorksheetFixture.generate()
+    try digital.pdfData.write(to: digitalDirectory.appendingPathComponent(DigitalWorksheetFixture.fileName))
+    try digital.truthData.write(to: digitalDirectory.appendingPathComponent(DigitalWorksheetFixture.truthFileName))
+    print("\(DigitalWorksheetFixture.fileName): digital, \(digital.truth.pageCount) page(s), "
+        + "\(digital.truth.items(ofKind: .worksheetText).count) text runs, \(digital.pdfData.count / 1024) KB")
 } catch {
     FileHandle.standardError.write(Data("make-fixtures failed: \(error)\n".utf8))
     exit(1)
