@@ -1,0 +1,2767 @@
+{
+  "fileName" : "Fotosynthese_reduziert.pdf",
+  "generator" : "StudyHelper TestFixtures (synthetic, Goodnotes structure)",
+  "handwritingFont" : "Noteworthy-Light",
+  "handwritingFontVersion" : "22.0d2e1",
+  "ocrErrors" : [
+    {
+      "inkWordID" : "p1-w11",
+      "itemID" : "p1-w11-ocr",
+      "page" : 1,
+      "recognized" : "Chlorophyl",
+      "truth" : "Chlorophyll"
+    },
+    {
+      "inkWordID" : "p1-w14",
+      "itemID" : "p1-w14-ocr",
+      "page" : 1,
+      "recognized" : "grune",
+      "truth" : "grüne"
+    },
+    {
+      "inkWordID" : "p1-w18",
+      "itemID" : "p1-w18-ocr",
+      "page" : 1,
+      "recognized" : "Blatter",
+      "truth" : "Blätter"
+    },
+    {
+      "inkWordID" : "p2-w02",
+      "itemID" : "p2-w02-ocr",
+      "page" : 2,
+      "recognized" : "Mitochondnen",
+      "truth" : "Mitochondrien"
+    },
+    {
+      "inkWordID" : "p3-w01",
+      "itemID" : "p3-w01-ocr",
+      "page" : 3,
+      "recognized" : "Okosystem",
+      "truth" : "Ökosystem"
+    }
+  ],
+  "pageCount" : 3,
+  "pageHeight" : 841.89,
+  "pageWidth" : 595.28,
+  "pages" : [
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.44,
+            744.86,
+            191.5,
+            44.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 16,
+          "text" : "Fotosynthese"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            76.24,
+            739.86,
+            198.9,
+            3.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p1-ul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "underline",
+          "lineWidth" : 2.4,
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            686.91,
+            77,
+            21.78
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Pflanzen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            163,
+            686.91,
+            69.56,
+            21.76
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 10,
+          "text" : "wandeln"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            238.4,
+            681.6,
+            104.89,
+            26.85
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 18,
+          "text" : "Lichtenergie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            619.65,
+            14.45,
+            18.18
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 3,
+          "text" : "in"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            100.46,
+            619.13,
+            87.85,
+            21.32
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 12,
+          "text" : "chemische"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.29,
+            613.6,
+            65.32,
+            27.04
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w07",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Energie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            265.48,
+            619.46,
+            23.7,
+            14.58
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w08",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 2,
+          "text" : "um"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.86,
+            551.32,
+            36.05,
+            21.18
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w09",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "Ort:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            121.75,
+            544.61,
+            118.02,
+            28.17
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w10",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 18,
+          "text" : "Chloroplasten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            109.75,
+            551.51,
+            141.72,
+            18.8
+          ],
+          "colorHex" : "#FFE600",
+          "emphasis" : "highlight",
+          "id" : "p1-hl01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "highlighter",
+          "lineWidth" : 18,
+          "relatedItemID" : "p1-w10",
+          "relatedItemIDs" : [
+            "p1-w10"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            476.61,
+            93.16,
+            28.17
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w11",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Chlorophyll"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            179.03,
+            483.57,
+            22.06,
+            18.26
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w12",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 4,
+          "text" : "ist"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            207.07,
+            483.32,
+            27.89,
+            21.13
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w13",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            240.94,
+            477.6,
+            47.53,
+            22.25
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w14",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "grüne"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            294.17,
+            482.91,
+            128.16,
+            21.76
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w15",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 20,
+          "text" : "Blattfarbstoff"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            408.61,
+            70.55,
+            28.06
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w16",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 17,
+          "text" : "Beispiel:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            156.28,
+            409.6,
+            50.2,
+            27.09
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w17",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "große"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            212.18,
+            414.91,
+            61.45,
+            21.76
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w18",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 13,
+          "text" : "Blätter"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            279.74,
+            415.57,
+            18.37,
+            18.26
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w19",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 3,
+          "text" : "im"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.95,
+            415.27,
+            69.57,
+            21.4
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w20",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "Sommer"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.16,
+            346.47,
+            60.25,
+            22.25
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w21",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "Merke:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            146.36,
+            347.13,
+            45.7,
+            21.37
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w22",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "Ohne"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            197.77,
+            347.13,
+            42.74,
+            21.32
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w23",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "Licht"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            246.49,
+            346.47,
+            45,
+            22.25
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w24",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "keine"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            296.97,
+            341.41,
+            119,
+            27.2
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w25",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 16,
+          "text" : "Fotosynthese"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            273.6,
+            65.32,
+            27.04
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w26",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Energie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            151.19,
+            279.32,
+            36.9,
+            21.13
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w27",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "wird"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.21,
+            279.65,
+            14.45,
+            18.18
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w28",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 3,
+          "text" : "in"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            214.34,
+            278.47,
+            129.57,
+            22.25
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w29",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 17,
+          "text" : "Traubenzucker"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            349.89,
+            272.61,
+            99.26,
+            27.84
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w30",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 17,
+          "text" : "gespeichert"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            202.34,
+            279.51,
+            258.51,
+            18.8
+          ],
+          "colorHex" : "#FFE600",
+          "emphasis" : "highlight",
+          "id" : "p1-hl02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "highlighter",
+          "lineWidth" : 18,
+          "relatedItemID" : "p1-w29",
+          "relatedItemIDs" : [
+            "p1-w29",
+            "p1-w30"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            238.61,
+            124.05,
+            28.11
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w31",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line09",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 20,
+          "text" : "Nebenprodukt:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            209.64,
+            244.91,
+            97.73,
+            21.76
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w32",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line09",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 13,
+          "text" : "Sauerstoff"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            311.07,
+            245.13,
+            83.97,
+            21.32
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w33",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line09",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 12,
+          "text" : "entweicht"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            191.3,
+            245.51,
+            125.07,
+            18.8
+          ],
+          "colorHex" : "#FFE600",
+          "emphasis" : "highlight",
+          "id" : "p1-hl03",
+          "incidentalItemIDs" : [
+            "p1-w31"
+          ],
+          "kind" : "highlighter",
+          "lineWidth" : 18,
+          "relatedItemID" : "p1-w32",
+          "relatedItemIDs" : [
+            "p1-w32"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            143.39,
+            643.29,
+            153.7,
+            33.31
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "arrow",
+          "endpoints" : [
+            296.09,
+            675.6,
+            144.39,
+            647.45
+          ],
+          "id" : "p1-st01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "stamp",
+          "lineWidth" : 2,
+          "relatedItemID" : "p1-w06",
+          "relatedItemIDs" : [
+            "p1-w06"
+          ],
+          "sourceItemID" : "p1-w04",
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "appearanceText" : "Formel: 6 CO2 + 6 H2O -> C6H12O6 + 6 O2",
+          "bbox" : [
+            80,
+            100,
+            440,
+            40
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-ft01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "freeText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Formel: 6 CO₂ + 6 H₂O → C₆H₁₂O₆ + 6 O₂"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.44,
+            744.86,
+            191.5,
+            44.09
+          ],
+          "id" : "p1-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line01",
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Fotosynthese"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            686.91,
+            77,
+            21.78
+          ],
+          "id" : "p1-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w02",
+          "relatedItemIDs" : [
+            "p1-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Pflanzen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            163,
+            686.91,
+            69.56,
+            21.76
+          ],
+          "id" : "p1-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w03",
+          "relatedItemIDs" : [
+            "p1-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "wandeln"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            238.4,
+            681.6,
+            104.89,
+            26.85
+          ],
+          "id" : "p1-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w04",
+          "relatedItemIDs" : [
+            "p1-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "Lichtenergie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            619.65,
+            14.45,
+            18.18
+          ],
+          "id" : "p1-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w05",
+          "relatedItemIDs" : [
+            "p1-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "in"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            100.46,
+            619.13,
+            87.85,
+            21.32
+          ],
+          "id" : "p1-w06-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w06",
+          "relatedItemIDs" : [
+            "p1-w06"
+          ],
+          "strokeCount" : 0,
+          "text" : "chemische"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.29,
+            613.6,
+            65.32,
+            27.04
+          ],
+          "id" : "p1-w07-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w07",
+          "relatedItemIDs" : [
+            "p1-w07"
+          ],
+          "strokeCount" : 0,
+          "text" : "Energie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            265.48,
+            619.46,
+            23.7,
+            14.58
+          ],
+          "id" : "p1-w08-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w08",
+          "relatedItemIDs" : [
+            "p1-w08"
+          ],
+          "strokeCount" : 0,
+          "text" : "um"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.86,
+            551.32,
+            36.05,
+            21.18
+          ],
+          "id" : "p1-w09-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w09",
+          "relatedItemIDs" : [
+            "p1-w09"
+          ],
+          "strokeCount" : 0,
+          "text" : "Ort:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            121.75,
+            544.61,
+            118.02,
+            28.17
+          ],
+          "id" : "p1-w10-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w10",
+          "relatedItemIDs" : [
+            "p1-w10"
+          ],
+          "strokeCount" : 0,
+          "text" : "Chloroplasten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            476.61,
+            93.16,
+            28.17
+          ],
+          "emphasis" : "recognitionError",
+          "id" : "p1-w11-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line05",
+          "relatedItemID" : "p1-w11",
+          "relatedItemIDs" : [
+            "p1-w11"
+          ],
+          "strokeCount" : 0,
+          "text" : "Chlorophyl"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            179.03,
+            483.57,
+            22.06,
+            18.26
+          ],
+          "id" : "p1-w12-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line05",
+          "relatedItemID" : "p1-w12",
+          "relatedItemIDs" : [
+            "p1-w12"
+          ],
+          "strokeCount" : 0,
+          "text" : "ist"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            207.07,
+            483.32,
+            27.89,
+            21.13
+          ],
+          "id" : "p1-w13-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line05",
+          "relatedItemID" : "p1-w13",
+          "relatedItemIDs" : [
+            "p1-w13"
+          ],
+          "strokeCount" : 0,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            240.94,
+            477.6,
+            47.53,
+            22.25
+          ],
+          "emphasis" : "recognitionError",
+          "id" : "p1-w14-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line05",
+          "relatedItemID" : "p1-w14",
+          "relatedItemIDs" : [
+            "p1-w14"
+          ],
+          "strokeCount" : 0,
+          "text" : "grune"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            294.17,
+            482.91,
+            128.16,
+            21.76
+          ],
+          "id" : "p1-w15-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line05",
+          "relatedItemID" : "p1-w15",
+          "relatedItemIDs" : [
+            "p1-w15"
+          ],
+          "strokeCount" : 0,
+          "text" : "Blattfarbstoff"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            408.61,
+            70.55,
+            28.06
+          ],
+          "id" : "p1-w16-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line06",
+          "relatedItemID" : "p1-w16",
+          "relatedItemIDs" : [
+            "p1-w16"
+          ],
+          "strokeCount" : 0,
+          "text" : "Beispiel:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            156.28,
+            409.6,
+            50.2,
+            27.09
+          ],
+          "id" : "p1-w17-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line06",
+          "relatedItemID" : "p1-w17",
+          "relatedItemIDs" : [
+            "p1-w17"
+          ],
+          "strokeCount" : 0,
+          "text" : "große"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            212.18,
+            414.91,
+            61.45,
+            21.76
+          ],
+          "emphasis" : "recognitionError",
+          "id" : "p1-w18-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line06",
+          "relatedItemID" : "p1-w18",
+          "relatedItemIDs" : [
+            "p1-w18"
+          ],
+          "strokeCount" : 0,
+          "text" : "Blatter"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            279.74,
+            415.57,
+            18.37,
+            18.26
+          ],
+          "id" : "p1-w19-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line06",
+          "relatedItemID" : "p1-w19",
+          "relatedItemIDs" : [
+            "p1-w19"
+          ],
+          "strokeCount" : 0,
+          "text" : "im"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.95,
+            415.27,
+            69.57,
+            21.4
+          ],
+          "id" : "p1-w20-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line06",
+          "relatedItemID" : "p1-w20",
+          "relatedItemIDs" : [
+            "p1-w20"
+          ],
+          "strokeCount" : 0,
+          "text" : "Sommer"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.16,
+            346.47,
+            60.25,
+            22.25
+          ],
+          "id" : "p1-w21-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line07",
+          "relatedItemID" : "p1-w21",
+          "relatedItemIDs" : [
+            "p1-w21"
+          ],
+          "strokeCount" : 0,
+          "text" : "Merke:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            146.36,
+            347.13,
+            45.7,
+            21.37
+          ],
+          "id" : "p1-w22-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line07",
+          "relatedItemID" : "p1-w22",
+          "relatedItemIDs" : [
+            "p1-w22"
+          ],
+          "strokeCount" : 0,
+          "text" : "Ohne"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            197.77,
+            347.13,
+            42.74,
+            21.32
+          ],
+          "id" : "p1-w23-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line07",
+          "relatedItemID" : "p1-w23",
+          "relatedItemIDs" : [
+            "p1-w23"
+          ],
+          "strokeCount" : 0,
+          "text" : "Licht"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            246.49,
+            346.47,
+            45,
+            22.25
+          ],
+          "id" : "p1-w24-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line07",
+          "relatedItemID" : "p1-w24",
+          "relatedItemIDs" : [
+            "p1-w24"
+          ],
+          "strokeCount" : 0,
+          "text" : "keine"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            296.97,
+            341.41,
+            119,
+            27.2
+          ],
+          "id" : "p1-w25-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line07",
+          "relatedItemID" : "p1-w25",
+          "relatedItemIDs" : [
+            "p1-w25"
+          ],
+          "strokeCount" : 0,
+          "text" : "Fotosynthese"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.03,
+            273.6,
+            65.32,
+            27.04
+          ],
+          "id" : "p1-w26-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line08",
+          "relatedItemID" : "p1-w26",
+          "relatedItemIDs" : [
+            "p1-w26"
+          ],
+          "strokeCount" : 0,
+          "text" : "Energie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            151.19,
+            279.32,
+            36.9,
+            21.13
+          ],
+          "id" : "p1-w27-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line08",
+          "relatedItemID" : "p1-w27",
+          "relatedItemIDs" : [
+            "p1-w27"
+          ],
+          "strokeCount" : 0,
+          "text" : "wird"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.21,
+            279.65,
+            14.45,
+            18.18
+          ],
+          "id" : "p1-w28-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line08",
+          "relatedItemID" : "p1-w28",
+          "relatedItemIDs" : [
+            "p1-w28"
+          ],
+          "strokeCount" : 0,
+          "text" : "in"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            214.34,
+            278.47,
+            129.57,
+            22.25
+          ],
+          "id" : "p1-w29-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line08",
+          "relatedItemID" : "p1-w29",
+          "relatedItemIDs" : [
+            "p1-w29"
+          ],
+          "strokeCount" : 0,
+          "text" : "Traubenzucker"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            349.89,
+            272.61,
+            99.26,
+            27.84
+          ],
+          "id" : "p1-w30-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line08",
+          "relatedItemID" : "p1-w30",
+          "relatedItemIDs" : [
+            "p1-w30"
+          ],
+          "strokeCount" : 0,
+          "text" : "gespeichert"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            238.61,
+            124.05,
+            28.11
+          ],
+          "id" : "p1-w31-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line09",
+          "relatedItemID" : "p1-w31",
+          "relatedItemIDs" : [
+            "p1-w31"
+          ],
+          "strokeCount" : 0,
+          "text" : "Nebenprodukt:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            209.64,
+            244.91,
+            97.73,
+            21.76
+          ],
+          "id" : "p1-w32-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line09",
+          "relatedItemID" : "p1-w32",
+          "relatedItemIDs" : [
+            "p1-w32"
+          ],
+          "strokeCount" : 0,
+          "text" : "Sauerstoff"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            311.07,
+            245.13,
+            83.97,
+            21.32
+          ],
+          "id" : "p1-w33-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line09",
+          "relatedItemID" : "p1-w33",
+          "relatedItemIDs" : [
+            "p1-w33"
+          ],
+          "strokeCount" : 0,
+          "text" : "entweicht"
+        }
+      ],
+      "pageNumber" : 1
+    },
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            753.8,
+            205.6,
+            18.6
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "bold",
+          "id" : "p2-ws01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Arbeitsblatt: Die Zelle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            540,
+            240,
+            180
+          ],
+          "id" : "p2-img01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "image",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            330,
+            697.27,
+            81.64,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "bold",
+          "id" : "p2-ws02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Pflanzenzelle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            330,
+            679.69,
+            128.38,
+            10.23
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "(schematisch, vereinfacht)"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            505.27,
+            185.75,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "1. Benenne die Zellbestandteile."
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            467.27,
+            11.56,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "a)"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            91.7,
+            468.13,
+            100.73,
+            20.82
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p2-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line01",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 15,
+          "text" : "Zellmembran"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            425.27,
+            11.56,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "b)"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            92.08,
+            426.33,
+            113.37,
+            19.75
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p2-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 19,
+          "text" : "Mitochondrien"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            383.27,
+            10.83,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws07",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "c)"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            91.7,
+            384.13,
+            72.2,
+            20.82
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p2-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Zellwand"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.45,
+            416.81,
+            135.52,
+            38.49
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "circle",
+          "id" : "p2-circ01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "circle",
+          "lineWidth" : 1.8,
+          "relatedItemID" : "p2-w02",
+          "relatedItemIDs" : [
+            "p2-w02"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            88.8,
+            375.23,
+            79,
+            6.8
+          ],
+          "colorHex" : "#D32F2F",
+          "emphasis" : "doubleUnderline",
+          "id" : "p2-dul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "doubleUnderline",
+          "lineWidth" : 1.8,
+          "relatedItemID" : "p2-w03",
+          "relatedItemIDs" : [
+            "p2-w03"
+          ],
+          "strokeCount" : 2
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            327.27,
+            24.56,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws08",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            84.56,
+            327.27,
+            46.24,
+            12.09
+          ],
+          "colorHex" : "#D32F2F",
+          "emphasis" : "colored",
+          "id" : "p2-ws09",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Zellkern"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            130.8,
+            327.27,
+            67.22,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws10",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "enthält die"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            198.02,
+            327.27,
+            84.54,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p2-ws11",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Erbinformation"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            282.56,
+            327.27,
+            3.61,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws12",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "."
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            60,
+            293.27,
+            45.52,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "bold",
+          "id" : "p2-ws13",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Merke:"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            105.52,
+            293.27,
+            233.4,
+            12.09
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-ws14",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "worksheetText",
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 0,
+          "text" : "Die Zellwand gibt der Pflanzenzelle Halt."
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            91.7,
+            468.13,
+            100.73,
+            20.82
+          ],
+          "id" : "p2-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line01",
+          "relatedItemID" : "p2-w01",
+          "relatedItemIDs" : [
+            "p2-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Zellmembran"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            92.08,
+            426.33,
+            113.37,
+            19.75
+          ],
+          "emphasis" : "recognitionError",
+          "id" : "p2-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w02",
+          "relatedItemIDs" : [
+            "p2-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Mitochondnen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            91.7,
+            384.13,
+            72.2,
+            20.82
+          ],
+          "id" : "p2-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line03",
+          "relatedItemID" : "p2-w03",
+          "relatedItemIDs" : [
+            "p2-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "Zellwand"
+        }
+      ],
+      "pageNumber" : 2
+    },
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            214.75,
+            629.89,
+            134.84,
+            40.74
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line01",
+          "lineWidth" : 2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Ökosystem"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            70.03,
+            518.37,
+            110.42,
+            21.43
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 16,
+          "text" : "Produzenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            359.7,
+            518.35,
+            117.27,
+            21.34
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p3-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Konsumenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            225.03,
+            418.43,
+            107.23,
+            21.51
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p3-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 15,
+          "text" : "Destruenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            124.24,
+            547.8,
+            118.48,
+            75.09
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "line",
+          "endpoints" : [
+            241.72,
+            621.89,
+            125.24,
+            548.8
+          ],
+          "id" : "p3-st01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "stamp",
+          "lineWidth" : 2,
+          "relatedItemID" : "p3-w02",
+          "relatedItemIDs" : [
+            "p3-w02"
+          ],
+          "sourceItemID" : "p3-w01",
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            321.62,
+            547.69,
+            97.72,
+            75.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "line",
+          "endpoints" : [
+            322.62,
+            621.89,
+            418.34,
+            548.69
+          ],
+          "id" : "p3-st02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "stamp",
+          "lineWidth" : 2,
+          "relatedItemID" : "p3-w03",
+          "relatedItemIDs" : [
+            "p3-w03"
+          ],
+          "sourceItemID" : "p3-w01",
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            277.65,
+            447.94,
+            5.52,
+            174.95
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "line",
+          "endpoints" : [
+            282.17,
+            621.89,
+            278.65,
+            448.94
+          ],
+          "id" : "p3-st03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "stamp",
+          "lineWidth" : 2,
+          "relatedItemID" : "p3-w04",
+          "relatedItemIDs" : [
+            "p3-w04"
+          ],
+          "sourceItemID" : "p3-w01",
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            87.2,
+            308.9,
+            405.6,
+            2.3
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "horizontal",
+          "id" : "p3-tl01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            87.2,
+            266.9,
+            405.6,
+            2.3
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "horizontal",
+          "id" : "p3-tl02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            87.2,
+            224.9,
+            405.6,
+            2.3
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "horizontal",
+          "id" : "p3-tl03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            87.2,
+            182.9,
+            405.6,
+            2.3
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "horizontal",
+          "id" : "p3-tl04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            88.9,
+            181.2,
+            2.2,
+            131.6
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "vertical",
+          "id" : "p3-tl05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            288.9,
+            181.2,
+            2.2,
+            131.6
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "vertical",
+          "id" : "p3-tl06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            488.9,
+            181.2,
+            2.2,
+            131.6
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "vertical",
+          "id" : "p3-tl07",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "tableLine",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.8,
+            274.3,
+            94.63,
+            24.6
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line05",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Organismus"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.45,
+            279.45,
+            40.02,
+            19.62
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line06",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "Rolle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.7,
+            237.13,
+            38.5,
+            19.97
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w07",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line07",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "Gras"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.95,
+            237.45,
+            82.48,
+            19.62
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w08",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line08",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 13,
+          "text" : "Produzent"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.5,
+            195.33,
+            47,
+            19.67
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w09",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line09",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "Fuchs"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.65,
+            195.43,
+            88.7,
+            19.55
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w10",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line10",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Konsument"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            214.75,
+            629.89,
+            134.84,
+            40.74
+          ],
+          "emphasis" : "recognitionError",
+          "id" : "p3-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line01",
+          "relatedItemID" : "p3-w01",
+          "relatedItemIDs" : [
+            "p3-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Okosystem"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            70.03,
+            518.37,
+            110.42,
+            21.43
+          ],
+          "id" : "p3-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w02",
+          "relatedItemIDs" : [
+            "p3-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Produzenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            359.7,
+            518.35,
+            117.27,
+            21.34
+          ],
+          "id" : "p3-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line03",
+          "relatedItemID" : "p3-w03",
+          "relatedItemIDs" : [
+            "p3-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "Konsumenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            225.03,
+            418.43,
+            107.23,
+            21.51
+          ],
+          "id" : "p3-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line04",
+          "relatedItemID" : "p3-w04",
+          "relatedItemIDs" : [
+            "p3-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "Destruenten"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.8,
+            274.3,
+            94.63,
+            24.6
+          ],
+          "id" : "p3-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line05",
+          "relatedItemID" : "p3-w05",
+          "relatedItemIDs" : [
+            "p3-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "Organismus"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.45,
+            279.45,
+            40.02,
+            19.62
+          ],
+          "id" : "p3-w06-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line06",
+          "relatedItemID" : "p3-w06",
+          "relatedItemIDs" : [
+            "p3-w06"
+          ],
+          "strokeCount" : 0,
+          "text" : "Rolle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.7,
+            237.13,
+            38.5,
+            19.97
+          ],
+          "id" : "p3-w07-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line07",
+          "relatedItemID" : "p3-w07",
+          "relatedItemIDs" : [
+            "p3-w07"
+          ],
+          "strokeCount" : 0,
+          "text" : "Gras"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.95,
+            237.45,
+            82.48,
+            19.62
+          ],
+          "id" : "p3-w08-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line08",
+          "relatedItemID" : "p3-w08",
+          "relatedItemIDs" : [
+            "p3-w08"
+          ],
+          "strokeCount" : 0,
+          "text" : "Produzent"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            103.5,
+            195.33,
+            47,
+            19.67
+          ],
+          "id" : "p3-w09-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line09",
+          "relatedItemID" : "p3-w09",
+          "relatedItemIDs" : [
+            "p3-w09"
+          ],
+          "strokeCount" : 0,
+          "text" : "Fuchs"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            303.65,
+            195.43,
+            88.7,
+            19.55
+          ],
+          "id" : "p3-w10-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line10",
+          "relatedItemID" : "p3-w10",
+          "relatedItemIDs" : [
+            "p3-w10"
+          ],
+          "strokeCount" : 0,
+          "text" : "Konsument"
+        }
+      ],
+      "pageNumber" : 3
+    }
+  ],
+  "variant" : "reduced"
+}

@@ -1,0 +1,774 @@
+{
+  "fileName" : "Andere_Notiz_reduziert.pdf",
+  "generator" : "StudyHelper TestFixtures (synthetic, Goodnotes structure)",
+  "handwritingFont" : "Noteworthy-Light",
+  "handwritingFontVersion" : "22.0d2e1",
+  "ocrErrors" : [
+
+  ],
+  "pageCount" : 1,
+  "pageHeight" : 841.89,
+  "pageWidth" : 595.28,
+  "pages" : [
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.18,
+            745.76,
+            108.74,
+            41.56
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 10,
+          "text" : "Englisch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            198.34,
+            753.28,
+            120.13,
+            34.89
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 12,
+          "text" : "Vokabeln"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            76.98,
+            740.76,
+            245.69,
+            3.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p1-ul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "underline",
+          "lineWidth" : 2.4,
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01",
+            "p1-w02"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            687.13,
+            26.93,
+            21.32
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 4,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.66,
+            680.61,
+            43.84,
+            28.06
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "apple"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            162.21,
+            694.09,
+            11.3,
+            7.01
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 2,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            179.35,
+            687.32,
+            27.9,
+            21.13
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            212.81,
+            680.61,
+            46.51,
+            28.06
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w07",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "Apfel"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            619.13,
+            26.93,
+            21.32
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w08",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 4,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.44,
+            619.13,
+            49.48,
+            21.32
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w09",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 7,
+          "text" : "house"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            167.62,
+            626.09,
+            11.31,
+            7.01
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w10",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 2,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            184.77,
+            618.91,
+            30.86,
+            21.54
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w11",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "das"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            221.34,
+            618.91,
+            45.78,
+            21.87
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p1-w12",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line03",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "Haus"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            551.13,
+            26.93,
+            21.32
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w13",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 4,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.66,
+            551.71,
+            35.11,
+            17.55
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w14",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "tree"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            153.47,
+            558.09,
+            11.31,
+            7.01
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w15",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 2,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            170.62,
+            551.32,
+            27.89,
+            21.13
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w16",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            204.35,
+            550.91,
+            48.48,
+            21.7
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p1-w17",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line04",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 7,
+          "text" : "Baum"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.18,
+            745.76,
+            108.74,
+            41.56
+          ],
+          "id" : "p1-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line01",
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Englisch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            198.34,
+            753.28,
+            120.13,
+            34.89
+          ],
+          "id" : "p1-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line01",
+          "relatedItemID" : "p1-w02",
+          "relatedItemIDs" : [
+            "p1-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Vokabeln"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            687.13,
+            26.93,
+            21.32
+          ],
+          "id" : "p1-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w03",
+          "relatedItemIDs" : [
+            "p1-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.66,
+            680.61,
+            43.84,
+            28.06
+          ],
+          "id" : "p1-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w04",
+          "relatedItemIDs" : [
+            "p1-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "apple"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            162.21,
+            694.09,
+            11.3,
+            7.01
+          ],
+          "id" : "p1-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w05",
+          "relatedItemIDs" : [
+            "p1-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            179.35,
+            687.32,
+            27.9,
+            21.13
+          ],
+          "id" : "p1-w06-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w06",
+          "relatedItemIDs" : [
+            "p1-w06"
+          ],
+          "strokeCount" : 0,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            212.81,
+            680.61,
+            46.51,
+            28.06
+          ],
+          "id" : "p1-w07-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w07",
+          "relatedItemIDs" : [
+            "p1-w07"
+          ],
+          "strokeCount" : 0,
+          "text" : "Apfel"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            619.13,
+            26.93,
+            21.32
+          ],
+          "id" : "p1-w08-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w08",
+          "relatedItemIDs" : [
+            "p1-w08"
+          ],
+          "strokeCount" : 0,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.44,
+            619.13,
+            49.48,
+            21.32
+          ],
+          "id" : "p1-w09-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w09",
+          "relatedItemIDs" : [
+            "p1-w09"
+          ],
+          "strokeCount" : 0,
+          "text" : "house"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            167.62,
+            626.09,
+            11.31,
+            7.01
+          ],
+          "id" : "p1-w10-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w10",
+          "relatedItemIDs" : [
+            "p1-w10"
+          ],
+          "strokeCount" : 0,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            184.77,
+            618.91,
+            30.86,
+            21.54
+          ],
+          "id" : "p1-w11-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w11",
+          "relatedItemIDs" : [
+            "p1-w11"
+          ],
+          "strokeCount" : 0,
+          "text" : "das"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            221.34,
+            618.91,
+            45.78,
+            21.87
+          ],
+          "id" : "p1-w12-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line03",
+          "relatedItemID" : "p1-w12",
+          "relatedItemIDs" : [
+            "p1-w12"
+          ],
+          "strokeCount" : 0,
+          "text" : "Haus"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.89,
+            551.13,
+            26.93,
+            21.32
+          ],
+          "id" : "p1-w13-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w13",
+          "relatedItemIDs" : [
+            "p1-w13"
+          ],
+          "strokeCount" : 0,
+          "text" : "the"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            112.66,
+            551.71,
+            35.11,
+            17.55
+          ],
+          "id" : "p1-w14-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w14",
+          "relatedItemIDs" : [
+            "p1-w14"
+          ],
+          "strokeCount" : 0,
+          "text" : "tree"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            153.47,
+            558.09,
+            11.31,
+            7.01
+          ],
+          "id" : "p1-w15-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w15",
+          "relatedItemIDs" : [
+            "p1-w15"
+          ],
+          "strokeCount" : 0,
+          "text" : "="
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            170.62,
+            551.32,
+            27.89,
+            21.13
+          ],
+          "id" : "p1-w16-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w16",
+          "relatedItemIDs" : [
+            "p1-w16"
+          ],
+          "strokeCount" : 0,
+          "text" : "der"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            204.35,
+            550.91,
+            48.48,
+            21.7
+          ],
+          "id" : "p1-w17-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line04",
+          "relatedItemID" : "p1-w17",
+          "relatedItemIDs" : [
+            "p1-w17"
+          ],
+          "strokeCount" : 0,
+          "text" : "Baum"
+        }
+      ],
+      "pageNumber" : 1
+    }
+  ],
+  "variant" : "reduced"
+}

@@ -1,0 +1,827 @@
+{
+  "fileName" : "Andere_Groesse_reduziert.pdf",
+  "generator" : "StudyHelper TestFixtures (synthetic, Goodnotes structure)",
+  "handwritingFont" : "Noteworthy-Light",
+  "handwritingFontVersion" : "22.0d2e1",
+  "ocrErrors" : [
+
+  ],
+  "pageCount" : 3,
+  "pageHeight" : 792,
+  "pageWidth" : 612,
+  "pages" : [
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            695.87,
+            197.36,
+            41.47
+          ],
+          "colorHex" : "#000000",
+          "id" : "p1-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 17,
+          "text" : "Bruchrechnung"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            76.55,
+            690.87,
+            204.76,
+            3.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p1-ul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "underline",
+          "lineWidth" : 2.4,
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.73,
+            637.07,
+            54.34,
+            21.79
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 10,
+          "text" : "Zähler"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            139.72,
+            637.28,
+            45.28,
+            20.42
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "durch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            190.73,
+            637.78,
+            58.54,
+            19.92
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 8,
+          "text" : "Nenner"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            254.92,
+            637.78,
+            43.76,
+            20.13
+          ],
+          "colorHex" : "#1565C0",
+          "id" : "p1-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p1-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "teilen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            695.87,
+            197.36,
+            41.47
+          ],
+          "id" : "p1-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line01",
+          "relatedItemID" : "p1-w01",
+          "relatedItemIDs" : [
+            "p1-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Bruchrechnung"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.73,
+            637.07,
+            54.34,
+            21.79
+          ],
+          "id" : "p1-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w02",
+          "relatedItemIDs" : [
+            "p1-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Zähler"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            139.72,
+            637.28,
+            45.28,
+            20.42
+          ],
+          "id" : "p1-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w03",
+          "relatedItemIDs" : [
+            "p1-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "durch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            190.73,
+            637.78,
+            58.54,
+            19.92
+          ],
+          "id" : "p1-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w04",
+          "relatedItemIDs" : [
+            "p1-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "Nenner"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            254.92,
+            637.78,
+            43.76,
+            20.13
+          ],
+          "id" : "p1-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p1-line02",
+          "relatedItemID" : "p1-w05",
+          "relatedItemIDs" : [
+            "p1-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "teilen"
+        }
+      ],
+      "pageNumber" : 1
+    },
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            704.63,
+            133.67,
+            32.88
+          ],
+          "colorHex" : "#000000",
+          "id" : "p2-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Geometrie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            76.55,
+            699.63,
+            141.07,
+            3.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p2-ul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "underline",
+          "lineWidth" : 2.4,
+          "relatedItemID" : "p2-w01",
+          "relatedItemIDs" : [
+            "p2-w01"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.96,
+            636.65,
+            109.16,
+            21.45
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p2-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 14,
+          "text" : "Winkelsumme"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.77,
+            637.7,
+            17.62,
+            17.51
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p2-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 3,
+          "text" : "im"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            218.17,
+            636.65,
+            64.32,
+            21.42
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p2-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 11,
+          "text" : "Dreieck"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            288.01,
+            637.75,
+            33.88,
+            19.85
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p2-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "180"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            327.27,
+            637.07,
+            40.55,
+            20.9
+          ],
+          "colorHex" : "#D32F2F",
+          "id" : "p2-w06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p2-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "Grad"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.75,
+            704.63,
+            133.67,
+            32.88
+          ],
+          "id" : "p2-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line01",
+          "relatedItemID" : "p2-w01",
+          "relatedItemIDs" : [
+            "p2-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Geometrie"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.96,
+            636.65,
+            109.16,
+            21.45
+          ],
+          "id" : "p2-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w02",
+          "relatedItemIDs" : [
+            "p2-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Winkelsumme"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            194.77,
+            637.7,
+            17.62,
+            17.51
+          ],
+          "id" : "p2-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w03",
+          "relatedItemIDs" : [
+            "p2-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "im"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            218.17,
+            636.65,
+            64.32,
+            21.42
+          ],
+          "id" : "p2-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w04",
+          "relatedItemIDs" : [
+            "p2-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "Dreieck"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            288.01,
+            637.75,
+            33.88,
+            19.85
+          ],
+          "id" : "p2-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w05",
+          "relatedItemIDs" : [
+            "p2-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "180"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            327.27,
+            637.07,
+            40.55,
+            20.9
+          ],
+          "id" : "p2-w06-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p2-line02",
+          "relatedItemID" : "p2-w06",
+          "relatedItemIDs" : [
+            "p2-w06"
+          ],
+          "strokeCount" : 0,
+          "text" : "Grad"
+        }
+      ],
+      "pageNumber" : 2
+    },
+    {
+      "items" : [
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.13,
+            695.87,
+            171.33,
+            41.85
+          ],
+          "colorHex" : "#000000",
+          "id" : "p3-w01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line01",
+          "lineWidth" : 2.2,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 18,
+          "text" : "Wiederholung"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            76.93,
+            690.87,
+            178.73,
+            3.2
+          ],
+          "colorHex" : "#000000",
+          "emphasis" : "underline",
+          "id" : "p3-ul01",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "underline",
+          "lineWidth" : 2.4,
+          "relatedItemID" : "p3-w01",
+          "relatedItemIDs" : [
+            "p3-w01"
+          ],
+          "strokeCount" : 1
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.46,
+            637.28,
+            30.73,
+            20.63
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w02",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 6,
+          "text" : "Alle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            115.58,
+            632,
+            69.21,
+            28.54
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w03",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 12,
+          "text" : "Übungen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            190.44,
+            637.28,
+            38.68,
+            20.42
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w04",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 5,
+          "text" : "noch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            234.98,
+            637.07,
+            50.59,
+            20.84
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w05",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "einmal"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            291.22,
+            637.28,
+            64.98,
+            20.42
+          ],
+          "colorHex" : "#2E7D32",
+          "id" : "p3-w06",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "inkWord",
+          "lineID" : "p3-line02",
+          "lineWidth" : 1.6,
+          "relatedItemIDs" : [
+
+          ],
+          "strokeCount" : 9,
+          "text" : "rechnen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            80.13,
+            695.87,
+            171.33,
+            41.85
+          ],
+          "id" : "p3-w01-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line01",
+          "relatedItemID" : "p3-w01",
+          "relatedItemIDs" : [
+            "p3-w01"
+          ],
+          "strokeCount" : 0,
+          "text" : "Wiederholung"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            79.46,
+            637.28,
+            30.73,
+            20.63
+          ],
+          "id" : "p3-w02-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w02",
+          "relatedItemIDs" : [
+            "p3-w02"
+          ],
+          "strokeCount" : 0,
+          "text" : "Alle"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            115.58,
+            632,
+            69.21,
+            28.54
+          ],
+          "id" : "p3-w03-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w03",
+          "relatedItemIDs" : [
+            "p3-w03"
+          ],
+          "strokeCount" : 0,
+          "text" : "Übungen"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            190.44,
+            637.28,
+            38.68,
+            20.42
+          ],
+          "id" : "p3-w04-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w04",
+          "relatedItemIDs" : [
+            "p3-w04"
+          ],
+          "strokeCount" : 0,
+          "text" : "noch"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            234.98,
+            637.07,
+            50.59,
+            20.84
+          ],
+          "id" : "p3-w05-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w05",
+          "relatedItemIDs" : [
+            "p3-w05"
+          ],
+          "strokeCount" : 0,
+          "text" : "einmal"
+        },
+        {
+          "annotationCount" : 0,
+          "bbox" : [
+            291.22,
+            637.28,
+            64.98,
+            20.42
+          ],
+          "id" : "p3-w06-ocr",
+          "incidentalItemIDs" : [
+
+          ],
+          "kind" : "ocrWord",
+          "lineID" : "p3-line02",
+          "relatedItemID" : "p3-w06",
+          "relatedItemIDs" : [
+            "p3-w06"
+          ],
+          "strokeCount" : 0,
+          "text" : "rechnen"
+        }
+      ],
+      "pageNumber" : 3
+    }
+  ],
+  "variant" : "reduced"
+}

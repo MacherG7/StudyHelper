@@ -1,0 +1,98 @@
+# XcodeGen spec for StudyHelper. Generate the project with scripts/bootstrap.sh.
+# The generated StudyHelper.xcodeproj is not committed (see docs/DECISIONS.md).
+name: StudyHelper
+
+options:
+  bundleIdPrefix: MiloG
+  developmentLanguage: de
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 4SJY8U8446
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+
+packages:
+  StudyHelperCore:
+    path: Packages/StudyHelperCore
+
+targets:
+  StudyHelper:
+    type: application
+    platform: iOS
+    sources:
+      - path: StudyHelper
+    dependencies:
+      - package: StudyHelperCore
+        product: StudyCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelper
+        PRODUCT_NAME: StudyHelper
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: StudyHelper
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        STRING_CATALOG_GENERATE_SYMBOLS: YES
+
+  StudyHelperTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: StudyHelperTests
+    dependencies:
+      - target: StudyHelper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperTests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+
+  StudyHelperUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: StudyHelperUITests
+    dependencies:
+      - target: StudyHelper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: StudyHelper
+
+schemes:
+  StudyHelper:
+    build:
+      targets:
+        StudyHelper: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      coverageTargets:
+        - StudyHelper
+      targets:
+        - name: StudyHelperTests
+        - name: StudyHelperUITests
+    archive:
+      config: Release
