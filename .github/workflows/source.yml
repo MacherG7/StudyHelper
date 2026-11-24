@@ -1,5 +1,5 @@
 # Puts the .ipa of every StudyHelper release into the public source for SideStore, AltStore and StikStore
-# (docs/DECISIONS.md D-024, D-025). The .ipa is built on the Mac and often attached after the release is
+# (docs/DECISIONS.md D-024, D-031). The .ipa is built on the Mac and often attached after the release is
 # published; GitHub has no event for an added asset, so a release run waits for it (up to 20 minutes) and a
 # scheduled run every 6 hours catches anything missed. Already published versions are skipped.
 # Needs the secret SOURCE_REPO_TOKEN: fine-grained token with "Contents: Read and write" on
