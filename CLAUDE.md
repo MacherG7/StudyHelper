@@ -27,6 +27,7 @@ scripts/test.sh --ui        # zusätzlich XCTest-UI-Tests
 SKIP_VISION_TESTS=1 scripts/test.sh   # ohne Tests mit echter Vision-Texterkennung
 scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
+scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push nach GitHub, Xcode-Checkout nachziehen
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 ```
@@ -80,9 +81,10 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   „Öffnen in“, 1c manuelle Strukturierung mit Quellenverweisen, „Quelle geändert“, Bestätigung).
   Kostenloser Developer-Account: keine Share-Extension/App Groups (D-013).
   Nach Gerätetest: übergangene Handschrift wird zeilenweise nachgelesen, Schriftprüfung (D-019),
-  nachgelesene Zeilen sind „unsicher“ (D-020). Bekannte Grenze: eng gestapelte Listen mit
-  Ziffernspalte (Testdatei S. 8) teils noch unleserlich; Fotos nur mit Schriftprüfung.
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.42 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+  nachgelesene Zeilen sind „unsicher“ (D-020). Erkennung an der echten Testdatei gemessen und verbessert
+  (D-022: Text in Bildern/Stamps, unterstrichene Zeilen, dichte Zeilen; F1 0,78 → 0,97). Bekannte Grenze:
+  einzelne Ziffern neben Strichen bleiben unleserlich; Fotos nur mit Schriftprüfung.
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.44 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
   API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf

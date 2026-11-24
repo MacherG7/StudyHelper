@@ -19,6 +19,8 @@ let package = Package(
         // Test-only: synthetic Goodnotes PDFs and their ground truth. Never linked into the app.
         .library(name: "TestFixtures", targets: ["TestFixtures"]),
         .executable(name: "make-fixtures", targets: ["make-fixtures"]),
+        // Dev tool: digitizes a local PDF and dumps the lines for scripts/score-recognition.py.
+        .executable(name: "recognition-bench", targets: ["recognition-bench"]),
     ],
     targets: [
         .target(name: "StudyCore"),
@@ -39,6 +41,10 @@ let package = Package(
         .executableTarget(
             name: "make-fixtures",
             dependencies: ["TestFixtures"]
+        ),
+        .executableTarget(
+            name: "recognition-bench",
+            dependencies: ["StudyCore", "StudyImport"]
         ),
         .testTarget(
             name: "StudyCoreTests",

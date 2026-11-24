@@ -27,12 +27,19 @@ public struct PipelineSettings: Hashable, Sendable {
     /// Goodnotes ink: at most this many extra recognizer calls per page to read again ink the first pass skipped
     /// or merged ("Nachlesen"). 0 switches the second chance off.
     public var retryCropLimit: Int
+    /// Recognize text inside raster images of PDF pages (pasted or scanned worksheets, maps). Only the image
+    /// areas are recognized, rendered without annotations.
+    public var recognizesImageText: Bool
+    /// Goodnotes ink: lines with a hand-drawn underline are read again in a crop without the underline (on the
+    /// whole page the recognizer misreads such words); the first reading stays when the crop spells the same.
+    public var rereadsUnderlinedLines: Bool
 
     public init(
         multiPass: Bool = false, customWords: [String] = [], renderScale: Double = 2,
         recognitionScale: Double = 3, secondPassScale: Double = 0.7, languages: [String] = ["de-DE"],
         usesLanguageCorrection: Bool = true, prefersDocumentRecognition: Bool = true,
-        maximumCandidates: Int = 3, imageQuality: Double = 0.85, retryCropLimit: Int = 40
+        maximumCandidates: Int = 3, imageQuality: Double = 0.85, retryCropLimit: Int = 40,
+        recognizesImageText: Bool = true, rereadsUnderlinedLines: Bool = true
     ) {
         self.multiPass = multiPass
         self.customWords = customWords
@@ -45,6 +52,8 @@ public struct PipelineSettings: Hashable, Sendable {
         self.maximumCandidates = maximumCandidates
         self.imageQuality = imageQuality
         self.retryCropLimit = retryCropLimit
+        self.recognizesImageText = recognizesImageText
+        self.rereadsUnderlinedLines = rereadsUnderlinedLines
     }
 
     func recognitionOptions(prefersDocumentRecognition: Bool) -> TextRecognitionOptions {

@@ -2,14 +2,15 @@ import Foundation
 import StudyCore
 
 /// Plausibility check of recognized text for German school notes. Vision sometimes reads scribbles as
-/// Cyrillic, Greek, Arabic or CJK letters, or as Turkish letters (dotted/dotless i, Ş, Ğ) when the language
+/// Cyrillic, Greek, Arabic or CJK letters, or as Latin letters of other languages (Turkish ı/Ş/Ğ, Polish ą/ś,
+/// Vietnamese ạ/ị) when the language
 /// is German. Such text is never what the student wrote, so it is replaced by an alternative reading that
 /// passes, or flagged as uncertain.
 enum ScriptGuard {
     /// Turkish letters that do not occur in German notes (the German reading of these shapes is i/s/g).
     private static let turkishLetters: Set<UInt32> = [0x0130, 0x0131, 0x015E, 0x015F, 0x011E, 0x011F]
 
-    /// True if the scalar is a letter of a script other than Latin, or one of the Turkish letters.
+    /// True if the scalar is a letter of a script other than Latin, or a Latin letter beyond Latin-1 (except Œ, Š, Ž, ẞ).
     static func isSuspiciousLetter(_ scalar: Unicode.Scalar) -> Bool {
         switch scalar.properties.generalCategory {
         case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter:
@@ -26,10 +27,11 @@ enum ScriptGuard {
             return false
         case 0xC0...0xFF:  // Latin-1 letters (umlauts, ß, accents)
             return false
-        case 0x100...0x24F:  // Latin Extended-A/B
+        case 0x152, 0x153, 0x160, 0x161, 0x17D, 0x17E, 0x1E9E:  // Œ œ Š š Ž ž ẞ
             return false
-        case 0x1E00...0x1EFF:  // Latin Extended Additional
-            return false
+        case 0x100...0x24F, 0x1E00...0x1EFF:
+            // Latin Extended-A/B and Additional (ą ę ś ạ ị …): never in German notes, Vision's reading of scribbles.
+            return true
         case 0xFB00...0xFB06:  // ligatures (ﬁ, ﬂ)
             return false
         default:
@@ -37,8 +39,8 @@ enum ScriptGuard {
         }
     }
 
-    /// True if the text has no letter from a foreign script (digits, punctuation, symbols and all Latin
-    /// letters incl. umlauts are fine).
+    /// True if the text has no suspicious letter (digits, punctuation, symbols, ASCII and Latin-1 letters incl.
+    /// umlauts and accents are fine).
     static func isPlausible(_ text: String) -> Bool {
         !text.unicodeScalars.contains(where: isSuspiciousLetter)
     }

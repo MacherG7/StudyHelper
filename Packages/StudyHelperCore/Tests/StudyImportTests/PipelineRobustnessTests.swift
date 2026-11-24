@@ -231,28 +231,16 @@ struct PipelineRobustnessTests {
         #expect(recognizer.callCount == 1, "nach der ersten Seite wurde nicht weitergemacht")
     }
 
-    @Test("Seite mit eingebettetem Text und großem Bild: Warnung, dass Text im Bild nicht erkannt wurde")
-    func embeddedTextWithImageWarns() async throws {
-        let resources = "<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> /XObject << /Im1 5 0 R >> >>"
-        let image = MiniObject.stream(
-            dictionary: "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8",
-            data: Data([128]))
-        let withImage = MiniPDF.page(
-            width: 612, height: 792,
-            content: "BT /F1 24 Tf 50 700 Td (Hallo Welt) Tj ET q 300 0 0 300 50 200 cm /Im1 Do Q",
-            resources: resources, extra: [image])
+    @Test("Seite mit eingebettetem Text ohne Bild: keine Erkennung, keine Warnung")
+    func embeddedTextWithoutImage() async throws {
+        let resources = "<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>"
         let textOnly = MiniPDF.page(
             width: 612, height: 792, content: "BT /F1 24 Tf 50 700 Td (Hallo Welt) Tj ET", resources: resources)
         let recognizer = CountingRecognizer()
-        let p = pipeline(recognizer)
-        let first = try await p.digitizePDF(data: withImage).pages.first
-        let second = try await p.digitizePDF(data: textOnly).pages.first
-        let a = try #require(first)
-        let b = try #require(second)
+        let page = try #require(try await pipeline(recognizer).digitizePDF(data: textOnly).pages.first)
         #expect(recognizer.callCount == 0)
-        #expect(a.result.metadata.method == .embeddedPDFText)
-        #expect(a.result.lines.first?.text == "Hallo Welt")
-        #expect(a.result.warnings == ["Seite enthält Bilder; Text darin wurde nicht erkannt. Bei Bedarf neu erkennen."])
-        #expect(b.result.warnings.isEmpty)
+        #expect(page.result.metadata.method == .embeddedPDFText)
+        #expect(page.result.lines.first?.text == "Hallo Welt")
+        #expect(page.result.warnings.isEmpty)
     }
 }

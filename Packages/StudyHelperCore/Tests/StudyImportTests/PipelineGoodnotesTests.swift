@@ -41,14 +41,22 @@ struct PipelineGoodnotesTests {
         }
     }
 
-    @Test("Je Stiftfarbe genau ein Erkennungsaufruf, ohne Dokumenterkennung")
+    @Test("Je Stiftfarbe genau ein Erkennungsaufruf der ganzen Seite ohne Dokumenterkennung, dazu einer für das eingefügte Arbeitsblatt-Bild")
     func oneCallPerLayer() async throws {
         let run = try await editable()
         let document = try GoodnotesParser.parse(data: try Data(contentsOf: GoodnotesFixture.fotosyntheseEditable.url))
         let layers = document.pages.reduce(0) { $0 + InkLayerRenderer.penColors(on: $1).count }
-        #expect(run.recognizerOptions.count == layers)
+        let calls = zip(run.recognizerOptions, run.imageWidths).map { (options: $0, width: $1) }
+        let fullPage = Int((595.28 * PipelineSettings().recognitionScale).rounded())
+        let layerCalls = calls.filter { $0.width == fullPage }
+        #expect(layerCalls.count == layers)
         #expect(layers >= 9)
-        #expect(run.recognizerOptions.allSatisfy { !$0.prefersDocumentRecognition && $0.languages == ["de-DE"] && $0.usesLanguageCorrection })
+        #expect(layerCalls.allSatisfy { !$0.options.prefersDocumentRecognition && $0.options.languages == ["de-DE"] && $0.options.usesLanguageCorrection })
+        // The pasted worksheet image (page 1) is read once, as printed text.
+        let imageCalls = calls.filter { $0.options.prefersDocumentRecognition }
+        #expect(imageCalls.count == 1)
+        // Everything else is a crop of handwriting read again ("Nachlesen", e.g. underlined lines), never document recognition.
+        #expect(calls.filter { $0.width != fullPage && !$0.options.prefersDocumentRecognition }.allSatisfy { $0.width < fullPage })
     }
 
     @Test("Jedes erkannte Handschriftwort hat die Farbe der Wahrheit, und fast alle Wörter werden erkannt")

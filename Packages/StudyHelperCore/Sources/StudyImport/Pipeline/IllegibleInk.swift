@@ -20,6 +20,19 @@ enum IllegibleInk {
     /// … unless they are further than this (in line heights) from every word of the line (a word the recognizer
     /// skipped in the middle of a line).
     static let lineGapAllowance = 0.5
+    /// A stroke is explained by a word or line box only if at least this share of its height lies inside the box.
+    /// Keeps a dense row below from swallowing a word of the row above that the recognizer skipped.
+    static let minimumLineShare = 0.5
+
+    /// Share of `box`'s height that lies within `rect`'s vertical extent (1 for flat strokes inside it).
+    static func verticalShare(of box: CGRect, in rect: CGRect) -> Double {
+        let overlap = min(box.maxY, rect.maxY) - max(box.minY, rect.minY)
+        guard box.height > 0.5 else { return box.midY >= rect.minY && box.midY <= rect.maxY ? 1 : 0 }
+        return max(0, Double(overlap)) / Double(box.height)
+    }
+
+    /// Strokes flatter than this (in line heights) – dashes, dots, crossbars – are explained by proximity alone.
+    static let flatStroke = 0.25
     /// Unexplained strokes closer than this (in line heights) form one area.
     static let clusterGap = 0.5
     /// Smaller areas are specks, not writing.
@@ -120,7 +133,11 @@ enum IllegibleInk {
         for stroke in textStrokes(page: page, strokeIndices: strokeIndices, shapeRects: shapeRects, lineHeight: lineHeight) {
             let index = stroke.index, box = stroke.box
             let center = CGPoint(x: box.midX, y: box.midY)
-            if wordRects.contains(where: { $0.insetBy(dx: -margin, dy: -verticalMargin).contains(center) }) { continue }
+            let isFlat = box.height < flatStroke * lineHeight
+            func inside(_ rect: CGRect) -> Bool { isFlat || verticalShare(of: box, in: rect) >= minimumLineShare }
+            if wordRects.contains(where: {
+                $0.insetBy(dx: -margin, dy: -verticalMargin).contains(center) && inside($0)
+            }) { continue }
             let overlap = wordRects.contains { rect in
                 let o = box.intersection(rect)
                 return !o.isNull && o.width * o.height >= 0.5 * max(1, box.width * box.height)
@@ -128,7 +145,8 @@ enum IllegibleInk {
             if overlap { continue }
             // Vision's word boxes are imprecise: ink inside the line box and near one of its words is explained.
             let inLine = lineAreas.contains { area in
-                guard area.rect.insetBy(dx: -lineGrow, dy: -lineGrow).contains(center) else { return false }
+                guard area.rect.insetBy(dx: -lineGrow, dy: -lineGrow).contains(center),
+                      inside(area.rect) else { return false }
                 if area.wordRects.isEmpty { return true }
                 return area.wordRects.contains { word in
                     center.x >= word.minX - allowance && center.x <= word.maxX + allowance
@@ -208,7 +226,7 @@ enum IllegibleInk {
     }
 
     /// Nearly straight stroke (path barely longer than its chord) with a chord of at least `minimum` points.
-    private static func isLongStraight(_ stroke: InkStroke, minimum: Double, pageHeight: Double) -> Bool {
+    static func isLongStraight(_ stroke: InkStroke, minimum: Double, pageHeight: Double) -> Bool {
         guard stroke.points.count >= 2, let first = stroke.points.first, let last = stroke.points.last else { return false }
         let chord = hypot(last.x - first.x, last.y - first.y)
         guard chord >= minimum else { return false }

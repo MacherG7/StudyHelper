@@ -148,7 +148,7 @@ public struct DigitizationPipeline: Sendable {
                         reducedPage: reducedDocument.flatMap { index < $0.pages.count ? $0.pages[index] : nil })
                     if let reducedWarning { digitization.result.warnings.append(reducedWarning) }
                 } else if goodnotes?.variant != .reduced, let embedded = EmbeddedTextExtractor.extract(from: pdfPage) {
-                    digitization = try embeddedPage(index: index, embedded: embedded, pdfPage: pdfPage)
+                    digitization = try await embeddedPage(index: index, embedded: embedded, pdfPage: pdfPage)
                 } else {
                     digitization = try await recognizeRenderedPage(index: index, pdfPage: pdfPage)
                 }
@@ -186,14 +186,16 @@ public struct DigitizationPipeline: Sendable {
 
     // MARK: Embedded text
 
-    private func embeddedPage(index: Int, embedded: EmbeddedTextPage, pdfPage: PDFPage) throws -> PageDigitization {
-        // The extractor's order (e.g. columns) is kept.
-        let lines = LineMerging.assignReadingOrder(embedded: embedded.lines, others: [])
+    private func embeddedPage(index: Int, embedded: EmbeddedTextPage, pdfPage: PDFPage) async throws -> PageDigitization {
+        // The extractor's order (e.g. columns) is kept; text recognized in images is placed between it.
+        let (imageLines, imageEngine) = try await recognizeImageText(on: pdfPage, existing: embedded.lines)
+        let lines = LineMerging.assignReadingOrder(embedded: embedded.lines, others: imageLines)
         var warnings: [String] = []
-        if embedded.imageCoverage >= Self.imageWarningCoverage { warnings.append(Self.imagesWarning) }
+        if !settings.recognizesImageText, embedded.imageCoverage >= Self.imageWarningCoverage { warnings.append(Self.imagesWarning) }
         let result = makeResult(
-            lines: lines, highlights: embedded.highlights, method: .embeddedPDFText, engineVersion: nil,
-            passes: 0, usedReducedPDF: false, pageSize: embedded.pageSize, customWordsCount: 0, warnings: warnings)
+            lines: lines, highlights: embedded.highlights, method: .embeddedPDFText,
+            engineVersion: imageEngine,
+            passes: imageLines.isEmpty ? 0 : 1, usedReducedPDF: false, pageSize: embedded.pageSize, customWordsCount: 0, warnings: warnings)
         return PageDigitization(pageIndex: index, result: result, imageData: try pageImage(pdfPage, index: index))
     }
 
@@ -259,10 +261,14 @@ public struct DigitizationPipeline: Sendable {
         // Visible worksheet text of the page and exact text of FreeText boxes.
         let embedded = EmbeddedTextExtractor.extract(from: pdfPage)
         let freeText = LineMerging.freeTextLines(page.freeTexts)
+        // Pasted or scanned worksheets and maps: text inside the images of the page content.
+        let (imageLines, imageEngine) = try await recognizeImageText(on: pdfPage, existing: embedded?.lines ?? [])
+        engineVersion = engineVersion ?? imageEngine
+        let printed = freeText + imageLines
 
         // 2. Second chance: ink the first pass skipped, and lines that swallowed several rows, are read again row by row.
         if settings.retryCropLimit > 0 {
-            let preliminary = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText)
+            let preliminary = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + printed)
             let detectedFirst = GoodnotesEmphasisDetector.detect(page: page, lines: preliminary)
             let shapes = Self.shapeRects(of: detectedFirst)
             let retried = try await retryUnreadInk(page: page, layerLines: layerLines, shapeRects: shapes)
@@ -279,7 +285,7 @@ public struct DigitizationPipeline: Sendable {
             usedReduced = true
         }
 
-        let provisional = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText)
+        let provisional = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + printed)
 
         // 4. Emphasis from the annotations; formatting highlights of the embedded text without duplicates.
         let detected = GoodnotesEmphasisDetector.detect(page: page, lines: provisional)
@@ -289,14 +295,16 @@ public struct DigitizationPipeline: Sendable {
         let illegible = IllegibleInk.lines(page: page, recognized: inkLines, shapeRects: Self.shapeRects(of: detected))
         let allLines = illegible.isEmpty
             ? provisional
-            : LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText + illegible)
+            : LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + printed + illegible)
 
         if colors.isEmpty, page.strokes.isEmpty { warnings.append("Seite enthält keine Handschrift.") }
         if allLines.isEmpty { warnings.append("Auf dieser Seite wurde kein Text gefunden.") }
         if variedWords > 0 { warnings.append(Self.variationWarning(variedWords)) }
         let illegibleCount = allLines.filter { $0.status == .illegible }.count
         if illegibleCount > 0 { warnings.append(Self.illegibleWarning(illegibleCount)) }
-        if let embedded, embedded.imageCoverage >= Self.imageWarningCoverage { warnings.append(Self.imagesWarning) }
+        if !settings.recognizesImageText, let embedded, embedded.imageCoverage >= Self.imageWarningCoverage {
+            warnings.append(Self.imagesWarning)
+        }
 
         let result = makeResult(
             lines: allLines, highlights: highlights, method: .goodnotesInkLayers, engineVersion: engineVersion,
@@ -342,7 +350,7 @@ public struct DigitizationPipeline: Sendable {
         try Task.checkCancellation()
         let options = settings.recognitionOptions(prefersDocumentRecognition: prefersDocumentRecognition)
         let first = try await recognizer.recognize(image, options: options)
-        let firstLines = Self.markIllegible(ScriptGuard.apply(to: first.lines))
+        let firstLines = Self.markIllegible(KnownMisreadings.apply(to: ScriptGuard.apply(to: first.lines)))
         guard settings.multiPass, let scaled = PageRenderer.scaled(image, by: settings.secondPassScale) else {
             return RecognitionOutcome(
                 lines: firstLines, engineVersion: first.engineVersion, method: first.method, passes: 1, variedWords: 0)

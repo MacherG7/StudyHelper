@@ -84,8 +84,8 @@ enum InkRows {
 
     /// Splits a projection band that is too tall for one row at the deepest valley of the ink profile (rows of
     /// small writing are packed closer than the page's typical line height), recursively.
-    private static func splitTall(_ row: Row, boxes: [CGRect], lineHeight h: Double) -> [Row] {
-        guard row.hi - row.lo > tallBand * h, row.members.count >= 4 else { return [row] }
+    private static func splitTall(_ row: Row, boxes: [CGRect], lineHeight h: Double, maxDepth: Double = valleyDepth) -> [Row] {
+        guard row.hi - row.lo > tallBand * h, row.members.count >= 2 + (maxDepth < 1 ? 2 : 0) else { return [row] }
         let bin = max(0.5, h / 20)
         let count = Int(((row.hi - row.lo) / bin).rounded(.up)) + 1
         var profile = [Double](repeating: 0, count: count)
@@ -111,7 +111,7 @@ enum InkRows {
             let peak = min(left, right)
             guard peak > 0 else { continue }
             let ratio = smooth[i] / peak
-            if ratio < valleyDepth, ratio < (best?.ratio ?? .infinity) { best = (i, ratio) }
+            if ratio < maxDepth, ratio < (best?.ratio ?? .infinity) { best = (i, ratio) }
         }
         guard let split = best else { return [row] }
         let cut = row.lo + (Double(split.index) + 0.5) * bin
@@ -126,8 +126,21 @@ enum InkRows {
             return (bands.map(\.0).min() ?? fallback.0, bands.map(\.1).max() ?? fallback.1)
         }
         let a = extent(upper, fallback: (row.lo, cut)), b = extent(lower, fallback: (cut, row.hi))
-        return splitTall(Row(members: upper, lo: a.0, hi: a.1), boxes: boxes, lineHeight: h)
-            + splitTall(Row(members: lower, lo: b.0, hi: b.1), boxes: boxes, lineHeight: h)
+        return splitTall(Row(members: upper, lo: a.0, hi: a.1), boxes: boxes, lineHeight: h, maxDepth: maxDepth)
+            + splitTall(Row(members: lower, lo: b.0, hi: b.1), boxes: boxes, lineHeight: h, maxDepth: maxDepth)
+    }
+
+    /// Splits strokes that span more than `tallBand` line heights at the thinnest places of the ink profile,
+    /// however shallow (fallback for dense rows the recognizer could not read as one piece). Rows top to bottom.
+    static func forcedRows(of indices: [Int], boxes: [CGRect], lineHeight h: Double) -> [[Int]] {
+        guard !indices.isEmpty else { return [] }
+        let bands = indices.map { index -> (Double, Double) in
+            let box = boxes[index]
+            let half = min(0.25 * box.height, maxBandHalfHeight * h)
+            return (box.midY - half, box.midY + half)
+        }
+        let row = Row(members: indices, lo: bands.map(\.0).min() ?? 0, hi: bands.map(\.1).max() ?? 0)
+        return splitTall(row, boxes: boxes, lineHeight: h, maxDepth: 1).map(\.members)
     }
 
     /// Splits the strokes of one row (`indices` into `boxes`) into horizontal segments: pieces separated by

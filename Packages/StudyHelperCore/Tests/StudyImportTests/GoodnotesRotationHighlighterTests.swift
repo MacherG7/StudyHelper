@@ -297,20 +297,23 @@ struct IllegibleInkTests {
             return TextRecognitionOutput(lines: lines, engineVersion: "mock", method: .vision)
         }
 
-        // The second chance reads small crops too; this recognizer reads nothing there and numbers only the layer calls.
+        // The second chance reads crops too (narrower than a whole A4 layer at scale 3, 1786 px); this recognizer reads
+        // nothing there and numbers only the layer calls.
         let layerCalls = CallNumbering()
         let recognizer = CountingRecognizer { _, image, _ in
-            image.width < 1000 ? mockOutput() : output(layerCalls.next(), image)
+            image.width < 1700 ? mockOutput() : output(layerCalls.next(), image)
         }
-        let pipeline = DigitizationPipeline(recognizer: recognizer, environment: testEnvironment)
+        let pipeline = DigitizationPipeline(
+            recognizer: recognizer, environment: testEnvironment,
+            settings: PipelineSettings(recognizesImageText: false, rereadsUnderlinedLines: true))
         let pages = try await pipeline.digitizePDF(data: try Data(contentsOf: GoodnotesFixture.fotosyntheseEditable.url)).pages
         #expect(pages.count == 3)
-        #expect(recognizer.calls.contains { $0.imageWidth < 1000 }, "das Wort wurde noch einmal ausschnittsweise versucht")
+        #expect(recognizer.calls.contains { $0.imageWidth < 1700 }, "das Wort wurde noch einmal ausschnittsweise versucht")
 
         let droppedRect = GoodnotesTestSupport.normalized(dropped.bbox, truth: truth)
         let first = pages[0].result
         let illegible = first.lines.filter { $0.status == .illegible }
-        #expect(illegible.count == 1, "unleserlich: \(illegible.map(\.rect))")
+        #expect(illegible.count == 1, "unleserlich: \(illegible.map(\.rect)), verworfen: \(droppedRect)")
         let line = try #require(illegible.first)
         #expect(line.text.isEmpty && line.reviewReasons == [.unreadable])
         #expect(droppedRect.coverage(by: line.rect) > 0.5 && line.rect.coverage(by: droppedRect.insetBy(dx: -0.01, dy: -0.01)) > 0.5)

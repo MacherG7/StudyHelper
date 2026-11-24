@@ -69,7 +69,14 @@ struct HandwritingRetryTests {
             .reduce(NormalizedRect.zero) { $0.union($1) }
     }
 
-    func run(_ recognizer: CountingRecognizer, settings: PipelineSettings = PipelineSettings()) async throws -> DigitizationResult {
+    func run(
+        _ recognizer: CountingRecognizer, settings: PipelineSettings = PipelineSettings(), underlines: Bool = false
+    ) async throws -> DigitizationResult {
+        // Skipped and merged lines only: the worksheet image of the fixture page (ImageTextTests) and its underlined
+        // lines (UnderlinedLineTests) are read again separately.
+        var settings = settings
+        settings.recognizesImageText = false
+        settings.rereadsUnderlinedLines = underlines
         let pipeline = DigitizationPipeline(recognizer: recognizer, environment: testEnvironment, settings: settings)
         var result: DigitizationResult?
         try await pipeline.digitizePDFPages(
@@ -311,5 +318,40 @@ struct HandwritingRetryTests {
         let page = GoodnotesPage(index: 0, size: size, strokes: [mark(x: 100), mark(x: 200)])
         let unexplained = IllegibleInk.unexplainedStrokes(page: page, recognized: [line], shapeRects: [], lineHeight: 16)
         #expect(unexplained.map(\.index) == [1])
+    }
+
+    // MARK: Underlined lines (page 1: the heading „Fotosynthese“ is underlined by hand)
+
+    @Test("Unterstrichene Zeile, auf der ganzen Seite falsch gelesen: im Ausschnitt ohne Unterstrich neu gelesen und „nachgelesen“ markiert")
+    func underlinedMisreadIsReplaced() async throws {
+        let recognizer = CountingRecognizer { _, image, _ in
+            if self.isFullPage(image) {
+                var lines = self.truthLines(on: image)
+                if var heading = lines["p1-line01"] { heading.text = "ikhdrom"; heading.words = heading.words.map { var w = $0; w.text = "ikhdrom"; return w }; lines["p1-line01"] = heading }
+                return self.output(Array(lines.values))
+            }
+            return self.output([self.inkLine(in: image, text: "Fotosynthese")].compactMap { $0 })
+        }
+        let result = try await run(recognizer, underlines: true)
+        #expect(!result.lines.contains { $0.text.contains("ikhdrom") })
+        let heading = try #require(result.lines.first { $0.text == "Fotosynthese" })
+        #expect(heading.status == .uncertain && heading.reviewReasons.contains(.reReadSeparately))
+        #expect(heading.rect.iou(lineRect("p1-line01")) > 0.6, "\(heading.rect) statt \(lineRect("p1-line01"))")
+        #expect(result.lines.count(where: { $0.text == "Fotosynthese" }) == 1)
+    }
+
+    @Test("Unterstrichene Zeile, im Ausschnitt gleich gelesen (oder gar nicht): die erste Lesung bleibt unverändert und sicher")
+    func underlinedSameReadingIsKept() async throws {
+        for cropText in ["Fotosynthese", nil] as [String?] {
+            let recognizer = CountingRecognizer { _, image, _ in
+                if self.isFullPage(image) { return self.output(Array(self.truthLines(on: image).values)) }
+                return self.output(cropText.flatMap { self.inkLine(in: image, text: $0) }.map { [$0] } ?? [])
+            }
+            let result = try await run(recognizer, underlines: true)
+            #expect(recognizer.calls.contains { $0.imageWidth < 1700 }, "die unterstrichene Zeile wurde im Ausschnitt gelesen")
+            let heading = try #require(result.lines.first { $0.text == "Fotosynthese" })
+            #expect(heading.status == .confident && heading.reviewReasons.isEmpty, "Ausschnitt: \(cropText ?? "leer")")
+            #expect(result.lines.count(where: { $0.text == "Fotosynthese" }) == 1)
+        }
     }
 }

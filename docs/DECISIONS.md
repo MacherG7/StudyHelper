@@ -170,6 +170,21 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Privates Repository `MacherG7/StudyHelper`, Branch `main`. Nach jedem Commit pusht `scripts/publish.sh` (mit Secret-Check) und zieht den Haupt-Checkout per Fast-Forward nach; ein `post-merge`/`post-checkout`-Hook erzeugt dort das Xcode-Projekt neu. Jede fertige Phase bekommt mit `scripts/release.sh` einen Tag `phase-N` (rückwirkend: `phase-0`, `phase-1`). Das Repository `StudyHelper-Test` wird nicht verwendet.
 - **Konsequenzen:** Ohne `gh` gibt es nur Tags, keine Release-Seiten; mit installiertem und angemeldetem `gh` legt `release.sh` sie mit an. Lokale Änderungen im Haupt-Checkout (z. B. von Xcode ergänzte Texte im String-Katalog) können das Nachziehen blockieren; das Skript meldet das.
 
+## D-022 Erkennung an echten Notizen messen und nur Verbesserungen übernehmen
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Auf dem echten Export `LocalSamples/GPG_bearbeitbar.pdf` fehlten Wörter („Geosphären“), unterstrichene Wörter wurden falsch gelesen („ikhdrom“ statt „Syndrom“), eingefügte Bilder und eingescannte Arbeitsblätter wurden gar nicht erkannt, und die dichte Länderliste auf S. 8 blieb lückenhaft.
+- **Entscheidung:** Jede Änderung der Erkennung wird mit `scripts/bench-recognition.sh <name> --baseline <vorher>` gemessen: echte Pipeline mit Vision auf der lokalen Datei, Vergleich mit einem lokal abgelesenen Referenztext (`*.reference.json`, nie im Repo) per unscharfem Wortabgleich (F1). Übernommen wird nur, was keine Referenzseite verschlechtert und F1 erhöht, oder bei gleichem F1 weniger unmarkierte Fremdzeichen, „unleserlich“- oder „unsicher“-Markierungen bringt; Seiten ohne Referenz werden auf verlorenen Text geprüft. So übernommen (F1 0,777 → 0,969):
+  1. **Text in Bildern:** Rasterbilder des Seiteninhalts und Stamp-Annotationen mit Rasterbild (so legt Goodnotes eingefügte Bilder ab; Pfeile sind Stamps ohne Bild) werden ohne Handschrift gerendert, einzeln ausgeschnitten und als Drucktext erkannt (`recognizesImageText`, Standard an). Gilt auch für PDFs mit Textebene.
+  2. **Erklärte Tinte:** Ein Strich gilt nur dann als von einem Wort/einer Zeile erklärt, wenn mindestens die Hälfte seiner Höhe im Kasten liegt (flache Striche: Nähe genügt). Sonst „verschluckt“ eine dichte Zeile ein übersprungenes Wort der Zeile darüber.
+  3. **Unterstrichene Zeilen** (langer, flacher, gerader Strich in der unteren Zeilenhälfte) werden im Ausschnitt ohne Unterstrich nachgelesen (`rereadsUnderlinedLines`). Unterscheidet sich die Lesung um höchstens einen Buchstaben, bleibt die erste Lesung unverändert und sicher.
+  4. **Schriftprüfung** auch für lateinische Buchstaben jenseits von Latin-1 (ą, ę, ś, ạ …; erlaubt bleiben Œ, Š, Ž, ẞ).
+  5. **Dichte Zeilen:** Liefert ein Ausschnitt eine zu hohe Zeile, wird er vergrößert erneut gelesen; bleibt ein hoher Ausschnitt leer, wird er an der dünnsten Stelle geteilt und jede Hälfte einzeln gelesen.
+  6. **„z.ß“/„2.ß.“ → „z.B.“** (die alte Lesung bleibt als Alternative).
+  Verworfen (nicht besser): zweiter Leseversuch ohne Sprachkorrektur.
+- **Konsequenzen:** Einzelne Ziffern neben Strichen (S. 8) bleiben „unleserlich“ – so gewollt: was sich nicht lesen lässt, wird nicht geraten. Die Referenz deckt nur vier Seiten ab; die Regeln sind deshalb allgemein gehalten und durch Unit-Tests abgesichert.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

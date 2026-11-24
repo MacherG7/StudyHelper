@@ -43,6 +43,9 @@ enum HandwritingRetry {
         var remaining: [[RecognizedLine]]
         /// Per layer: suspicious lines taken out; they are replaced by the retry result or restored.
         var suspicious: [[RecognizedLine]]
+        /// Suspicious lines whose only reason is an underline: they stay unchanged unless the retry reads them clearly
+        /// differently (`keepsOriginal`).
+        var underlinedOnly: Set<UUID> = []
         var segments: [Segment]
         /// Typical line height in points.
         var lineHeight: Double
@@ -56,20 +59,24 @@ enum HandwritingRetry {
     ///   - layerStrokes: the stroke indices of each layer.
     ///   - shapeRects: detected underlines, circles and the like; their strokes are not text.
     static func plan(
-        page: GoodnotesPage, layerLines: [[RecognizedLine]], layerStrokes: [[Int]], shapeRects: [NormalizedRect]
+        page: GoodnotesPage, layerLines: [[RecognizedLine]], layerStrokes: [[Int]], shapeRects: [NormalizedRect],
+        rereadsUnderlined: Bool = true
     ) -> Plan {
         let all = layerLines.flatMap { $0 }
         let lineHeight = IllegibleInk.lineHeight(page: page, recognized: all)
         let highlighters = page.highlighterFlags
         var plan = Plan(remaining: [], suspicious: [], segments: [], lineHeight: lineHeight)
+        let underlines = rereadsUnderlined ? underlineStrokes(page: page, lineHeight: lineHeight) : []
 
         for (layer, lines) in layerLines.enumerated() {
             let strokes = layer < layerStrokes.count ? layerStrokes[layer] : []
             var remaining: [RecognizedLine] = []
             var suspicious: [RecognizedLine] = []
             for line in lines {
-                if isSuspicious(line, page: page, strokeIndices: strokes, highlighters: highlighters, lineHeight: lineHeight) {
+                let doubtful = isSuspicious(line, page: page, strokeIndices: strokes, highlighters: highlighters, lineHeight: lineHeight)
+                if doubtful || isUnderlined(line, underlines: underlines, pageSize: page.size, lineHeight: lineHeight) {
                     suspicious.append(line)
+                    if !doubtful { plan.underlinedOnly.insert(line.id) }
                 } else {
                     remaining.append(line)
                 }
@@ -128,6 +135,34 @@ enum HandwritingRetry {
         return InkRows.substantialRowCount(of: boxes, lineHeight: lineHeight) >= 2
     }
 
+    /// Long, flat, straight pen strokes of the page (underlines drawn by hand), in page points.
+    static func underlineStrokes(page: GoodnotesPage, lineHeight: Double) -> [CGRect] {
+        let highlighters = page.highlighterFlags
+        return page.strokes.indices.compactMap { index in
+            let stroke = page.strokes[index]
+            guard !highlighters[index],
+                  IllegibleInk.isLongStraight(stroke, minimum: IllegibleInk.longStrokeLength * lineHeight, pageHeight: page.size.height)
+            else { return nil }
+            let r = stroke.boundingBox(pageSize: page.size)
+            let box = CGRect(x: r.x * page.size.width, y: r.y * page.size.height, width: r.width * page.size.width, height: r.height * page.size.height)
+            return box.height < 0.3 * lineHeight ? box : nil
+        }
+    }
+
+    /// A line with a hand-drawn underline in its lower half or just below: on the whole page the recognizer often
+    /// reads such words wrongly ("ikhdrom" for an underlined „Syndrom“). The line is read again row by row; the
+    /// underline itself is no text stroke (`IllegibleInk.textStrokes`) and is left out of the crop.
+    static func isUnderlined(_ line: RecognizedLine, underlines: [CGRect], pageSize: PageSize, lineHeight: Double) -> Bool {
+        guard !line.isUserCorrected, !line.rect.isEmpty, !underlines.isEmpty else { return false }
+        let rect = CGRect(
+            x: line.rect.x * pageSize.width, y: line.rect.y * pageSize.height,
+            width: line.rect.width * pageSize.width, height: line.rect.height * pageSize.height)
+        return underlines.contains { stroke in
+            let overlapX = min(stroke.maxX, rect.maxX) - max(stroke.minX, rect.minX)
+            return overlapX >= 0.5 * stroke.width && stroke.midY >= rect.midY && stroke.midY <= rect.maxY + 0.3 * lineHeight
+        }
+    }
+
     /// Crop region of a segment in normalized page coordinates: the strokes plus padding, clamped to the page.
     static func cropRegion(of box: CGRect, lineHeight: Double, pageSize: PageSize) -> NormalizedRect {
         let padY = verticalPadding * lineHeight, padX = horizontalPadding * lineHeight
@@ -160,6 +195,32 @@ enum HandwritingRetry {
                 candidate.rect.iou(other.rect) > 0.4 || other.rect.coverage(by: candidate.rect) > 0.8
             }
         }
+    }
+
+    /// Edit distance of two readings over their letters and digits only (case, spacing and punctuation ignored).
+    static func letterDistance(_ a: String, _ b: String) -> Int {
+        func letters(_ text: String) -> [Character] { Array(text.lowercased().filter { $0.isLetter || $0.isNumber }) }
+        let x = letters(a), y = letters(b)
+        guard !x.isEmpty else { return y.count }
+        guard !y.isEmpty else { return x.count }
+        var previous = Array(0...y.count)
+        for i in 1...x.count {
+            var current = [i] + Array(repeating: 0, count: y.count)
+            for j in 1...y.count {
+                current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (x[i - 1] == y[j - 1] ? 0 : 1))
+            }
+            previous = current
+        }
+        return previous[y.count]
+    }
+
+    /// Whether an underlined-only line stays: the lines read inside its box spell the same letters (one
+    /// difference allowed), or nothing was read there.
+    static func keepsOriginal(_ line: RecognizedLine, readings: [RecognizedLine]) -> Bool {
+        let inside = readings.filter { line.rect.insetBy(dx: -0.005, dy: -0.005).contains(x: $0.rect.midX, y: $0.rect.midY) }
+        guard !inside.isEmpty else { return true }
+        let text = inside.sorted { $0.rect.minX < $1.rect.minX }.map(\.text).joined(separator: " ")
+        return letterDistance(text, line.text) <= 1
     }
 
     /// A suspicious line whose retry gave nothing stays, but is marked as uncertain.
@@ -202,7 +263,8 @@ extension DigitizationPipeline {
         guard limit > 0, clusters.count == layerLines.count else { return layerLines }
 
         let plan = HandwritingRetry.plan(
-            page: page, layerLines: layerLines, layerStrokes: clusters.map(\.strokeIndices), shapeRects: shapeRects)
+            page: page, layerLines: layerLines, layerStrokes: clusters.map(\.strokeIndices), shapeRects: shapeRects,
+            rereadsUnderlined: settings.rereadsUnderlinedLines)
         let hasSuspicious = plan.suspicious.contains { !$0.isEmpty }
         guard !plan.segments.isEmpty || hasSuspicious else { return layerLines }
 
@@ -221,7 +283,12 @@ extension DigitizationPipeline {
         budget -= chosen.count
         for (index, lines) in first.enumerated() { read[index] = lines }
 
-        let unreadIndices = read.indices.filter { read[$0].isEmpty }.prefix(max(0, budget))
+        // Second attempt, enlarged: segments that gave nothing, and segments read as one line over two rows
+        // (dense rows like a numbered list); the attempt with more lines wins.
+        let tallLimit = HandwritingRetry.suspiciousHeightFactor * plan.lineHeight / page.size.height
+        let unreadIndices = read.indices.filter { index in
+            read[index].isEmpty || read[index].contains { $0.rect.height > tallLimit }
+        }.prefix(max(0, budget))
         if !unreadIndices.isEmpty {
             let second = try await concurrentMap(Array(unreadIndices), maxConcurrent: 2) { index in
                 let segment = chosen[index]
@@ -229,7 +296,30 @@ extension DigitizationPipeline {
                     segment, in: page, lineHeight: plan.lineHeight, color: clusters[segment.layer].representative,
                     scale: self.settings.recognitionScale * HandwritingRetry.secondAttemptScale)
             }
-            for (position, index) in unreadIndices.enumerated() { read[index] = second[position] }
+            for (position, index) in unreadIndices.enumerated() where second[position].count > read[index].count {
+                read[index] = second[position]
+            }
+            budget -= unreadIndices.count
+        }
+
+        // Last resort for tall segments that are still unread: split at the thinnest places, read each row alone.
+        let boxes = page.strokes.map { stroke -> CGRect in
+            let r = stroke.boundingBox(pageSize: page.size)
+            return CGRect(x: r.x * page.size.width, y: r.y * page.size.height, width: r.width * page.size.width, height: r.height * page.size.height)
+        }
+        for index in read.indices where read[index].isEmpty && budget > 0 {
+            let segment = chosen[index]
+            guard segment.box.height > InkRows.tallBand * plan.lineHeight else { continue }
+            let rows = InkRows.forcedRows(of: segment.strokes, boxes: boxes, lineHeight: plan.lineHeight)
+            guard rows.count > 1 else { continue }
+            for row in rows.prefix(budget) {
+                let part = HandwritingRetry.Segment(
+                    layer: segment.layer, strokes: row.sorted(), box: InkRows.union(of: row, boxes: boxes))
+                read[index] += try await readSegment(
+                    part, in: page, lineHeight: plan.lineHeight, color: clusters[segment.layer].representative,
+                    scale: settings.recognitionScale * HandwritingRetry.secondAttemptScale)
+                budget -= 1
+            }
         }
 
         var result: [[RecognizedLine]] = []
@@ -243,6 +333,12 @@ extension DigitizationPipeline {
                 added += fresh
             }
             for line in plan.suspicious[layer] {
+                if plan.underlinedOnly.contains(line.id), HandwritingRetry.keepsOriginal(line, readings: added) {
+                    // Read again only for its underline and nothing new came out: the first reading stays as it was.
+                    added.removeAll { line.rect.insetBy(dx: -0.005, dy: -0.005).contains(x: $0.rect.midX, y: $0.rect.midY) }
+                    lines.append(line)
+                    continue
+                }
                 let replaced = yielded.contains { HandwritingRetry.segment(chosen[$0], belongsTo: line, pageSize: page.size) }
                 if !replaced { lines.append(HandwritingRetry.restored(line)) }
             }
@@ -262,7 +358,7 @@ extension DigitizationPipeline {
         }
         let options = settings.recognitionOptions(prefersDocumentRecognition: false)
         let output = try await recognizer.recognize(crop.image, options: options)
-        return ScriptGuard.apply(to: output.lines)
+        return KnownMisreadings.apply(to: ScriptGuard.apply(to: output.lines))
             .filter { line in
                 !line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     && line.confidence >= HandwritingRetry.minimumConfidence

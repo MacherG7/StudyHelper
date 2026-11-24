@@ -101,6 +101,7 @@ final class RecordingRecognizer: TextRecognizing, @unchecked Sendable {
     private let inner: any TextRecognizing
     private let lock = NSLock()
     private var recorded: [TextRecognitionOptions] = []
+    private var recordedWidths: [Int] = []
 
     init(_ inner: any TextRecognizing) { self.inner = inner }
 
@@ -109,7 +110,14 @@ final class RecordingRecognizer: TextRecognizing, @unchecked Sendable {
         return recorded
     }
 
+    /// Pixel width of every recognized image, in call order.
+    var widths: [Int] {
+        lock.lock(); defer { lock.unlock() }
+        return recordedWidths
+    }
+
     func recognize(_ image: CGImage, options: TextRecognitionOptions) async throws -> TextRecognitionOutput {
+        lock.withLock { recordedWidths.append(image.width) }
         record(options)
         return try await inner.recognize(image, options: options)
     }
@@ -125,6 +133,8 @@ actor PipelineFixtureCache {
     struct Run: Sendable {
         var pages: [PageDigitization]
         var recognizerOptions: [TextRecognitionOptions]
+        /// Pixel width of the recognized image of each call (same order as `recognizerOptions`).
+        var imageWidths: [Int] = []
     }
 
     static let shared = PipelineFixtureCache()
@@ -141,7 +151,7 @@ actor PipelineFixtureCache {
             let results = try await pipeline.digitizePDF(
                 data: try Data(contentsOf: editable.url), reducedPDF: try reduced.map { try Data(contentsOf: $0.url) })
             precondition(results.failures.isEmpty, "Seiten fehlgeschlagen: \(results.failures)")
-            return Run(pages: results.pages, recognizerOptions: recorder.options)
+            return Run(pages: results.pages, recognizerOptions: recorder.options, imageWidths: recorder.widths)
         }
         runs[key] = task
         return try await task.value
