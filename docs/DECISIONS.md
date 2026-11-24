@@ -239,7 +239,7 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Datum:** 2026-11-24
 - **Status:** angenommen (Wunsch des Entwicklers)
 - **Kontext:** Version 0.0.1.0 erschien nicht unter den Releases: `scripts/publish.sh` hat nur gepusht, eine `.ipa` als Release gab es bisher nur von Hand (v0.1.0-beta.1). Gewünscht ist, dass nach jedem Commit die auf dem Mac gebaute `.ipa` automatisch als Beta unter der vereinbarten Versionsnummer erscheint.
-- **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf. Es baut die `.ipa` (seit D-030 unsigniert, `scripts/build-ipa.sh --unsigned`) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
+- **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf (seit D-033 nur bei Änderungen an der .ipa). Es baut die `.ipa` (seit D-030 unsigniert, `scripts/build-ipa.sh --unsigned`) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
 - **Konsequenzen:** Jeder Commit dauert durch den Release-Build einige Minuten länger und braucht den angemeldeten Xcode-Account und `gh`. Schlägt der Build fehl, ist der Push schon erfolgt; das Release lässt sich mit `scripts/beta-release.sh` nachholen. 0.0.1.0 wurde nachträglich veröffentlicht. Die Source für SideStore/AltStore/StikStore (D-024) bleibt ein eigener, bewusster Schritt.
 
 ## D-029 Commit in der App sichtbar
@@ -270,6 +270,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   - Titel: „1.0.0“ heißt „1.0“, „1.0.1“ bleibt „1.0.1“.
   - Danach weiter mit `scripts/bump-version.sh --set 1.0.1` (Fehlerkorrekturen) bzw. `--set 1.1.0` (neue Funktionen); `--set` weiterhin nur nach Rückfrage.
 - **Konsequenzen:** `scripts/beta-release.sh --final` bricht ab, wenn der Build schon veröffentlicht ist oder es `v<A.B.C>` schon gibt; `--dry-run` zeigt vorher Tag, Titel und Art. Xcode-Builds gelten immer als Beta.
+
+## D-033 Release nur bei Änderungen an der .ipa
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Bisher wurde jeder Commit als Beta veröffentlicht (D-028), auch wenn sich nur Doku, Tests oder Skripte geändert hatten – die .ipa war dann bis auf den eingetragenen Commit dieselbe.
+- **Entscheidung:** `scripts/beta-release.sh` (aus `scripts/publish.sh`) veröffentlicht eine Beta nur, wenn sich seit dem letzten Release (neuester Tag `vA.B.C.D` vor dem Commit) etwas geändert hat, das in die .ipa gehört: `StudyHelper/`, die verlinkten Bibliotheken `Packages/StudyHelperCore/Sources/StudyCore`, `StudyImport`, `StudyData` und `Package.swift`, `project.yml` ohne die Versionszeilen sowie `scripts/build-ipa.sh` und `scripts/embed-commit.sh`. Sonst meldet es „kein neues Release“. `--force` erzwingt eine Beta; eine Vollversion (`--final`, D-032) wird immer gebaut.
+- **Konsequenzen:** Die Version steigt weiter mit jedem Commit (D-027); zwischen zwei Releases können deshalb Build-Nummern fehlen (z. B. 0.0.1.7 → 0.0.1.9). AltStore/SideStore stört das nicht, sie vergleichen nur auf größer.
 
 ## Offene Punkte (spätere Phasen)
 

@@ -35,6 +35,7 @@ else
     echo "Nicht aktualisiert: lokale Änderungen im Checkout stehen im Weg (git status dort prüfen)."
 fi
 
-# Every commit becomes a beta release on GitHub: v<A.B.C.D> with the unsigned .ipa. "--final" publishes it as a
+# A commit that changes what goes into the .ipa becomes a beta release on GitHub: v<A.B.C.D> with the unsigned
+# .ipa; other commits (docs, tests, scripts) get none (D-033). "--final" publishes it as a
 # full version instead (only after the developer said so, D-032).
 "$ROOT/scripts/beta-release.sh" "$@"

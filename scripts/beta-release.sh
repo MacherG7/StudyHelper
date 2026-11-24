@@ -8,18 +8,40 @@
 #                                       build, normal release "v<A.B.C.D>" plus tag "v<A.B.C>", title
 #                                       "StudyHelper <A.B[.C]>", the app shows no "(Beta)"
 #   --dry-run                           only print what would be published
-# A beta whose version already has a release is skipped (the version was not raised, see scripts/bump-version.sh).
+#   --force                             beta even if nothing in the .ipa changed
+# A beta is only published if something that goes into the .ipa changed since the last release (IPA_PATHS below;
+# version lines of project.yml do not count, D-033), and never twice for one version (scripts/bump-version.sh).
 source "$(dirname "$0")/common.sh"
 REPO="MacherG7/StudyHelper"
 FINAL=0
 DRY=0
+FORCE=0
 for arg in "$@"; do
     case "$arg" in
         --final) FINAL=1 ;;
         --dry-run) DRY=1 ;;
-        *) fail "Unbekannte Option: $arg (erlaubt: --final, --dry-run)" ;;
+        --force) FORCE=1 ;;
+        *) fail "Unbekannte Option: $arg (erlaubt: --final, --dry-run, --force)" ;;
     esac
 done
+# Everything that ends up in the .ipa: the app, the package libraries it links, the build settings and the scripts
+# that build it. Tests, docs, other scripts and the remaining package targets are not part of the app.
+IPA_PATHS=(
+    StudyHelper
+    Packages/StudyHelperCore/Package.swift
+    Packages/StudyHelperCore/Sources/StudyCore
+    Packages/StudyHelperCore/Sources/StudyImport
+    Packages/StudyHelperCore/Sources/StudyData
+    scripts/build-ipa.sh
+    scripts/embed-commit.sh
+)
+
+# True if the .ipa of HEAD would differ from the one built at commit $1 (project.yml without its version lines).
+ipa_changed() {
+    git -C "$ROOT" diff --quiet "$1" HEAD -- "${IPA_PATHS[@]}" || return 0
+    git -C "$ROOT" diff "$1" HEAD -- project.yml | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' \
+        | grep -qvE '^[+-]    (MARKETING_VERSION|CURRENT_PROJECT_VERSION):'
+}
 command -v gh >/dev/null 2>&1 || fail "gh fehlt (brew install gh, dann gh auth login)."
 
 VERSION="$("$ROOT/scripts/bump-version.sh" --show)"
@@ -41,6 +63,13 @@ if [[ $FINAL == 1 ]]; then
 else
     if exists "$TAG"; then
         echo "Release $TAG gibt es schon – übersprungen. Vor dem nächsten Commit scripts/bump-version.sh ausführen."
+        exit 0
+    fi
+    # Last release before this commit: the newest version tag (A.B.C.D) reachable from HEAD.
+    git -C "$ROOT" fetch -q --tags origin 2>/dev/null || true
+    LAST="$(git -C "$ROOT" describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*.[0-9]*' HEAD 2>/dev/null || true)"
+    if [[ $FORCE == 0 && -n "$LAST" ]] && ! ipa_changed "$LAST"; then
+        echo "Seit $LAST hat sich nichts geändert, was in die .ipa gehört – kein neues Release (erzwingen: --force)."
         exit 0
     fi
     TITLE="StudyHelper $NAME Beta $BUILD"

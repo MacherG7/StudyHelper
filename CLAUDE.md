@@ -29,8 +29,8 @@ scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
 scripts/bump-version.sh     # vor jedem Commit: letzte Stelle der Version +1 (--set A.B.C nur nach Rückfrage, D-027)
-scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Checkout nachziehen, Beta-Release mit .ipa (D-028)
-scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen)
+scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Checkout nachziehen, Beta-Release mit .ipa – nur wenn sich die App geändert hat (D-028, D-033)
+scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen; --force)
 scripts/publish.sh --final  # Vollversion statt Beta (nur nach Zusage des Entwicklers, D-032; vorher --dry-run)
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 scripts/build-ipa.sh        # unsignierte .ipa nach build/ipa/ (eine signierte gibt es nicht, D-030)
@@ -83,13 +83,14 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
   `scripts/bump-version.sh` (D +1). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
   vorschlagen, ihn als größere Version (`--set A.B.C`) zu veröffentlichen, und erst nach Zustimmung setzen.
-- Beta oder Vollversion (D-032): Jeder Commit ist eine Beta („StudyHelper 1.0 Beta N“, App zeigt „(Beta)“).
+- Beta oder Vollversion (D-032): Jedes automatische Release ist eine Beta („StudyHelper 1.0 Beta N“, App zeigt „(Beta)“).
   Eine Vollversion ist dieselbe Version mit dem nächsten Build (nie Build 0), veröffentlicht mit
   `scripts/publish.sh --final` als normales Release „StudyHelper 1.0“ plus Tag `v1.0.0` – nur wenn der
   Entwickler es sagt. Danach `--set 1.0.1` (Fehlerkorrekturen) bzw. `--set 1.1.0` (neue Funktionen), nach Rückfrage.
 - Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
   `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, privat; Branch `main`; danach automatisch Beta-Release
-  `v<Version>` mit der auf dem Mac gebauten, unsignierten .ipa), nach jeder fertigen Phase
+  `v<Version>` mit der auf dem Mac gebauten, unsignierten .ipa, sofern sich die App geändert hat), nach jeder
+  fertigen Phase
   `scripts/release.sh`. Das Repository `StudyHelper-Test` nie anfassen. Der Haupt-Checkout
   `/Users/milogotz/Documents/StudyHelper` (für Xcode) wird per Fast-Forward nachgezogen; der Hook
   `scripts/git-hooks/post-merge` erzeugt dort das Xcode-Projekt neu (`git config core.hooksPath scripts/git-hooks`).
@@ -110,8 +111,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   `distribution/README.md`); das öffentliche Repository `MacherG7/StudyHelper-Source` legt der Entwickler an.
   Formpfeile in Zeilen werden als „→“ eingesetzt, Nachlesen zeilentreu (D-025, F1 0,9625 mit S. 9 als
   Referenz). Unterstreichungen ohne vermutete Bedeutung, Nutzer oder KI entscheidet (D-026).
-  App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit wird als
-  Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028); die Einstellungen zeigen auch den
+  App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit mit
+  Änderungen an der App wird als Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028, D-033); die Einstellungen zeigen auch den
   Commit (D-029). Beta/Vollversion als Markierung, `publish.sh --final` (D-032).
 - **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
