@@ -12,7 +12,8 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: 4SJY8U8446
+    # Team of the Xcode account <Apple-ID> (free Personal Team); IDs end in 1 (see CLAUDE.md).
+    DEVELOPMENT_TEAM: RL9PPXX5GV
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -53,7 +54,7 @@ targets:
         NSCameraUsageDescription: StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen.
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelper
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelper1
         PRODUCT_NAME: StudyHelper
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: StudyHelper
@@ -77,7 +78,7 @@ targets:
       - target: StudyHelper
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperTests
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperTests1
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_APPROACHABLE_CONCURRENCY: YES
 
@@ -90,7 +91,7 @@ targets:
       - target: StudyHelper
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperUITests
+        PRODUCT_BUNDLE_IDENTIFIER: MiloG.StudyHelperUITests1
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: StudyHelper
 

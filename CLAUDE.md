@@ -30,6 +30,7 @@ scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push nach GitHub, Xcode-Checkout nachziehen
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
+scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (für Beta-Releases auf GitHub)
 ```
 
 Simulator: `SIM_DEVICE` (Standard „iPhone 17“), iPad: `IPAD_DEVICE`.
@@ -53,6 +54,8 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 ## Konventionen
 
+- Signieren immer mit dem Xcode-Account <Apple-ID> (Team RL9PPXX5GV, kostenlos); alle App-IDs
+  enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Andere installierte Teams nicht verwenden.
 - iOS 18 Minimum, iPhone + iPad, SwiftUI, SwiftData. Swift 6 Sprachmodus;
   App-Target mit Default-Isolation `MainActor`, Package-Code nicht.
 - Unit-Tests mit Swift Testing, XCTest nur für UI-Tests. Testnamen (`@Test("…")`) auf Deutsch.
