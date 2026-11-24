@@ -20,7 +20,7 @@ settings:
     # App version A.B.C.D shown in the settings: A.B.C = MARKETING_VERSION, D = build. Raise D with
     # scripts/bump-version.sh before every commit (D-027).
     MARKETING_VERSION: "0.0.1"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
@@ -72,6 +72,12 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         SWIFT_APPROACHABLE_CONCURRENCY: YES
         STRING_CATALOG_GENERATE_SYMBOLS: YES
+        # The commit phase below reads the git repository, which the script sandbox does not allow (D-029).
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      - name: Commit in Info.plist eintragen
+        script: '"$SRCROOT/scripts/embed-commit.sh"'
+        basedOnDependencyAnalysis: false
 
   StudyHelperTests:
     type: bundle.unit-test

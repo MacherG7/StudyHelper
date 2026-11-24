@@ -93,7 +93,7 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.45 | Bestehende Digitalisierungen nach dem Update öffnen | Alte Seiten laden ohne Fehler (Zeilen ohne Absatz-ID); nach „Neu erkennen“ sind Absätze gesetzt | |
 | MT-1.46 | Goodnotes-Seite mit Pfeil aus dem Formwerkzeug mitten in einer Zeile („Kausalkette (→ B.S.35)“) | Der Pfeil steht im erkannten Text an der richtigen Stelle; Pfeile zwischen Kästen erscheinen nicht als Text | |
 | MT-1.47 | Ganze Zeile und einzelnes Wort unterstreichen, importieren, Prüfansicht und Themen-Vorschläge öffnen | Bedeutung „Offen“; Vorschlag bietet „Als Titel des Themas“, „Als Begriff“, „Als Kernaussage“ an; nach Wahl „Überschrift“ erscheint die Zeile als Überschrift | |
-| MT-1.48 | Einstellungen öffnen | Unter „Über StudyHelper“ steht die Version (z. B. „0.0.1.0“), dieselbe wie in `project.yml` | |
+| MT-1.48 | Einstellungen öffnen (Beta-.ipa von GitHub) | Unter „Über StudyHelper“ stehen Version (z. B. „0.0.1.2“, wie in `project.yml`) und Commit (Hash des Releases, ohne „*“) | |
 
 ---
 

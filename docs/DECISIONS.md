@@ -242,6 +242,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf. Es baut die signierte Development-`.ipa` (`scripts/build-ipa.sh`, Team RL9PPXX5GV) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
 - **Konsequenzen:** Jeder Commit dauert durch den Release-Build einige Minuten länger und braucht den angemeldeten Xcode-Account und `gh`. Schlägt der Build fehl, ist der Push schon erfolgt; das Release lässt sich mit `scripts/beta-release.sh` nachholen. 0.0.1.0 wurde nachträglich veröffentlicht. Die Source für SideStore/AltStore/StikStore (D-024) bleibt ein eigener, bewusster Schritt.
 
+## D-029 Commit in der App sichtbar
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Neben der Version soll man in der App sehen, aus welchem Commit sie gebaut wurde.
+- **Entscheidung:** Eine Build-Phase des App-Targets (`scripts/embed-commit.sh`, in `project.yml`) schreibt bei jedem Build den kurzen Hash von `HEAD` als `StudyHelperCommit` in die gebaute `Info.plist` – in Xcode, bei Tests und bei der Release-`.ipa`. Hat der Build uncommittete Änderungen an `StudyHelper/`, `Packages/` oder `project.yml`, bekommt der Hash ein „+“; die Einstellungen zeigen dann „ec2c94b*“ mit dem Hinweis „Mit lokalen, noch nicht committeten Änderungen gebaut“. Weil die Phase das Git-Repository liest, ist `ENABLE_USER_SCRIPT_SANDBOXING` im App-Target aus.
+- **Konsequenzen:** Die Beta-Releases (D-028) werden nach dem Commit gebaut und zeigen dessen Hash ohne Stern. Ohne Git (z. B. Quellcode-Archiv) steht „unbekannt“.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

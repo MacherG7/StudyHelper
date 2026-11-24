@@ -102,7 +102,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   Formpfeile in Zeilen werden als „→“ eingesetzt, Nachlesen zeilentreu (D-025, F1 0,9625 mit S. 9 als
   Referenz). Unterstreichungen ohne vermutete Bedeutung, Nutzer oder KI entscheidet (D-026).
   App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit wird als
-  Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028).
+  Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028); die Einstellungen zeigen auch den
+  Commit (D-029).
 - **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).

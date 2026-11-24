@@ -17,9 +17,21 @@ struct SettingsView: View {
                 } footer: {
                     Text("Bei der Mehrfacherkennung wird jede Seite zweimal gelesen. Wörter, bei denen sich die Ergebnisse unterscheiden, werden als unsicher markiert. Die Fachbegriffe für die Erkennung pflegst du im jeweiligen Fach.")
                 }
-                Section("Über StudyHelper") {
+                Section {
                     LabeledContent("Version", value: AppVersion.current)
                         .accessibilityIdentifier("appVersion")
+                    LabeledContent("Commit") {
+                        Text(AppVersion.currentCommit)
+                            .font(.body.monospaced())
+                            .textSelection(.enabled)
+                    }
+                    .accessibilityIdentifier("appCommit")
+                } header: {
+                    Text("Über StudyHelper")
+                } footer: {
+                    if AppVersion.hasLocalChanges(info: Bundle.main.infoDictionary) {
+                        Text("* Mit lokalen, noch nicht committeten Änderungen gebaut.")
+                    }
                 }
             }
             .navigationTitle("Einstellungen")

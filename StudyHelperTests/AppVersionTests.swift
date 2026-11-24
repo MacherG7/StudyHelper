@@ -19,4 +19,20 @@ struct AppVersionTests {
         #expect(current.wholeMatch(of: /\d+\.\d+\.\d+\.\d+/) != nil, "\(current)")
         #expect(!current.hasPrefix("1.0"))
     }
+
+    @Test("Commit: kurzer Hash, „*“ heißt lokale Änderungen, fehlt er, steht „unbekannt“")
+    func commit() {
+        #expect(AppVersion.commit(info: ["StudyHelperCommit": "ec2c94b"]) == "ec2c94b")
+        #expect(AppVersion.commit(info: ["StudyHelperCommit": "ec2c94b+"]) == "ec2c94b*")
+        #expect(AppVersion.hasLocalChanges(info: ["StudyHelperCommit": "ec2c94b+"]))
+        #expect(!AppVersion.hasLocalChanges(info: ["StudyHelperCommit": "ec2c94b"]))
+        #expect(AppVersion.commit(info: ["StudyHelperCommit": "unbekannt"]) == "unbekannt")
+        #expect(AppVersion.commit(info: nil) == "unbekannt")
+    }
+
+    @Test("Die gebaute App trägt den Commit, aus dem sie gebaut wurde")
+    func bundleCommit() {
+        let raw = Bundle.main.infoDictionary?["StudyHelperCommit"] as? String ?? ""
+        #expect(raw.wholeMatch(of: /[0-9a-f]{7}\+?/) != nil, "\(raw)")
+    }
 }
