@@ -37,5 +37,7 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen.</string>
+	<key>StudyHelperChannel</key>
+	<string>$(STUDYHELPER_CHANNEL)</string>
 </dict>
 </plist>

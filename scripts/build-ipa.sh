@@ -4,14 +4,17 @@
 #                                      project.yml); needs the Xcode account signed in (Xcode → Settings →
 #                                      Accounts) and the device registered with the team. Local use only: a signed
 #                                      .ipa carries the Apple ID of the certificate, so it is never published (D-030).
+#   scripts/build-ipa.sh ... --final → marks the build as full version (no "(Beta)" in the app, D-032).
 #   scripts/build-ipa.sh --unsigned  → build/ipa/StudyHelper.ipa, unsigned, for the SideStore/AltStore/StikStore
 #                                      source (they re-sign with the user's Apple ID, see docs/DECISIONS.md D-024).
 source "$(dirname "$0")/common.sh"
 
 UNSIGNED=0
+CHANNEL=Beta
 for arg in "$@"; do
     case "$arg" in
         --unsigned) UNSIGNED=1 ;;
+        --final) CHANNEL=Final ;;
         *) fail "Unbekannte Option: $arg" ;;
     esac
 done
@@ -27,7 +30,7 @@ if [[ $UNSIGNED == 1 ]]; then
     step "Archiv bauen (Release, unsigniert)"
     xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
         -destination "generic/platform=iOS" -archivePath "$ARCHIVE" \
-        CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -quiet
+        CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" STUDYHELPER_CHANNEL="$CHANNEL" -quiet
 
     step ".ipa packen (unsigniert)"
     APP="$ARCHIVE/Products/Applications/StudyHelper.app"
@@ -41,7 +44,7 @@ else
     step "Archiv bauen (Release, Team $TEAM)"
     xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
         -destination "generic/platform=iOS" -archivePath "$ARCHIVE" \
-        -allowProvisioningUpdates -quiet
+        -allowProvisioningUpdates STUDYHELPER_CHANNEL="$CHANNEL" -quiet
 
     step ".ipa exportieren (Development)"
     cat > "$OUT/ExportOptions.plist" <<PLIST

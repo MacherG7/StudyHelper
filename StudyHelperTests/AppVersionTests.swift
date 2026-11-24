@@ -5,19 +5,28 @@ import Testing
 @MainActor
 @Suite("App-Version in den Einstellungen")
 struct AppVersionTests {
-    @Test("Anzeige: Version und Build als A.B.C.D")
+    @Test("Anzeige: Version und Build als A.B.C.D, „(Beta)“ außer bei einer Vollversion")
     func display() {
-        #expect(AppVersion.display(info: ["CFBundleShortVersionString": "0.0.1", "CFBundleVersion": "0"]) == "0.0.1.0")
-        #expect(AppVersion.display(info: ["CFBundleShortVersionString": "0.0.1", "CFBundleVersion": "12"]) == "0.0.1.12")
-        #expect(AppVersion.display(info: ["CFBundleShortVersionString": "0.0.2"]) == "0.0.2")
-        #expect(AppVersion.display(info: nil) == "unbekannt")
+        let final = ["StudyHelperChannel": "Final"]
+        func info(_ version: String, _ build: String?, channel: String?) -> [String: Any] {
+            var info: [String: Any] = ["CFBundleShortVersionString": version]
+            if let build { info["CFBundleVersion"] = build }
+            if let channel { info["StudyHelperChannel"] = channel }
+            return info
+        }
+        #expect(AppVersion.display(info: info("1.0.0", "3", channel: "Beta")) == "1.0.0.3 (Beta)")
+        #expect(AppVersion.display(info: info("1.0.0", "8", channel: "Final")) == "1.0.0.8")
+        #expect(AppVersion.display(info: info("0.0.1", "12", channel: nil)) == "0.0.1.12 (Beta)")
+        #expect(AppVersion.display(info: info("0.0.2", nil, channel: "Final")) == "0.0.2")
+        #expect(AppVersion.display(info: final) == "unbekannt")
+        #expect(AppVersion.isBeta(info: nil) && !AppVersion.isBeta(info: final))
     }
 
-    @Test("Die App trägt die Version aus project.yml (vier Zahlen, nicht mehr fest 1.0)")
+    @Test("Die App trägt die Version aus project.yml (vier Zahlen) und ist ohne --final eine Beta")
     func bundleVersion() {
         let current = AppVersion.current
-        #expect(current.wholeMatch(of: /\d+\.\d+\.\d+\.\d+/) != nil, "\(current)")
-        #expect(!current.hasPrefix("1.0"))
+        #expect(current.wholeMatch(of: /\d+\.\d+\.\d+\.\d+ \(Beta\)/) != nil, "\(current)")
+        #expect(Bundle.main.infoDictionary?["StudyHelperChannel"] as? String == "Beta")
     }
 
     @Test("Commit: kurzer Hash, „*“ heißt lokale Änderungen, fehlt er, steht „unbekannt“")

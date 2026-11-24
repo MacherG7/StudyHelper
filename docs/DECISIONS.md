@@ -258,6 +258,19 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Alle Releases wurden gelöscht, die Git-Historie umgeschrieben (Autor/Committer auf die GitHub-noreply-Adresse, die E-Mail in alten Dateiständen und Nachrichten durch „<Apple-ID>“ ersetzt, Tags neu gesetzt) und per Force-Push ersetzt; der offene PR #2 wurde mit umgeschrieben. Beta-Releases (D-028) enthalten ab jetzt eine unsignierte .ipa (`scripts/build-ipa.sh --unsigned`); installiert wird sie mit SideStore, AltStore, StikStore oder Sideloadly, die mit der eigenen Apple-ID signieren. Signierte .ipa nur lokal. Keine E-Mail-Adressen mehr in Dateien, Commits, Tags oder Release-Texten.
 - **Konsequenzen:** Alle Commit-Hashes haben sich geändert; Hashes in älteren Texten (z. B. „Commit ec2c94b“) gelten nicht mehr. GitHub hält die alten Commits des gemergten PR #1 (`refs/pull/1/head`) weiter vor – endgültig entfernen kann sie nur der GitHub-Support. Direkt über die Xcode-Geräteliste lässt sich die Release-.ipa nicht mehr installieren; dafür aus Xcode bauen.
 
+## D-032 Beta und Vollversion: Markierung statt eigener Nummer
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Entscheidung des Entwicklers)
+- **Kontext:** Bisher war jeder Commit eine Beta (D-027, D-028). Es braucht ein Schema für Vollversionen, das AltStore/SideStore richtig sortieren (Version und Build müssen steigen).
+- **Entscheidung:**
+  - **Betas:** Version A.B.C plus Build pro Commit wie bisher (z. B. 1.0.0.1 … 1.0.0.7), GitHub-Pre-Release `v1.0.0.N`, Titel „StudyHelper 1.0 Beta N“ (N = Build). Die App zeigt „1.0.0.3 (Beta)“.
+  - **Vollversion:** dieselbe Version mit dem nächsten Build (z. B. 1.0.0.8, nie Build 0 – sonst wäre sie für AltStore/SideStore älter als die Betas), normales Release `v1.0.0.8` (kein Pre-Release, „Latest“), Titel „StudyHelper 1.0“, zusätzlich Tag `v1.0.0` auf demselben Commit. Die App zeigt „1.0.0.8“ ohne „(Beta)“. Veröffentlichen mit `scripts/publish.sh --final` (ruft `scripts/beta-release.sh --final`), nur wenn der Entwickler es sagt.
+  - Beta/Final ist eine Markierung, keine Stelle der Nummer: Build-Einstellung `STUDYHELPER_CHANNEL` (Standard `Beta`, `scripts/build-ipa.sh --final` setzt `Final`), in der App als `StudyHelperChannel` in der `Info.plist`.
+  - Titel: „1.0.0“ heißt „1.0“, „1.0.1“ bleibt „1.0.1“.
+  - Danach weiter mit `scripts/bump-version.sh --set 1.0.1` (Fehlerkorrekturen) bzw. `--set 1.1.0` (neue Funktionen); `--set` weiterhin nur nach Rückfrage.
+- **Konsequenzen:** `scripts/beta-release.sh --final` bricht ab, wenn der Build schon veröffentlicht ist oder es `v<A.B.C>` schon gibt; `--dry-run` zeigt vorher Tag, Titel und Art. Xcode-Builds gelten immer als Beta.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

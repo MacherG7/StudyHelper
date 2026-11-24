@@ -2,7 +2,8 @@
 # Publishes the current commit: secret check, push to GitHub (origin/main), brings the main checkout
 # that Xcode opens up to date (fast-forward; its post-merge hook regenerates the project) and releases the
 # commit as a beta with the .ipa built on this Mac (scripts/beta-release.sh, D-028).
-# Usage: scripts/publish.sh            after every commit
+# Usage: scripts/publish.sh            after every commit (beta)
+#        scripts/publish.sh --final    full version (D-032)
 source "$(dirname "$0")/common.sh"
 
 "$ROOT/scripts/check-secrets.sh"
@@ -34,5 +35,6 @@ else
     echo "Nicht aktualisiert: lokale Änderungen im Checkout stehen im Weg (git status dort prüfen)."
 fi
 
-# Every commit becomes a beta release on GitHub: v<A.B.C.D> with the signed .ipa.
-"$ROOT/scripts/beta-release.sh"
+# Every commit becomes a beta release on GitHub: v<A.B.C.D> with the unsigned .ipa. "--final" publishes it as a
+# full version instead (only after the developer said so, D-032).
+"$ROOT/scripts/beta-release.sh" "$@"

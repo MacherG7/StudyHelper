@@ -19,8 +19,10 @@ settings:
     TARGETED_DEVICE_FAMILY: "1,2"
     # App version A.B.C.D shown in the settings: A.B.C = MARKETING_VERSION, D = build. Raise D with
     # scripts/bump-version.sh before every commit (D-027).
+    # Beta or Final (D-032): Xcode and every commit build a beta; scripts/beta-release.sh --final a full version.
+    STUDYHELPER_CHANNEL: Beta
     MARKETING_VERSION: "0.0.1"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
@@ -48,6 +50,7 @@ targets:
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        StudyHelperChannel: $(STUDYHELPER_CHANNEL)
         # "Öffnen in StudyHelper" for PDFs (replaces the share extension, see docs/DECISIONS.md D-013).
         CFBundleDocumentTypes:
           - CFBundleTypeName: PDF-Dokument
