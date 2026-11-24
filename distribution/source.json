@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.1",
+          "buildVersion": "13",
+          "date": "2026-11-24T22:05:48Z",
+          "localizedDescription": "Phase 2a: KI-Kern – Protokoll, HTTP/SSE, Keychain, Mock, Parsing, Preise, Anfrage-Log",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.1.13/StudyHelper-0.0.1.13.ipa",
+          "size": 1346889,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.1",
           "buildVersion": "7",
           "date": "2026-11-24T20:07:01Z",
           "localizedDescription": "Erste Beta: Lernstoff (Fotos, PDFs, Goodnotes-Exporte) digitalisieren, prüfen und in Themen strukturieren.",
@@ -38,10 +47,10 @@
         }
       ],
       "version": "0.0.1",
-      "versionDate": "2026-11-24T20:07:01Z",
-      "versionDescription": "Erste Beta: Lernstoff (Fotos, PDFs, Goodnotes-Exporte) digitalisieren, prüfen und in Themen strukturieren.",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.1.7/StudyHelper-0.0.1.7.ipa",
-      "size": 1307323
+      "versionDate": "2026-11-24T22:05:48Z",
+      "versionDescription": "Phase 2a: KI-Kern – Protokoll, HTTP/SSE, Keychain, Mock, Parsing, Preise, Anfrage-Log",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.1.13/StudyHelper-0.0.1.13.ipa",
+      "size": 1346889
     }
   ],
   "news": []
