@@ -2,10 +2,12 @@
 """Maintains the app source for SideStore, AltStore and StikStore (distribution/source.json).
 
     scripts/update-source.py --ipa build/ipa/StudyHelper.ipa --source distribution/source.json \
-        --repo MacherG7/StudyHelper-Source [--output OUT.json] [--notes TEXT] [--replace]
+        --repo MacherG7/StudyHelper-Source [--versions-from PUBLISHED.json] [--output OUT.json] \
+        [--notes TEXT] [--replace | --skip-existing]
     scripts/update-source.py --check distribution/source.json
 
-Update mode reads bundle ID, version, build, minimum iOS, privacy keys and entitlements straight from
+distribution/source.json is the template (metadata, no versions); the published source.json in the
+public repository holds the version history and is passed with --versions-from. Update mode reads bundle ID, version, build, minimum iOS, privacy keys and entitlements straight from
 the .ipa, adds a new version entry (newest first) with size and SHA-256, and points all URLs at the
 public distribution repository. On success it prints shell assignments (TAG, ASSET, TITLE, VERSION,
 BUILD) for scripts/publish-source.sh; messages go to stderr. Format: faq.altstore.io "Make a Source"
@@ -189,6 +191,24 @@ def add_version(source, meta, repo, notes, date, replace=False):
     return tag, asset
 
 
+def has_version(source, meta):
+    return any((v.get("version"), v.get("buildVersion")) == (meta["version"], meta["buildVersion"])
+               for a in source.get("apps", []) if a.get("bundleIdentifier") == meta["bundleIdentifier"]
+               for v in a.get("versions", []))
+
+
+def take_versions(template, published):
+    """Copies the version history of each app from the published source into the template."""
+    history = {a.get("bundleIdentifier"): a.get("versions", []) for a in published.get("apps", [])}
+    for app in template.get("apps", []):
+        if history.get(app.get("bundleIdentifier")):
+            app["versions"] = history[app["bundleIdentifier"]]
+            newest = app["versions"][0]
+            app.update({"version": newest.get("version"), "versionDate": newest.get("date"),
+                        "versionDescription": newest.get("localizedDescription", ""),
+                        "downloadURL": newest.get("downloadURL"), "size": newest.get("size")})
+
+
 def check(source):
     """Problems that would make SideStore/AltStore/StikStore reject or misread the source."""
     problems = []
@@ -256,7 +276,10 @@ def main(argv=None):
     parser.add_argument("--repo", help="öffentliches Repository Besitzer/Name")
     parser.add_argument("--notes", default="", help="Was ist neu (Markdown)")
     parser.add_argument("--date", help="Datum ISO 8601 (Standard: jetzt, UTC)")
+    parser.add_argument("--versions-from", metavar="PUBLISHED", help="Versionen aus der veröffentlichten Source")
     parser.add_argument("--replace", action="store_true", help="gleiche Version/Build ersetzen")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="gleiche Version/Build: nichts tun, SKIP=1 ausgeben")
     args = parser.parse_args(argv)
 
     try:
@@ -270,8 +293,17 @@ def main(argv=None):
 
         if not (args.ipa and args.source and args.repo):
             parser.error("--ipa, --source und --repo sind nötig (oder --check).")
+        if args.replace and args.skip_existing:
+            parser.error("--replace und --skip-existing schließen sich aus.")
         source = load(args.source)
+        if args.versions_from:
+            take_versions(source, load(args.versions_from))
         meta = read_ipa(args.ipa)
+        if args.skip_existing and has_version(source, meta):
+            print("Version %s (%s) steht schon in der Source – nichts zu tun." % (
+                meta["version"], meta["buildVersion"]), file=sys.stderr)
+            print("SKIP=1")
+            return 0
         date = args.date or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         notes = args.notes.strip() or "Version %s (%s)" % (meta["version"], meta["buildVersion"])
         tag, asset = add_version(source, meta, args.repo, notes, date, args.replace)

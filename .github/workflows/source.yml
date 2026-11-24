@@ -1,0 +1,72 @@
+# Puts the .ipa of every StudyHelper release into the public source for SideStore, AltStore and StikStore
+# (docs/DECISIONS.md D-024). Needs the secret SOURCE_REPO_TOKEN: fine-grained token with
+# "Contents: Read and write" on MacherG7/StudyHelper-Source only (see distribution/README.md).
+name: Source aktualisieren
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag (leer: neuestes Release mit .ipa)"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source
+  cancel-in-progress: false
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_REPO: ${{ vars.SOURCE_REPO || 'MacherG7/StudyHelper-Source' }}
+    steps:
+      # Scripts and template always from the default branch, not from the (possibly older) release tag.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: .ipa aus dem Release laden
+        id: ipa
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$TAG" ]]; then
+            for t in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 30 --json tagName -q '.[].tagName'); do
+              if gh release view "$t" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' | grep -q '\.ipa$'; then
+                TAG="$t"; break
+              fi
+            done
+          fi
+          ASSET=""
+          [[ -n "$TAG" ]] && ASSET="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            -q '[.assets[].name | select(endswith(".ipa"))][0] // ""')"
+          if [[ -z "$ASSET" ]]; then
+            echo "::notice::Kein Release mit .ipa gefunden (${TAG:-keins}) – nichts zu tun."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p build/release
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --dir build/release
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body,name \
+            -q 'if (.body // "") != "" then .body else (.name // "") end' > build/release/notes.md
+          echo "Release $TAG: $ASSET"
+          echo "ipa=build/release/$ASSET" >> "$GITHUB_OUTPUT"
+
+      - name: In die Source eintragen und veröffentlichen
+        if: steps.ipa.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
+          IPA: ${{ steps.ipa.outputs.ipa }}
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Secret SOURCE_REPO_TOKEN fehlt (siehe distribution/README.md)."
+            exit 1
+          fi
+          scripts/publish-source.sh --skip-existing --ipa "$IPA" --notes-file build/release/notes.md

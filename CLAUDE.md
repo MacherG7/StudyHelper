@@ -35,6 +35,7 @@ scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Rel
 scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (nur lokal, nie veröffentlichen)
 scripts/build-ipa.sh --unsigned           # unsignierte .ipa für die Source (SideStore/AltStore/StikStore)
 scripts/publish-source.sh "Was ist neu"   # Beta in die Source stellen (öffentliches Repo, D-024)
+                            # automatisch: Workflow .github/workflows/source.yml bei jedem Release mit .ipa (D-031)
 ```
 
 Simulator: `SIM_DEVICE` (Standard „iPhone 17“), iPad: `IPAD_DEVICE`.
@@ -106,7 +107,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit wird als
   Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028); die Einstellungen zeigen auch den
   Commit (D-029).
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+  Releases mit `.ipa` landen automatisch in der Source (Workflow, Secret `SOURCE_REPO_TOKEN`, D-031).
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.9 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
   API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf

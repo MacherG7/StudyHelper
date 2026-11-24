@@ -258,6 +258,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Alle Releases wurden gelöscht, die Git-Historie umgeschrieben (Autor/Committer auf die GitHub-noreply-Adresse, die E-Mail in alten Dateiständen und Nachrichten durch „<Apple-ID>“ ersetzt, Tags neu gesetzt) und per Force-Push ersetzt; der offene PR #2 wurde mit umgeschrieben. Beta-Releases (D-028) enthalten ab jetzt eine unsignierte .ipa (`scripts/build-ipa.sh --unsigned`); installiert wird sie mit SideStore, AltStore, StikStore oder Sideloadly, die mit der eigenen Apple-ID signieren. Signierte .ipa nur lokal. Keine E-Mail-Adressen mehr in Dateien, Commits, Tags oder Release-Texten.
 - **Konsequenzen:** Alle Commit-Hashes haben sich geändert; Hashes in älteren Texten (z. B. „Commit ec2c94b“) gelten nicht mehr. GitHub hält die alten Commits des gemergten PR #1 (`refs/pull/1/head`) weiter vor – endgültig entfernen kann sie nur der GitHub-Support. Direkt über die Xcode-Geräteliste lässt sich die Release-.ipa nicht mehr installieren; dafür aus Xcode bauen.
 
+## D-031 Source automatisch aus den Releases aktualisieren
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Betas erscheinen als Releases mit `.ipa` im privaten Repository (z. B. `v0.1.0-beta.1`). Deren Downloads brauchen eine Anmeldung, die Store-Apps können sie also nicht direkt laden.
+- **Entscheidung:** Der Workflow `.github/workflows/source.yml` läuft bei jedem veröffentlichten Release (und von Hand) auf `ubuntu-latest`. Er nimmt die erste `.ipa` des Releases (von Hand ohne Tag: neuestes Release mit `.ipa`), Skripte und Vorlage immer vom Standard-Branch, und ruft `scripts/publish-source.sh --skip-existing --ipa …` auf. Schreibzugriff auf das öffentliche Repository über das Secret `SOURCE_REPO_TOKEN` (fein granularer Token, nur `Contents: Read and write` auf `MacherG7/StudyHelper-Source`). `distribution/source.json` ist ab jetzt nur Vorlage (Texte, Icon, Berechtigungen); die Versionsliste liegt allein in der veröffentlichten `source.json` und wird bei jedem Lauf übernommen (`--versions-from`). So entstehen keine automatischen Commits im privaten Repository.
+- **Konsequenzen:** Bereits veröffentlichte Version/Build-Kombinationen werden übersprungen, nicht überschrieben. Die signierte `.ipa` aus `scripts/build-ipa.sh` enthält die Team-ID und `get-task-allow`; beides landet öffentlich bzw. in der Source (passend erkannt). Läuft der Token ab, schlägt der Workflow mit klarer Meldung fehl. Ein Release, dessen Tag vor diesem Workflow liegt, löst ihn nicht aus – dafür „Run workflow“.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

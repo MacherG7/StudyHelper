@@ -193,6 +193,64 @@ class UpdateTests(unittest.TestCase):
         self.assertIn("Fehler:", stderr.getvalue())
 
 
+class PublishedHistoryTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def published_with(self, *builds):
+        source = template()
+        for i, build in enumerate(builds):
+            us.add_version(source, us.read_ipa(make_ipa(self.dir, build=build)), REPO, "b%s" % build,
+                           "2026-11-2%dT12:00:00Z" % i)
+        path = os.path.join(self.dir, "published.json")
+        us.save(source, path)
+        return path
+
+    def run_main(self, *args):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            code = us.main(list(args))
+        return code, stdout.getvalue(), stderr.getvalue()
+
+    def test_versions_come_from_published_source(self):
+        """Versionen aus der veröffentlichten Source, Texte aus der Vorlage"""
+        published = self.published_with("1")
+        tpl = os.path.join(self.dir, "template.json")
+        changed = template()
+        changed["apps"][0]["subtitle"] = "Neuer Untertitel"
+        us.save(changed, tpl)
+        out = os.path.join(self.dir, "out.json")
+        code, _, err = self.run_main("--ipa", make_ipa(self.dir, build="2"), "--source", tpl, "--output", out,
+                                     "--repo", REPO, "--versions-from", published)
+        self.assertEqual(code, 0, err)
+        app = us.load(out)["apps"][0]
+        self.assertEqual([v["buildVersion"] for v in app["versions"]], ["2", "1"])
+        self.assertEqual(app["subtitle"], "Neuer Untertitel")
+        self.assertEqual(us.load(tpl)["apps"][0]["versions"], [])
+
+    def test_skip_existing_writes_nothing(self):
+        """Schon veröffentlichte Version wird übersprungen"""
+        published = self.published_with("1")
+        out = os.path.join(self.dir, "out.json")
+        code, stdout, _ = self.run_main("--ipa", make_ipa(self.dir, build="1"),
+                                        "--source", os.path.join(ROOT, "distribution", "source.json"),
+                                        "--output", out, "--repo", REPO, "--versions-from", published,
+                                        "--skip-existing")
+        self.assertEqual(code, 0)
+        self.assertIn("SKIP=1", stdout)
+        self.assertFalse(os.path.exists(out))
+
+    def test_without_published_source_history_is_empty(self):
+        """Erste Veröffentlichung ohne bisherige Source"""
+        source = template()
+        us.take_versions(source, {"apps": []})
+        self.assertEqual(source["apps"][0]["versions"], [])
+
+
 class CheckTests(unittest.TestCase):
     def test_repository_source_is_valid(self):
         """distribution/source.json ist gültig"""

@@ -120,6 +120,8 @@ Voraussetzung: öffentliches Repository angelegt, `scripts/publish-source.sh` ei
 | MT-S.5 | Neue Version veröffentlichen (Build erhöht), Store-App aktualisieren lassen | Update wird angeboten; nach dem Update sind Fächer, Importe und Themen noch da | |
 | MT-S.6 | 7 Tage warten bzw. in der Store-App „Refresh“ | App wird aufgefrischt und startet weiter; Daten bleiben erhalten | |
 | MT-S.7 | Kamera (Scan/Foto) in der Source-Installation | Systemabfrage mit dem deutschen Text; Scannen funktioniert | |
+| MT-S.8 | Workflow „Source aktualisieren“ von Hand starten (vorhandenes Release `v0.1.0-beta.1`) | Lauf grün; Release mit `.ipa` und `source.json` im öffentlichen Repository; zweiter Lauf meldet „nichts zu tun“ | |
+| MT-S.9 | Neues Release mit `.ipa` (Build erhöht) veröffentlichen | Workflow startet von selbst; neue Version steht oben in der Source; Store-App bietet das Update an | |
 
 ---
 
