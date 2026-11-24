@@ -226,6 +226,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Unterstreichungen (einfach und doppelt) bekommen keine vermutete Bedeutung; sie bleibt „Offen“. Ob es eine Überschrift, ein wichtiger Fachbegriff oder eine Kernaussage ist, entscheidet der Nutzer (Bedeutung in der Prüfansicht, Vorschlag in der Themenansicht mit „Als Titel des Themas“, „Als Begriff“, „Als Kernaussage“) oder ab Phase 3 die KI. Andere Hervorhebungen (Textmarker → „wichtig“, Kreis → Begriff, große Schrift im PDF-Text → Überschrift) bleiben unverändert.
 - **Konsequenzen:** Der Originaltext-Markdown macht aus unterstrichenen Zeilen keine `##`-Überschrift mehr, solange niemand „Überschrift“ gewählt hat; die Unterstreichung bleibt als `<u>` sichtbar.
 
+## D-027 App-Version A.B.C.D, letzte Stelle pro Commit
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Die Einstellungen sollen die App-Version zeigen. Start bei 0.0.1.0; die letzte Stelle steigt mit jedem Commit. Größere Sprünge (Release, Test-Beta) nur nach Rückfrage. Bisher stand in `Info.plist` fest „1.0“ (Build 1), `MARKETING_VERSION` aus `project.yml` wurde nicht benutzt.
+- **Entscheidung:** Die Version hat vier Stellen: A.B.C ist `MARKETING_VERSION` (`CFBundleShortVersionString`, iOS erlaubt dort höchstens drei Zahlen), D ist `CURRENT_PROJECT_VERSION` (Build, `CFBundleVersion`). `Info.plist` übernimmt beide aus `project.yml`. Vor jedem Commit erhöht `scripts/bump-version.sh` den Build (0.0.1.0 → 0.0.1.1) und nimmt `project.yml` in den Commit auf. Eine größere Version setzt `scripts/bump-version.sh --set A.B.C` (Build wieder 0) – nur nach Rückfrage beim Entwickler. `scripts/publish.sh` warnt, wenn ein Push die Version nicht erhöht. Die Einstellungen zeigen unter „Über StudyHelper“ die Version „A.B.C.D“.
+- **Konsequenzen:** Jede Version/Build-Kombination ist eindeutig, wie es AltStore für die Source verlangt (D-024). Das Beta-Release v0.1.0-beta.1 trug intern „1.0 (1)“; die neue Zählung beginnt bewusst niedriger bei 0.0.1.0. Die Source enthält noch keine Version, es gibt also keinen Konflikt.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

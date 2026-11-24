@@ -24,7 +24,7 @@ Wer die Source-URL kennt, kann die App herunterladen.
 
 ## Neue Beta veröffentlichen
 
-1. In `project.yml` `MARKETING_VERSION` oder `CURRENT_PROJECT_VERSION` erhöhen (jede Version/Build-Kombination
+1. Version erhöhen (`scripts/bump-version.sh`, vor jedem Commit ohnehin, D-027), also `MARKETING_VERSION` oder `CURRENT_PROJECT_VERSION` in `project.yml` (jede Version/Build-Kombination
    darf nur einmal in der Source stehen).
 2. Auf dem Mac:
 

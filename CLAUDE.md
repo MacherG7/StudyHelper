@@ -28,6 +28,7 @@ SKIP_VISION_TESTS=1 scripts/test.sh   # ohne Tests mit echter Vision-Texterkennu
 scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
+scripts/bump-version.sh     # vor jedem Commit: letzte Stelle der Version +1 (--set A.B.C nur nach Rückfrage, D-027)
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push nach GitHub, Xcode-Checkout nachziehen
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (für Beta-Releases auf GitHub)
@@ -73,6 +74,9 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - API-Parameter (Modelle, Reasoning, Usage, Streaming) aus der aktuellen offiziellen
   Doku von Anthropic und OpenAI, nicht aus dem Gedächtnis.
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
+- App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
+  `scripts/bump-version.sh` (D +1). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
+  vorschlagen, ihn als größere Version (`--set A.B.C`) zu veröffentlichen, und erst nach Zustimmung setzen.
 - Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
   `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, privat; Branch `main`), nach jeder fertigen Phase
   `scripts/release.sh`. Das Repository `StudyHelper-Test` nie anfassen. Der Haupt-Checkout
@@ -95,7 +99,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   `distribution/README.md`); das öffentliche Repository `MacherG7/StudyHelper-Source` legt der Entwickler an.
   Formpfeile in Zeilen werden als „→“ eingesetzt, Nachlesen zeilentreu (D-025, F1 0,9625 mit S. 9 als
   Referenz). Unterstreichungen ohne vermutete Bedeutung, Nutzer oder KI entscheidet (D-026).
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.47 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+  App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027).
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
   API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf

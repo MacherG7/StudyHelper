@@ -1,7 +1,7 @@
 import StudyData
 import SwiftUI
 
-/// App settings (Phase 1: recognition only).
+/// App settings: recognition (Phase 1) and the app version.
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var multiPass = StudySettings().multiPassRecognition
@@ -16,6 +16,10 @@ struct SettingsView: View {
                     Text("Texterkennung")
                 } footer: {
                     Text("Bei der Mehrfacherkennung wird jede Seite zweimal gelesen. Wörter, bei denen sich die Ergebnisse unterscheiden, werden als unsicher markiert. Die Fachbegriffe für die Erkennung pflegst du im jeweiligen Fach.")
+                }
+                Section("Über StudyHelper") {
+                    LabeledContent("Version", value: AppVersion.current)
+                        .accessibilityIdentifier("appVersion")
                 }
             }
             .navigationTitle("Einstellungen")
