@@ -29,7 +29,9 @@ enum AppEnvironment {
             let container = try ModelContainerFactory.makeContainer(inMemory: inMemory)
             let services = AppServices(container: container)
             if inMemory, arguments.contains("-uiTestSeed") {
-                try UITestSeeder.seed(services.repository, withVersions: arguments.contains("-uiTestSeedVersions"))
+                try UITestSeeder.seed(
+                    services.repository, withVersions: arguments.contains("-uiTestSeedVersions"),
+                    withTopics: arguments.contains("-uiTestSeedTopics"))
             }
             return .ready(services)
         } catch {

@@ -138,6 +138,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Eingehende PDFs werden in `Application Support/StudyHelper/Inbox` übernommen (aus dem eigenen `Documents/Inbox` verschoben, sonst kopiert). Beim Start wird der App-Eingang geleert; in `Documents/Inbox` bleiben nur Dateien jünger als 60 s (Kaltstart über „Öffnen in“). Das Import-Blatt für eingehende Dateien lässt sich nicht wegwischen; Verwerfen fragt nach. Ein Fach mit laufendem Import kann nicht gelöscht werden. Dekodierte Zeilen/Hervorhebungen werden in der UI zwischengespeichert (`DerivedValue`) statt bei jedem Rendern neu gelesen. Die Pipeline steckt in der App hinter dem Protokoll `DigitizingPipeline`, damit `ImportCoordinator` mit einem Mock getestet werden kann.
 - **Konsequenzen:** Wird die App während eines offenen Imports beendet, ist die eingehende Datei beim nächsten Start weg und muss erneut geteilt werden. `TestFixtures` lässt sich in App-Tests nicht linken (Ressourcen-Bundle scheitert an der Signierung); App-Tests bauen Testdaten selbst.
 
+## D-018 Themen: Bestätigung, Herkunft und Quellenänderungen (Phase 1c)
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen
+- **Kontext:** SPEC §5: Ein Thema darf erst nach Bestätigung gelernt werden; jeder Inhalt verweist auf seine Quelle; nach Korrekturen der Digitalisierung bietet die App an, betroffene Themen zu aktualisieren.
+- **Entscheidung:** Lernbereit ist ein Thema nur, wenn es bestätigt und seit der Bestätigung nicht geändert wurde (`modifiedAt == nil`). Wird ein unbestätigtes Thema in ein bestätigtes zusammengelegt, ist das Ziel wieder unbestätigt. Wird der Text eines Original-Eintrags bearbeitet, wird er zur „Eigenen Eingabe“, behält aber seinen Quellenverweis; ohne Quellenverweis kann ein Eintrag nicht „Original“ sein. Eine Hervorhebung wird einem übernommenen Eintrag nur zugeordnet, wenn sie mindestens die Hälfte der übernommenen Wörter abdeckt. Ändert sich die Quelle eines Eintrags (Korrektur, Neuerkennung, Version wiederhergestellt, Hervorhebung bearbeitet), markiert die App den Eintrag mit „Quelle geändert“ und bietet „Text aus Quelle übernehmen“ oder „Ignorieren“ an.
+- **Konsequenzen:** Lernmodi (ab Phase 5) dürfen nur lernbereite Themen verwenden. Löschen eines Imports nennt die betroffenen Themen; deren Einträge zeigen danach „Quelle nicht mehr vorhanden“.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

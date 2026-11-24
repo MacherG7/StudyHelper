@@ -656,6 +656,15 @@ public final class StudyRepository {
         try save()
     }
 
+    /// Replaces the source references of an entry without recording an edit of the topic: the content
+    /// is unchanged (used when the user acknowledges a changed source with "Ignorieren").
+    /// Throws `.damagedData` if the entry's stored blobs are unreadable.
+    public func replaceSourceReferences(of entry: TopicEntry, with references: [SourceReference]) throws {
+        guard entry.isReadable else { throw StudyDataError.damagedData }
+        entry.sourceReferences = references
+        try save()
+    }
+
     public func setSupplementStatus(_ status: SupplementStatus, for entry: TopicEntry) throws {
         try editEntry(entry) { $0.supplementStatus = status }
     }
@@ -700,6 +709,8 @@ public final class StudyRepository {
     // MARK: Merge / split
 
     /// Moves all entries and sources of `a` into `b` and deletes `a`.
+    /// Unreviewed content must not become confirmed content: if `a` is not confirmed, `b` becomes an
+    /// unconfirmed draft (a confirmed `b` that receives content gets `modifiedAt`, see `touch`).
     public func merge(_ a: Topic, into b: Topic) throws {
         guard a !== b else { throw StudyDataError.sameTopic }
         guard a.subject === b.subject else { throw StudyDataError.differentSubjects }
@@ -716,8 +727,15 @@ public final class StudyRepository {
         if a.origin != b.origin { b.origin = .mixed }
         a.entries.removeAll()
         a.sources.removeAll()
+        let takesUnconfirmedContent = !a.isConfirmed
         context.delete(a)
-        touch(b)
+        if takesUnconfirmedContent {
+            b.isConfirmed = false
+            b.confirmedAt = nil
+            b.modifiedAt = nil
+        } else {
+            touch(b)
+        }
         try save()
     }
 

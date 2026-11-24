@@ -10,6 +10,7 @@ struct HighlightsSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.studyRepository) private var repository
+    @Environment(ImportCoordinator.self) private var coordinator
     @State private var showAdd = false
     @State private var deleteTarget: RecognizedHighlight?
     @State private var errorMessage: String?
@@ -65,6 +66,8 @@ struct HighlightsSheet: View {
             }
             .navigationTitle("Hervorhebungen")
             .navigationBarTitleDisplayMode(.inline)
+            // Also when the sheet is swiped away: entries that took over the old emphasis are affected.
+            .onDisappear { coordinator.reportImpact(of: [source]) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Fertig") { dismiss() }

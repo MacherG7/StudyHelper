@@ -6,7 +6,9 @@ import UIKit
 /// Demo data for UI tests (`-uiTestInMemory -uiTestSeed`): one subject with one
 /// digitized page, so review and topic screens can be tested without pickers,
 /// camera or Vision. With `-uiTestSeedVersions` the page has a second version
-/// (as after a re-recognition) whose first line differs: `revisedFirstLine`.
+/// (as after a re-recognition) whose first line differs: `revisedFirstLine`. With `-uiTestSeedTopics`
+/// the subject also has the unconfirmed topic `topicTitle` whose one entry (origin "Original") points at
+/// line 2 of the page (`topicEntryText`) and which has the page assigned.
 @MainActor
 enum UITestSeeder {
     static let subjectName = "Biologie"
@@ -18,7 +20,10 @@ enum UITestSeeder {
 
     static let revisedFirstLine = "Fotosynthese (überarbeitet)"
 
-    static func seed(_ repository: StudyRepository, withVersions: Bool = false) throws {
+    static let topicTitle = "Fotosynthese"
+    static let topicEntryText = "Ort: Chloroplasten"
+
+    static func seed(_ repository: StudyRepository, withVersions: Bool = false, withTopics: Bool = false) throws {
         let subject = try repository.createSubject(name: subjectName)
         _ = try repository.createSubject(name: "Deutsch")
 
@@ -85,6 +90,19 @@ enum UITestSeeder {
             var revised = lines
             revised[0].text = revisedFirstLine
             _ = try repository.saveDigitization(result(lines: revised, engine: "UI-Test 2"), for: source)
+        }
+
+        if withTopics, let digitization = source.currentDigitization,
+           let line = digitization.lines.first(where: { $0.order == 1 }) {
+            let topic = try repository.createTopic(in: subject, title: topicTitle)
+            try repository.assign(source, to: topic)
+            try repository.addEntry(
+                to: topic, kind: .keyStatement, text: topicEntryText, origin: .original,
+                sourceReferences: [SourceReference(
+                    sourceID: source.id, lineIDs: [line.id], rect: line.rect,
+                    digitizationID: digitization.id, digitizationVersion: digitization.versionNumber
+                ).withSnapshot(SourceFingerprint.make(lines: [line], highlights: digitization.highlights))],
+                highlight: EntryHighlight(kind: .highlighter, color: RGBColor(hex: "#FFEB3B")))
         }
     }
 

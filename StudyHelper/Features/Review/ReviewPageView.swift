@@ -35,7 +35,7 @@ struct ReviewPageView: View {
     @State private var selectedLineID: UUID?
     @State private var onlyOpen = false
     @State private var sheet: PageSheet?
-    @State private var affectedHint: String?
+    @State private var openedTopicID: UUID?
     @State private var pageImage: UIImage?
     @State private var snapshotCache = DerivedValue<PageSnapshot>()
 
@@ -103,10 +103,13 @@ struct ReviewPageView: View {
                 pageImage = nil
             }
         }
+        .navigationDestination(item: $openedTopicID) { id in
+            TopicLookupView(subject: batch.subject, topicID: id)
+        }
         .sheet(item: $sheet) { sheet in
             switch sheet {
             case .correction(let id):
-                CorrectionSheet(source: source, lineID: id) { hint in affectedHint = hint }
+                CorrectionSheet(source: source, lineID: id)
             case .highlights(let id):
                 HighlightsSheet(source: source, lineID: id)
             case .unmatched:
@@ -123,7 +126,8 @@ struct ReviewPageView: View {
         let warnings = snapshot.warnings
         let damaged = snapshot.unreadable
         let hasDigitization = snapshot.digitizationID != nil
-        if damaged || unmatched > 0 || !warnings.isEmpty || affectedHint != nil
+        let affectedTopics = coordinator.affectedSubjectID == batch.subject?.id ? coordinator.affectedTopics : []
+        if damaged || unmatched > 0 || !warnings.isEmpty || !affectedTopics.isEmpty
             || source.digitizationState == .failed
             || (source.digitizationState == .pending && !isActive) {
             VStack(spacing: 6) {
@@ -168,11 +172,8 @@ struct ReviewPageView: View {
                             .accessibilityIdentifier("showUnmatchedButton")
                     }
                 }
-                if let affectedHint {
-                    InfoBanner(affectedHint, style: .info) {
-                        Button("OK") { self.affectedHint = nil }.font(.footnote.weight(.semibold))
-                    }
-                    .accessibilityIdentifier("affectedTopicsHint")
+                if !affectedTopics.isEmpty {
+                    AffectedTopicsBanner(topics: affectedTopics) { openedTopicID = $0 } onDismiss: { coordinator.dismissImpact() }
                 }
             }
             .padding(.horizontal, 10)

@@ -7,10 +7,9 @@ import SwiftUI
 struct CorrectionSheet: View {
     let source: Source
     let lineID: UUID
-    /// Called after saving with a hint about topics that refer to the line (nil: none).
-    let onSaved: (String?) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(ImportCoordinator.self) private var coordinator
     @Environment(\.studyRepository) private var repository
     @State private var text = ""
     @State private var loaded = false
@@ -130,8 +129,8 @@ struct CorrectionSheet: View {
             if let subject = source.batch?.subject {
                 for term in rememberedTerms { try repository.addConfirmedTerm(term, to: subject) }
             }
-            let topics = try repository.affectedTopics(bySourceID: source.id, lineIDs: [lineID])
-            onSaved(topics.isEmpty ? nil : "Betroffene Themen: " + topics.map(\.title).joined(separator: ", ") + ". Prüfe, ob der Inhalt dort noch stimmt.")
+            // Topics whose entries took over the old text are now affected (nothing happens if the text is unchanged).
+            coordinator.reportImpact(of: [source])
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

@@ -35,6 +35,7 @@ struct VersionsView: View {
     private func restore(_ version: Digitization) {
         do {
             try repository?.restoreVersion(version)
+            coordinator.reportImpact(of: [source])
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

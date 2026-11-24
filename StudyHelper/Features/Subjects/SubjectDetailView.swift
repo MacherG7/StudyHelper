@@ -3,14 +3,16 @@ import StudyData
 import SwiftData
 import SwiftUI
 
-/// One subject: its imports, the (future) topics and the terms that help text recognition.
+/// One subject: its imports, its topics and the terms that help text recognition.
 struct SubjectDetailView: View {
     let subject: Subject
     @Environment(\.studyRepository) private var repository
     @Environment(ImportCoordinator.self) private var coordinator
-    @State private var batchToDelete: ImportBatch?
+    /// Id and alert text, taken when the user asks: the alert must not read the batch while it is being deleted.
+    @State private var batchToDelete: PendingBatchDeletion?
     @State private var newTerm = ""
     @State private var errorMessage: String?
+    @State private var topicModel = TopicListModel()
 
     private var batches: [ImportBatch] {
         subject.imports.sorted { $0.createdAt > $1.createdAt }
@@ -36,18 +38,23 @@ struct SubjectDetailView: View {
                     }
                     .accessibilityIdentifier("importRow")
                     .swipeActions(edge: .trailing) {
-                        Button("Löschen", systemImage: "trash", role: .destructive) { batchToDelete = batch }
+                        Button("Löschen", systemImage: "trash", role: .destructive) { batchToDelete = PendingBatchDeletion(id: batch.id, message: deleteMessage(for: batch)) }
                     }
                     BatchActions(batch: batch)
                 }
             }
 
-            // Topics arrive in Phase 1c; nothing here is functional yet.
-            Section("Themen") {
-                Label("Folgt bald", systemImage: "clock")
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("topicsPlaceholder")
+            if coordinator.affectedSubjectID == subject.id, !coordinator.affectedTopics.isEmpty {
+                Section {
+                    AffectedTopicsBanner(topics: coordinator.affectedTopics) { topicModel.openedTopicID = $0 } onDismiss: {
+                        coordinator.dismissImpact()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
             }
+
+            TopicsSection(subject: subject, model: topicModel)
 
             Section {
                 ForEach(subject.confirmedTerms, id: \.self) { term in
@@ -73,20 +80,35 @@ struct SubjectDetailView: View {
         }
         .navigationTitle(subject.name)
         .navigationBarTitleDisplayMode(.large)
+        .topicListDialogs(subject: subject, model: topicModel)
+        .navigationDestination(item: $topicModel.openedTopicID) { id in
+            TopicLookupView(subject: subject, topicID: id)
+        }
         .alert(
             "Import löschen?",
             isPresented: Binding(get: { batchToDelete != nil }, set: { if !$0 { batchToDelete = nil } }),
             presenting: batchToDelete
-        ) { batch in
-            Button("Löschen", role: .destructive) { delete(batch) }
+        ) { pending in
+            Button("Löschen", role: .destructive) { delete(pending) }
             Button("Abbrechen", role: .cancel) {}
-        } message: { _ in
-            Text("Der Import wird mit allen Seiten, erkannten Texten und Korrekturen gelöscht. Das kann nicht rückgängig gemacht werden.")
+        } message: { pending in
+            Text(pending.message)
         }
         .errorAlert($errorMessage)
     }
 
-    private func delete(_ batch: ImportBatch) {
+    private func deleteMessage(for batch: ImportBatch) -> String {
+        var text = "Der Import wird mit allen Seiten, erkannten Texten und Korrekturen gelöscht. Das kann nicht rückgängig gemacht werden."
+        let topics = TopicImpact.using(sourceIDs: Set(batch.sources.map(\.id)), in: subject)
+        if !topics.isEmpty {
+            text += " Diese Themen verwenden den Import und verlieren die Quelle ihrer Einträge: "
+                + topics.map { "„\($0.title)“" }.joined(separator: ", ") + "."
+        }
+        return text
+    }
+
+    private func delete(_ pending: PendingBatchDeletion) {
+        guard let batch = subject.imports.first(where: { $0.id == pending.id }) else { batchToDelete = nil; return }
         do { try coordinator.deleteBatch(batch) } catch { errorMessage = error.localizedDescription }
         batchToDelete = nil
     }
@@ -103,6 +125,11 @@ struct SubjectDetailView: View {
     private func remove(_ term: String) {
         do { try repository?.removeConfirmedTerm(term, from: subject) } catch { errorMessage = error.localizedDescription }
     }
+}
+
+private struct PendingBatchDeletion: Equatable {
+    let id: UUID
+    let message: String
 }
 
 private struct BatchRow: View {

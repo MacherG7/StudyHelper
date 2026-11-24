@@ -83,6 +83,10 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.35 | Zwei PDFs nacheinander per „Öffnen in“ teilen (bearbeitbar, dann reduziert) | Beide erscheinen nacheinander im Import-Blatt; keine Datei geht verloren | |
 | MT-1.36 | Dokumentenscanner abbrechen bzw. Fehler provozieren | Verständliche deutsche Meldung, App bleibt bedienbar | |
 | MT-1.37 | VoiceOver während eines Imports | Start, Fortschritt (25/50/75 %) und Ende werden angesagt | |
+| MT-1.38 | Thema anlegen und Einträge aus der Quelle übernehmen (iPad nebeneinander, iPhone umschaltbar) | Übernahme per Zeilen- und Wortauswahl; Vorschläge aus Hervorhebungen erscheinen; Layout auch bei großer Schrift bedienbar | |
+| MT-1.39 | VoiceOver im Themen-Editor und in der Themenprüfung | Herkunft (Original/Eigene Eingabe) und Hervorhebung werden angesagt; Übernahme wird angesagt | |
+| MT-1.40 | Zeile korrigieren, die in einem Thema verwendet wird | Hinweis „Betroffene Themen“; im Thema „Quelle geändert“ mit „Text aus Quelle übernehmen“ | |
+| MT-1.41 | Tabellen-Eintrag auf iPhone und iPad bearbeiten | Zeilen/Spalten hinzufügen und entfernen funktioniert, nichts abgeschnitten | |
 
 ---
 

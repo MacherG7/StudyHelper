@@ -55,6 +55,10 @@ final class ImportCoordinator {
     var notice: String?
     /// German error message for an alert.
     var errorMessage: String?
+    /// Topics whose entries refer to a source that was corrected, edited, restored or recognized again
+    /// (SPEC §5); shown as a banner until dismissed. Belongs to `affectedSubjectID`.
+    private(set) var affectedTopics: [AffectedTopic] = []
+    private(set) var affectedSubjectID: UUID?
 
     var isRunning: Bool { progress != nil }
 
@@ -162,6 +166,31 @@ final class ImportCoordinator {
     /// Waits until the running job (if any) has ended.
     func waitUntilIdle() async {
         await task?.value
+    }
+
+    // MARK: Impact on topics
+
+    /// Looks for topics with entries whose source changed since they were taken over (for pages of one subject)
+    /// and adds them to `affectedTopics`. Returns the topics found now.
+    @discardableResult
+    func reportImpact(of sources: [Source]) -> [AffectedTopic] {
+        let alive = sources.filter { !$0.isDeleted && $0.modelContext != nil }
+        guard let subject = alive.first?.batch?.subject else { return [] }
+        let found = TopicImpact.changed(in: subject, sourceIDs: Set(alive.map(\.id)))
+        if affectedSubjectID != subject.id { affectedTopics = [] }
+        affectedSubjectID = subject.id
+        for topic in found where !affectedTopics.contains(topic) { affectedTopics.append(topic) }
+        return found
+    }
+
+    func dismissImpact() {
+        affectedTopics = []
+        affectedSubjectID = nil
+    }
+
+    /// " Betroffene Themen: A, B." or "".
+    private func impactNote(_ topics: [AffectedTopic]) -> String {
+        topics.isEmpty ? "" : " Betroffene Themen: \(topics.map(\.title).joined(separator: ", "))."
     }
 
     // MARK: Deleting
@@ -348,7 +377,9 @@ final class ImportCoordinator {
             skipped += outcome.skippedCorrectionCount
             saved += 1
         }
+        let affected = reportImpact(of: sources)
         notice = summary(saved: saved, failed: failed, skipped: skipped, unit: total == 1 ? "Bild" : "Bilder", total: total)
+            + impactNote(affected)
     }
 
     // MARK: PDF
@@ -393,9 +424,11 @@ final class ImportCoordinator {
             fail(message)
             return
         }
+        let affected = reportImpact(of: batch.sources.filter { targets.contains($0.pageIndex) })
         notice = summary(
             saved: run.saved, failed: run.failed, skipped: run.skipped,
             unit: run.saved + run.failed == 1 ? "Seite" : "Seiten", total: targets.count)
+            + impactNote(affected)
     }
 
     private func savePage(_ result: PageResult, done: Int, total: Int) async throws {

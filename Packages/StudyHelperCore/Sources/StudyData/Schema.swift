@@ -360,6 +360,14 @@ public enum SchemaV1: VersionedSchema {
         }
 
         public var sortedEntries: [TopicEntry] { entries.sorted { $0.sortIndex < $1.sortIndex } }
+
+        /// Confirmed and not edited since: the only state in which a topic may be learned.
+        /// Every edit of a confirmed topic sets `modifiedAt`, so "modifiedAt != nil" means
+        /// "must be confirmed again before learning".
+        public var isReadyForLearning: Bool { isConfirmed && modifiedAt == nil }
+        /// Confirmed once, edited since: shows as changed until the user confirms again.
+        public var needsReconfirmation: Bool { isConfirmed && modifiedAt != nil }
+
         public var sortedSources: [Source] {
             sources.sorted {
                 ($0.batch?.createdAt ?? .distantPast, $0.pageIndex) < ($1.batch?.createdAt ?? .distantPast, $1.pageIndex)

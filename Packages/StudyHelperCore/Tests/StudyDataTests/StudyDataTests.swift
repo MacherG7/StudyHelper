@@ -399,6 +399,111 @@ struct TopicTests {
         #expect(throws: StudyDataError.differentSubjects) { try repo.merge(c, into: b) }
     }
 
+    @Test("Zusammenlegen: ein unbestätigtes Thema macht das Ziel zum Entwurf")
+    func mergeUnconfirmedIntoConfirmed() throws {
+        let (repo, _) = try makeRepo()
+        let (s, _) = try makeSource(repo)
+        let draft = try repo.createTopic(in: s, title: "Entwurf")
+        let target = try repo.createTopic(in: s, title: "Ziel")
+        try repo.addEntry(to: draft, kind: .keyStatement, text: "ungeprüft")
+        try repo.addEntry(to: target, kind: .keyStatement, text: "geprüft")
+        try repo.confirm(target)
+        #expect(target.isReadyForLearning)
+        try repo.merge(draft, into: target)
+        #expect(!target.isConfirmed)
+        #expect(target.confirmedAt == nil)
+        #expect(target.modifiedAt == nil)
+        #expect(!target.isReadyForLearning)
+        #expect(target.entries.count == 2)
+    }
+
+    @Test("Zusammenlegen: ein bestätigtes Thema in ein bestätigtes Ziel verlangt erneutes Bestätigen")
+    func mergeConfirmedIntoConfirmed() throws {
+        let (repo, _) = try makeRepo()
+        let (s, _) = try makeSource(repo)
+        let a = try repo.createTopic(in: s, title: "A")
+        let b = try repo.createTopic(in: s, title: "B")
+        try repo.addEntry(to: a, kind: .keyStatement, text: "a")
+        try repo.confirm(a)
+        try repo.confirm(b)
+        try repo.merge(a, into: b)
+        #expect(b.isConfirmed)
+        #expect(b.modifiedAt != nil)
+        #expect(!b.isReadyForLearning)
+        #expect(b.needsReconfirmation)
+        try repo.confirm(b)
+        #expect(b.isReadyForLearning)
+        // A confirmed topic merged into a draft stays a draft.
+        let c = try repo.createTopic(in: s, title: "C")
+        let d = try repo.createTopic(in: s, title: "D")
+        try repo.confirm(c)
+        try repo.merge(c, into: d)
+        #expect(!d.isConfirmed)
+    }
+
+    @Test("Lernbereit ist nur ein bestätigtes, seither nicht geändertes Thema")
+    func readyForLearning() throws {
+        let (repo, _) = try makeRepo()
+        let (s, batch) = try makeSource(repo, pages: 2)
+        let t = try repo.createTopic(in: s, title: "T")
+        #expect(!t.isReadyForLearning && !t.needsReconfirmation)
+        try repo.confirm(t)
+        #expect(t.isReadyForLearning && !t.needsReconfirmation)
+        // Every kind of edit of a confirmed topic needs a new confirmation.
+        let edits: [(String, () throws -> Void)] = [
+            ("Eintrag hinzufügen", { try repo.addEntry(to: t, kind: .keyStatement, text: "x") }),
+            ("Quelle zuordnen", { try repo.assign(batch.sortedSources[0], to: t) }),
+            ("Quelle entfernen", { try repo.remove(batch.sortedSources[0], from: t) }),
+            ("Umbenennen", { try repo.renameTopic(t, to: "T2") }),
+        ]
+        for (name, edit) in edits {
+            try repo.confirm(t)
+            #expect(t.isReadyForLearning, "\(name): vorher bereit")
+            try edit()
+            #expect(!t.isReadyForLearning, "\(name): danach nicht bereit")
+            #expect(t.isConfirmed && t.modifiedAt != nil, "\(name)")
+        }
+        // Moving a source into a confirmed topic marks the target (and the source topic) as changed.
+        let from = try repo.createTopic(in: s, title: "Von")
+        let to = try repo.createTopic(in: s, title: "Nach")
+        try repo.assign(batch.sortedSources[1], to: from)
+        try repo.confirm(from)
+        try repo.confirm(to)
+        try repo.moveSource(batch.sortedSources[1], from: from, to: to)
+        #expect(!from.isReadyForLearning && !to.isReadyForLearning)
+    }
+
+    @Test("Verweise ersetzen ohne das Thema als geändert zu markieren")
+    func replaceReferencesKeepsTopicReady() throws {
+        let (repo, _) = try makeRepo()
+        let (s, batch) = try makeSource(repo)
+        let t = try repo.createTopic(in: s, title: "T")
+        let source = batch.sortedSources[0]
+        let entry = try repo.addEntry(
+            to: t, kind: .keyStatement, text: "x", origin: .original,
+            sourceReferences: [SourceReference(sourceID: source.id, snapshotText: "alt")])
+        try repo.confirm(t)
+        try repo.replaceSourceReferences(
+            of: entry, with: [SourceReference(sourceID: source.id, snapshotText: "neu", snapshotHighlights: [])])
+        #expect(entry.sourceReferences.first?.snapshotText == "neu")
+        #expect(t.isReadyForLearning)
+    }
+
+    @Test("Der Schnappschuss im Quellenverweis wird gespeichert; ältere Verweise ohne ihn bleiben lesbar")
+    func referenceSnapshotRoundTrip() throws {
+        let id = UUID()
+        let marker = EntryHighlight(kind: .highlighter, color: RGBColor(hex: "#FFEB3B"))
+        let reference = SourceReference(
+            sourceID: id, lineIDs: [UUID()], digitizationVersion: 3, snapshotText: "Text", snapshotHighlights: [marker])
+        let data = try JSONEncoder().encode(reference)
+        let decoded = try JSONDecoder().decode(SourceReference.self, from: data)
+        #expect(decoded == reference)
+        let legacy = Data(#"{"sourceID":"\#(id.uuidString)","lineIDs":[],"digitizationVersion":2}"#.utf8)
+        let old = try JSONDecoder().decode(SourceReference.self, from: legacy)
+        #expect(old.snapshotText == nil && old.snapshotHighlights == nil)
+        #expect(old.digitizationVersion == 2)
+    }
+
     @Test("Aufteilen verschiebt Einträge in ein neues Thema mit den referenzierten Quellen")
     func split() throws {
         let (repo, _) = try makeRepo()

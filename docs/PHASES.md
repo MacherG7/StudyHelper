@@ -4,8 +4,8 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 
 | Phase | Status | Commit |
 |---|---|---|
-| 0 Gerüst, Test-PDFs, Skripte, Doku | in Arbeit | – |
-| 1 Datenmodell, Import, Digitalisierung, manuelle Strukturierung | offen | – |
+| 0 Gerüst, Test-PDFs, Skripte, Doku | fertig | 27235ba |
+| 1 Datenmodell, Import, Digitalisierung, manuelle Strukturierung | fertig (Geräteprüfungen offen) | b8bf773, b3622fd, 1c |
 | 2 Anbieter-Protokoll und Anbieter | offen | – |
 | 3 Hervorhebungen | offen | – |
 | 4 System-Prompts, sortierte Fassung, KI-Strukturierung, Lerneinheiten | offen | – |
@@ -44,30 +44,30 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 
 **Ziel:** Lernstoff importieren (Fotos, PDFs, Scans, Goodnotes), einmalig digitalisieren, dauerhaft speichern, prüfen/korrigieren und manuell in Themen strukturieren (Weg a).
 
-- [ ] SwiftData-Modell: Fach, Import, Quelle, Digitalisierung (Originaltext, Zeilen mit Bounding Box, Sicherheit, Kandidaten, Methode, Vision-Revision, iOS, Gerät, Zeitpunkt, Versionen, Nutzerkorrekturen), Hervorhebung, Thema und Eintrag mit Herkunft, Quellenverweis, Hervorhebung, Ergänzungsstatus
-- [ ] Entscheidung zum Ort der Modelle (Package vs. App) in DECISIONS festhalten
-- [ ] Fächerverwaltung: anlegen, bearbeiten, löschen
-- [ ] Import: Foto (Kamera, Mediathek), PDF, Dokumentenscanner (VisionKit)
-- [ ] PDF-Seiten mit PDFKit als Bilder rendern; eingebetteter PDF-Text samt Formatierung (Fett, Farbe, Unterstreichung) direkt übernehmen
-- [ ] Jede Seite/jedes Bild als Quelle speichern und direkt nach dem Import digitalisieren
-- [ ] Goodnotes-Parser: Ink (`/InkList`, `/C`, `/BS /W`), Textmarker, FreeText (`/Contents`), Stamp; Seiteninhalt (Bilder/Arbeitsblätter)
-- [ ] Format-Erkennung (bearbeitbar vs. reduziert) und Zuordnung beider Exporte (gleiche Seitenzahl/-größe, Bestätigung durch den Nutzer); `.goodnotes` abgelehnt
-- [ ] Share-Extension inkl. App Group („Teilen → Exportieren → PDF“ → StudyHelper)
-- [ ] Vision-Texterkennung (genauer Modus, Deutsch, Sprachkorrektur, Umlaute getestet); `RecognizeDocumentsRequest` ab iOS 26 für Tabellen, Listen, Absätze
-- [ ] Goodnotes: nur Ink in hoher Auflösung auf Weiß rendern, je Farbe eine Ebene, jede Ebene erkennen; Textmarker-Flächen per Position den Wörtern zuordnen; FreeText direkt übernehmen
-- [ ] Unterstreichungen aus der Form erkennen (lange, fast waagerechte Linie unter einer Zeile)
-- [ ] Sicherheitswerte und Kandidaten speichern, unsichere/unleserliche Stellen markieren
-- [ ] `customWords` aus bestätigten Fachbegriffen an Vision übergeben; Wirkung testen und dokumentieren
-- [ ] Abgleich mit dem reduzierten Goodnotes-PDF (übereinstimmend = sicher, abweichend = zur Prüfung)
-- [ ] Optionale Mehrfacherkennung mit veränderten Renderings (Einstellung, abschaltbar)
-- [ ] Vision-Revision, iOS-Version und Gerät pro Erkennung speichern
-- [ ] Prüfen-/Korrigieren-Ansicht: Bild und Text nebeneinander, Zeile ↔ Bildmarkierung, Übersicht offener Stellen, Text und Hervorhebungen von Hand korrigierbar, Korrekturen haben Vorrang
-- [ ] Erneute Erkennung nur auf Wunsch (einzelne Seite oder Import), mit Hinweis auf erhaltene Korrekturen und Versionierung
-- [ ] Manuelle Strukturierung: Themen anlegen, Seiten zuordnen, Felder füllen (nur Titel Pflicht), Text mit Hervorhebungen neben dem Editor, Vorschläge aus Hervorhebungen
-- [ ] Themen zusammenlegen, aufteilen, umbenennen, löschen; Quellen verschieben
-- [ ] Hinweis auf betroffene Themen bei nachträglicher Korrektur der Digitalisierung
-- [ ] Thema bestätigen (Voraussetzung zum Lernen)
-- [ ] Core: Wortzerlegung/Normalisierung als Grundlage für spätere Abgleiche
+- [x] SwiftData-Modell: Fach, Import, Quelle, Digitalisierung (Originaltext, Zeilen mit Bounding Box, Sicherheit, Kandidaten, Methode, Vision-Revision, iOS, Gerät, Zeitpunkt, Versionen, Nutzerkorrekturen), Hervorhebung, Thema und Eintrag mit Herkunft, Quellenverweis, Hervorhebung, Ergänzungsstatus
+- [x] Entscheidung zum Ort der Modelle (Package vs. App) in DECISIONS festhalten
+- [x] Fächerverwaltung: anlegen, bearbeiten, löschen
+- [x] Import: Foto (Kamera, Mediathek), PDF, Dokumentenscanner (VisionKit)
+- [x] PDF-Seiten mit PDFKit als Bilder rendern; eingebetteter PDF-Text samt Formatierung (Fett, Farbe, Unterstreichung) direkt übernehmen
+- [x] Jede Seite/jedes Bild als Quelle speichern und direkt nach dem Import digitalisieren
+- [x] Goodnotes-Parser: Ink (`/InkList`, `/C`, `/BS /W`), Textmarker, FreeText (`/Contents`), Stamp; Seiteninhalt (Bilder/Arbeitsblätter)
+- [x] Format-Erkennung (bearbeitbar vs. reduziert) und Zuordnung beider Exporte (gleiche Seitenzahl/-größe, Bestätigung durch den Nutzer); `.goodnotes` abgelehnt
+- [x] ~~Share-Extension inkl. App Group~~ → „Öffnen in StudyHelper“ als PDF-Dokumenttyp (kostenloser Developer-Account, D-013)
+- [x] Vision-Texterkennung (genauer Modus, Deutsch, Sprachkorrektur, Umlaute getestet); `RecognizeDocumentsRequest` ab iOS 26 für Tabellen, Listen, Absätze
+- [x] Goodnotes: nur Ink in hoher Auflösung auf Weiß rendern, je Farbe eine Ebene, jede Ebene erkennen; Textmarker-Flächen per Position den Wörtern zuordnen; FreeText direkt übernehmen
+- [x] Unterstreichungen aus der Form erkennen (lange, fast waagerechte Linie unter einer Zeile)
+- [x] Sicherheitswerte und Kandidaten speichern, unsichere/unleserliche Stellen markieren
+- [x] `customWords` aus bestätigten Fachbegriffen an Vision übergeben; Wirkung testen und dokumentieren
+- [x] Abgleich mit dem reduzierten Goodnotes-PDF (übereinstimmend = sicher, abweichend = zur Prüfung)
+- [x] Optionale Mehrfacherkennung mit veränderten Renderings (Einstellung, abschaltbar)
+- [x] Vision-Revision, iOS-Version und Gerät pro Erkennung speichern
+- [x] Prüfen-/Korrigieren-Ansicht: Bild und Text nebeneinander, Zeile ↔ Bildmarkierung, Übersicht offener Stellen, Text und Hervorhebungen von Hand korrigierbar, Korrekturen haben Vorrang
+- [x] Erneute Erkennung nur auf Wunsch (einzelne Seite oder Import), mit Hinweis auf erhaltene Korrekturen und Versionierung
+- [x] Manuelle Strukturierung: Themen anlegen, Seiten zuordnen, Felder füllen (nur Titel Pflicht), Text mit Hervorhebungen neben dem Editor, Vorschläge aus Hervorhebungen
+- [x] Themen zusammenlegen, aufteilen, umbenennen, löschen; Quellen verschieben
+- [x] Hinweis auf betroffene Themen bei nachträglicher Korrektur der Digitalisierung
+- [x] Thema bestätigen (Voraussetzung zum Lernen)
+- [x] Core: Wortzerlegung/Normalisierung als Grundlage für spätere Abgleiche
 
 **Abnahmekriterien**
 - Alle vier Fixture-PDFs lassen sich importieren; Format-Erkennung und Zuordnung beider Exporte funktionieren (negative Fälle: `Andere_Notiz_reduziert.pdf` mit anderer Seitenzahl und `Andere_Groesse_reduziert.pdf` mit anderer Seitengröße werden nicht zugeordnet).
@@ -76,7 +76,7 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 - Digitalisierung läuft einmalig; spätere Schritte lösen keine erneute Erkennung aus (Test).
 - Korrekturen überleben eine erneute Erkennung; alter Stand ist als Version wiederherstellbar.
 - Ein manuell angelegtes Thema mit Quellenverweisen lässt sich speichern, bearbeiten, bestätigen; Tippen auf einen Eintrag markiert die Stelle im Bild.
-- Geräteprüfungen MT-1.x (Goodnotes-Exporte, Vision, Share-Extension) durchgeführt und protokolliert.
+- Geräteprüfungen MT-1.x (Goodnotes-Exporte, Vision, „Öffnen in“) durchgeführt und protokolliert. **Offen – vom Entwickler auf dem Gerät durchzuführen.**
 
 ---
 

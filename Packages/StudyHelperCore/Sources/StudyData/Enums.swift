@@ -67,16 +67,25 @@ public struct SourceReference: Codable, Hashable, Sendable {
     /// carried over between versions, but this keeps a reference interpretable).
     public var digitizationID: UUID?
     public var digitizationVersion: Int?
+    /// Joined text of the referenced lines as it was when the entry was taken over (or when the user last
+    /// confirmed a change of the source). Compared with the current text to detect "Quelle geändert".
+    /// nil for references created without a snapshot.
+    public var snapshotText: String?
+    /// The emphasis on the referenced lines at that time (see `snapshotText`).
+    public var snapshotHighlights: [EntryHighlight]?
 
     public init(
         sourceID: UUID, lineIDs: [UUID] = [], rect: NormalizedRect? = nil,
-        digitizationID: UUID? = nil, digitizationVersion: Int? = nil
+        digitizationID: UUID? = nil, digitizationVersion: Int? = nil,
+        snapshotText: String? = nil, snapshotHighlights: [EntryHighlight]? = nil
     ) {
         self.sourceID = sourceID
         self.lineIDs = lineIDs
         self.rect = rect
         self.digitizationID = digitizationID
         self.digitizationVersion = digitizationVersion
+        self.snapshotText = snapshotText
+        self.snapshotHighlights = snapshotHighlights
     }
 
     public init(from decoder: Decoder) throws {
@@ -86,6 +95,8 @@ public struct SourceReference: Codable, Hashable, Sendable {
         rect = try c.decodeIfPresent(NormalizedRect.self, forKey: .rect)
         digitizationID = try c.decodeIfPresent(UUID.self, forKey: .digitizationID)
         digitizationVersion = try c.decodeIfPresent(Int.self, forKey: .digitizationVersion)
+        snapshotText = try c.decodeIfPresent(String.self, forKey: .snapshotText)
+        snapshotHighlights = try c.decodeIfPresent([EntryHighlight].self, forKey: .snapshotHighlights)
     }
 }
 

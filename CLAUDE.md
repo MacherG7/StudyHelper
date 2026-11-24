@@ -70,20 +70,11 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
 
-- **Fertig:** Phase 0 – XcodeGen-Projekt (iOS 18, iPhone + iPad), Core-Package
-  (`StudyCore`, `TestFixtures`, `make-fixtures`), 4 synthetische Goodnotes-PDFs mit
-  Ground Truth und 36 Strukturtests, Skripte, Doku. `scripts/test.sh --ui` grün.
-- **In Arbeit:** Phase 1 (Plan: `/Users/milogotz/.claude/plans/lernstoff-ein-fotos-von-tranquil-crane-of-b35b397e-3b8c-4b8f-94df-35f61c6a4591.md`).
-  1a committet: `StudyCore` (Ergebnistypen, Tokenizer, Abgleich, Markdown, Korrektur-Merger),
-  `StudyImport` (Goodnotes-Parser, Farbebenen, Hervorhebungen, Abgleich reduziertes PDF, Vision,
-  eingebetteter Text, `DigitizationPipeline` mit Seitenfehlern/Abbruch), `StudyData` (SwiftData
-  `SchemaV1`, `StudyRepository`, Korrekturen für Text und Hervorhebungen, stabile Zeilen-IDs).
-  Echte-Vision-Tests mit `SKIP_VISION_TESTS=1` überspringbar.
-- **1b committet:** App-Rahmen (`App/`), Fächer, Import (Fotos, Kamera, Scanner, PDF, „Öffnen in“,
-  Goodnotes-Zuordnung), `ImportCoordinator` (Pipeline hinter `DigitizingPipeline`, seitenweise
-  speichern, Abbruch), Prüfansicht (Bild/Text, Korrektur, Hervorhebungen, Versionen, Neu erkennen),
-  Einstellungen (Mehrfacherkennung). 26 App-Unit-Tests, 7 UI-Tests (`-uiTestInMemory -uiTestSeed`).
-- **Nächster Schritt:** 1c (manuelle Strukturierung: Themen pro Fach, Editor mit fester Struktur,
-  Quellen und Übernahme aus dem Text, Zusammenlegen/Aufteilen, Bestätigen; Platzhalter „Themen“ in
-  `SubjectDetailView` ersetzen), danach Abschluss-Review Phase 1. Agenten nacheinander starten und
-  danach auf zurückgelassene Prozesse prüfen.
+- **Fertig:** Phase 0 und Phase 1 (1a Datenmodell/Import/Erkennung, 1b Fächer/Import-UI/Prüfansicht/
+  „Öffnen in“, 1c manuelle Strukturierung mit Quellenverweisen, „Quelle geändert“, Bestätigung).
+  Kostenloser Developer-Account: keine Share-Extension/App Groups (D-013).
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.41 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+- **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
+  Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
+  API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf
+  zurückgelassene Prozesse/Simulatoren prüfen.

@@ -9,6 +9,8 @@ struct PageImageView: View {
     let highlights: [RecognizedHighlight]
     @Binding var selectedLineID: UUID?
     let onlyOpen: Bool
+    /// An area of the page to point at (the source of a topic entry); the view scrolls to it.
+    var markedRect: NormalizedRect?
 
     @State private var zoom: CGFloat = 1
     @State private var baseZoom: CGFloat = 1
@@ -36,13 +38,20 @@ struct PageImageView: View {
             )
             .overlay(alignment: .bottomTrailing) { zoomControls }
             .onChange(of: selectedLineID) { _, id in
-                guard let id else { return }
+                guard let id, let line = lines.first(where: { $0.id == id }) else { return }
                 if tappedHere == id { tappedHere = nil; return }
-                focus(on: id, viewport: geo.size)
+                focus(on: line.rect, viewport: geo.size)
+            }
+            .onChange(of: markedRect) { _, rect in
+                if let rect { focus(on: rect, viewport: geo.size) }
             }
             .task(id: image.size.width) {
                 // Coming back to a page (or switching from the text view) with a line selected.
-                if let id = selectedLineID { focus(on: id, viewport: geo.size) }
+                if let id = selectedLineID, let line = lines.first(where: { $0.id == id }) {
+                    focus(on: line.rect, viewport: geo.size)
+                } else if let markedRect {
+                    focus(on: markedRect, viewport: geo.size)
+                }
             }
         }
         .accessibilityIdentifier("pageImage")
@@ -56,12 +65,11 @@ struct PageImageView: View {
         return CGSize(width: image.size.width * scale, height: image.size.height * scale)
     }
 
-    /// Zooms in (if needed) and scrolls so that the line is in the middle of the viewport.
-    private func focus(on id: UUID, viewport: CGSize) {
-        guard let line = lines.first(where: { $0.id == id }) else { return }
+    /// Zooms in (if needed) and scrolls so that the area is in the middle of the viewport.
+    private func focus(on area: NormalizedRect, viewport: CGSize) {
         let fit = fitSize(in: viewport)
         // Zoom in so that the line fills most of the width, but never zoom out and not beyond 3×.
-        let lineWidth = max(line.rect.width * fit.width, 1)
+        let lineWidth = max(area.width * fit.width, 1)
         let lineZoom = min(viewport.width * 0.9 / lineWidth, 3)
         let target = max(zoom, lineZoom)
         if abs(target - zoom) > 0.01 {
@@ -71,12 +79,12 @@ struct PageImageView: View {
         let content = CGSize(width: fit.width * target, height: fit.height * target)
         Task {
             try? await Task.sleep(for: .milliseconds(120))
-            let lineLeft = line.rect.minX * content.width
-            let lineW = line.rect.width * content.width
+            let lineLeft = area.minX * content.width
+            let lineW = area.width * content.width
             // A line wider than the viewport is shown from its start, otherwise it is centered.
-            let wantedX = lineW > viewport.width - 24 ? lineLeft - 12 : line.rect.midX * content.width - viewport.width / 2
+            let wantedX = lineW > viewport.width - 24 ? lineLeft - 12 : area.midX * content.width - viewport.width / 2
             let x = min(max(wantedX, 0), max(content.width - viewport.width, 0))
-            let y = min(max(line.rect.midY * content.height - viewport.height / 2, 0), max(content.height - viewport.height, 0))
+            let y = min(max(area.midY * content.height - viewport.height / 2, 0), max(content.height - viewport.height, 0))
             withAnimation { position.scrollTo(x: x, y: y) }
         }
     }
@@ -91,6 +99,9 @@ struct PageImageView: View {
                 .accessibilityLabel("Originalbild der Seite")
             ForEach(highlights) { highlight in
                 HighlightMark(highlight: highlight, size: size)
+            }
+            if let markedRect {
+                SourceMark(rect: markedRect, size: size)
             }
             ForEach(lines) { line in
                 LineOverlay(
@@ -217,5 +228,28 @@ private struct HighlightMark: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The area an entry of a topic points at, drawn over the page image.
+private struct SourceMark: View {
+    let rect: NormalizedRect
+    let size: CGSize
+
+    var body: some View {
+        let frame = CGRect(
+            x: rect.x * size.width, y: rect.y * size.height,
+            width: max(rect.width * size.width, 14), height: max(rect.height * size.height, 14))
+        RoundedRectangle(cornerRadius: 4)
+            .fill(Color.accentColor.opacity(0.2))
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color.accentColor, lineWidth: 3))
+            .padding(-4)
+            .frame(width: frame.width, height: frame.height)
+            .offset(x: frame.minX, y: frame.minY)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Markierte Stelle im Original")
+            .accessibilityValue("ausgewählt")
+            .accessibilityIdentifier("sourceMark")
     }
 }
