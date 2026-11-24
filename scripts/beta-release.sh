@@ -42,6 +42,7 @@ IPA_PATHS=(
     Packages/StudyHelperCore/Sources/StudyCore
     Packages/StudyHelperCore/Sources/StudyImport
     Packages/StudyHelperCore/Sources/StudyData
+    Packages/StudyHelperCore/Sources/StudyAI
     scripts/build-ipa.sh
     scripts/embed-commit.sh
 )

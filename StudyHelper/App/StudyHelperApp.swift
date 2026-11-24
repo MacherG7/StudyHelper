@@ -8,6 +8,7 @@ import SwiftUI
 /// - `-uiTestInMemory`: use an in-memory store (no data on disk)
 /// - `-uiTestSeed`: additionally fill it with demo data (`UITestSeeder`)
 /// - `-uiTestSeedVersions`: with `-uiTestSeed`, the demo page has a second version
+/// - `-uiTestMockAI`: with `-uiTestInMemory`, every AI provider kind is a mock (no network, in-memory keys)
 @main
 struct StudyHelperApp: App {
     @State private var environment = AppEnvironment.make()
@@ -21,6 +22,7 @@ struct StudyHelperApp: App {
                         .modelContainer(app.container)
                         .environment(\.studyRepository, app.repository)
                         .environment(app.incomingFiles)
+                        .environment(app.ai)
                         .onOpenURL { url in Task { await app.incomingFiles.receive(url) } }
                 case .failed(let message):
                     ContentUnavailableView(

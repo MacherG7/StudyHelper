@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import StudyAI
 import StudyData
 import SwiftData
 import SwiftUI
@@ -10,11 +11,31 @@ final class AppServices {
     let container: ModelContainer
     let repository: StudyRepository
     let incomingFiles: IncomingFiles
+    let ai: AIService
 
-    init(container: ModelContainer) {
+    /// - Parameter makeAI: nil builds the production service (settings in UserDefaults, keys in the Keychain).
+    init(container: ModelContainer, makeAI: ((StudyRepository) -> AIService)? = nil) {
         self.container = container
-        self.repository = StudyRepository(container: container)
+        let repository = StudyRepository(container: container)
+        self.repository = repository
         self.incomingFiles = IncomingFiles()
+        if let makeAI {
+            self.ai = makeAI(repository)
+        } else {
+            let keyStore = KeychainKeyStore()
+            self.ai = AIService(
+                repository: repository, settingsStore: AISettingsStore(), keyStore: keyStore,
+                backend: .live(keyStore: keyStore))
+        }
+    }
+
+    /// Service for UI tests: settings in a fresh suite, keys in memory; with `mockAI` every provider kind is a mock.
+    static func makeUITestAI(repository: StudyRepository, mockAI: Bool) -> AIService {
+        let suite = UserDefaults(suiteName: "StudyHelper.uitest.\(UUID().uuidString)") ?? .standard
+        let keyStore = InMemoryKeyStore()
+        return AIService(
+            repository: repository, settingsStore: AISettingsStore(defaults: suite), keyStore: keyStore,
+            backend: mockAI ? .mock() : .live(keyStore: keyStore))
     }
 }
 
@@ -27,7 +48,11 @@ enum AppEnvironment {
         do {
             let inMemory = arguments.contains("-uiTestInMemory")
             let container = try ModelContainerFactory.makeContainer(inMemory: inMemory)
-            let services = AppServices(container: container)
+            // UI tests (in-memory) never touch the real Keychain or the real settings.
+            let mockAI = arguments.contains("-uiTestMockAI")
+            let services = AppServices(
+                container: container,
+                makeAI: inMemory ? { AppServices.makeUITestAI(repository: $0, mockAI: mockAI) } : nil)
             if inMemory, arguments.contains("-uiTestSeed") {
                 try UITestSeeder.seed(
                     services.repository, withVersions: arguments.contains("-uiTestSeedVersions"),
