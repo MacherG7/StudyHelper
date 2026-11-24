@@ -16,6 +16,8 @@ let package = Package(
         .library(name: "StudyCore", targets: ["StudyCore"]),
         .library(name: "StudyImport", targets: ["StudyImport"]),
         .library(name: "StudyData", targets: ["StudyData"]),
+        // AI providers behind one protocol (Claude, OpenAI, OpenAI-compatible, Apple), keys in the Keychain.
+        .library(name: "StudyAI", targets: ["StudyAI"]),
         // Test-only: synthetic Goodnotes PDFs and their ground truth. Never linked into the app.
         .library(name: "TestFixtures", targets: ["TestFixtures"]),
         .executable(name: "make-fixtures", targets: ["make-fixtures"]),
@@ -32,6 +34,10 @@ let package = Package(
         // SwiftData models and persistence operations.
         .target(
             name: "StudyData",
+            dependencies: ["StudyCore"]
+        ),
+        .target(
+            name: "StudyAI",
             dependencies: ["StudyCore"]
         ),
         .target(
@@ -56,7 +62,12 @@ let package = Package(
         ),
         .testTarget(
             name: "StudyDataTests",
-            dependencies: ["StudyData"]
+            dependencies: ["StudyData"],
+            resources: [.copy("Resources")]
+        ),
+        .testTarget(
+            name: "StudyAITests",
+            dependencies: ["StudyAI"]
         ),
         .testTarget(
             name: "TestFixturesTests",

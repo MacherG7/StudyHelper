@@ -489,10 +489,12 @@ public typealias HighlightCorrection = SchemaV1.HighlightCorrection
 public typealias Topic = SchemaV1.Topic
 public typealias TopicEntry = SchemaV1.TopicEntry
 
-/// Migration plan; add `SchemaV2` and a stage here when the shape changes.
+/// Migration plan. V1 -> V2 only adds the `RequestLog` entity, so a lightweight stage is enough. `SchemaV2` reuses the
+/// V1 model classes unchanged (their checksums stay the same) and lists the new one; this is verified against a real
+/// V1 store in `MigrationTests`. When a V1 model has to change, freeze the old shape in its own nested type first.
 public enum StudyMigrationPlan: SchemaMigrationPlan {
-    public static var schemas: [any VersionedSchema.Type] { [SchemaV1.self] }
-    public static var stages: [MigrationStage] { [] }
+    public static var schemas: [any VersionedSchema.Type] { [SchemaV1.self, SchemaV2.self] }
+    public static var stages: [MigrationStage] { [.lightweight(fromVersion: SchemaV1.self, toVersion: SchemaV2.self)] }
 }
 
 public enum ModelContainerFactory {
@@ -510,7 +512,7 @@ public enum ModelContainerFactory {
     ///   - url: explicit store location (tests); default is `defaultStoreURL()`.
     @MainActor
     public static func makeContainer(inMemory: Bool = false, url: URL? = nil) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        let schema = Schema(versionedSchema: SchemaV2.self)
         let configuration: ModelConfiguration
         if inMemory {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
