@@ -27,6 +27,8 @@ scripts/test.sh --ui        # zusätzlich XCTest-UI-Tests
 SKIP_VISION_TESTS=1 scripts/test.sh   # ohne Tests mit echter Vision-Texterkennung
 scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
+scripts/publish.sh          # nach jedem Commit: Secret-Check, Push nach GitHub, Xcode-Checkout nachziehen
+scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 ```
 
 Simulator: `SIM_DEVICE` (Standard „iPhone 17“), iPad: `IPAD_DEVICE`.
@@ -64,7 +66,11 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - API-Parameter (Modelle, Reasoning, Usage, Streaming) aus der aktuellen offiziellen
   Doku von Anthropic und OpenAI, nicht aus dem Gedächtnis.
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
-- Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt), nur lokal.
+- Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
+  `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, privat; Branch `main`), nach jeder fertigen Phase
+  `scripts/release.sh`. Das Repository `StudyHelper-Test` nie anfassen. Der Haupt-Checkout
+  `/Users/milogotz/Documents/StudyHelper` (für Xcode) wird per Fast-Forward nachgezogen; der Hook
+  `scripts/git-hooks/post-merge` erzeugt dort das Xcode-Projekt neu (`git config core.hooksPath scripts/git-hooks`).
 
 ## Stand
 

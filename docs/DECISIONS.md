@@ -162,6 +162,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Jede Zeile, die erst beim Nachlesen erkannt wurde, ist mindestens „unsicher“ mit dem Prüfgrund `reReadSeparately`. Die Wörter behalten ihren eigenen Status, damit innerhalb der Zeile nur zweifelhafte Wörter markiert sind.
 - **Konsequenzen:** Mehr offene Stellen in der Prüfansicht (auf der Testdatei 11 von 266 Zeilen). Eine Korrektur oder Bestätigung durch den Nutzer hebt die Markierung wie bei anderen unsicheren Zeilen auf.
 
+## D-021 GitHub-Repository und lokaler Xcode-Checkout
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Bisher blieben alle Commits lokal im Worktree; Xcode öffnete einen veralteten Haupt-Checkout.
+- **Entscheidung:** Privates Repository `MacherG7/StudyHelper`, Branch `main`. Nach jedem Commit pusht `scripts/publish.sh` (mit Secret-Check) und zieht den Haupt-Checkout per Fast-Forward nach; ein `post-merge`/`post-checkout`-Hook erzeugt dort das Xcode-Projekt neu. Jede fertige Phase bekommt mit `scripts/release.sh` einen Tag `phase-N` (rückwirkend: `phase-0`, `phase-1`). Das Repository `StudyHelper-Test` wird nicht verwendet.
+- **Konsequenzen:** Ohne `gh` gibt es nur Tags, keine Release-Seiten; mit installiertem und angemeldetem `gh` legt `release.sh` sie mit an. Lokale Änderungen im Haupt-Checkout (z. B. von Xcode ergänzte Texte im String-Katalog) können das Nachziehen blockieren; das Skript meldet das.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

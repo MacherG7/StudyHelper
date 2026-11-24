@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Regenerates StudyHelper.xcodeproj after a merge/pull, so Xcode sees new files. Never blocks git.
+ROOT="$(git rev-parse --show-toplevel)"
+if command -v xcodegen >/dev/null 2>&1 && [[ -f "$ROOT/project.yml" ]]; then
+    (cd "$ROOT" && xcodegen generate --quiet --use-cache >/dev/null 2>&1) || echo "post-merge: xcodegen fehlgeschlagen" >&2
+fi
+exit 0
