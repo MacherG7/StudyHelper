@@ -8,9 +8,17 @@ enum KnownMisreadings {
     private static let zumBeispiel = try! NSRegularExpression(
         pattern: "(?<![\\p{L}\\d])[zZ2]\\.\\s?ß(?=[\\s.,;:)]|$)")
 
+    /// Page reference "B.S.35" (Buch, Seite 35) read with 5 for S: after a single capital and a dot, "5." followed
+    /// by a number is the abbreviation "S." (not after "z.B.", where a number may follow).
+    private static let pageReference = try! NSRegularExpression(
+        pattern: "(?<=(?<![\\p{L}.])\\p{Lu}\\.)5\\.(?=\\s?\\d)")
+
     static func fix(_ text: String) -> String {
-        let range = NSRange(text.startIndex..., in: text)
-        return zumBeispiel.stringByReplacingMatches(in: text, range: range, withTemplate: "z.B")
+        var result = zumBeispiel.stringByReplacingMatches(
+            in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "z.B")
+        result = pageReference.stringByReplacingMatches(
+            in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "S.")
+        return result
     }
 
     static func apply(to line: RecognizedLine) -> RecognizedLine {

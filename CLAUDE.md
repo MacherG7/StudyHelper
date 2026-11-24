@@ -93,7 +93,9 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   Zusammenhängende Zeilen werden als Absätze gespeichert (`paragraphID` je Zeile, D-023).
   Verteilung über eine Source für SideStore, AltStore und StikStore vorbereitet (D-024,
   `distribution/README.md`); das öffentliche Repository `MacherG7/StudyHelper-Source` legt der Entwickler an.
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.44 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+  Formpfeile in Zeilen werden als „→“ eingesetzt, Nachlesen zeilentreu (D-025, F1 0,9625 mit S. 9 als
+  Referenz). Unterstreichungen ohne vermutete Bedeutung, Nutzer oder KI entscheidet (D-026).
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.47 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
   API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf

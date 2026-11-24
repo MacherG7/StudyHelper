@@ -224,6 +224,9 @@ besonders wichtige Inhalte und werden gezielt erkannt.
   die Erkennung ist
 - Vermutete Bedeutung als Vorschlag: Überschrift, Fachbegriff, Definition,
   Merksatz, Formel oder "wichtig". Der Nutzer kann die Bedeutung ändern.
+- Unterstrichen bedeutet nicht immer Überschrift: Bei Unterstreichungen wird
+  keine Bedeutung vermutet. Ob es eine Überschrift oder ein wichtiger
+  Fachbegriff ist, entscheidet der Nutzer oder die KI.
 - Mit bildfähigem KI-Modell: Die KI erkennt die Hervorhebungen bei der
   Transkription und gibt sie strukturiert zurück
 - Ohne bildfähiges Modell: Die App analysiert das Bild selbst, z. B. die Farbe

@@ -88,9 +88,11 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.40 | Zeile korrigieren, die in einem Thema verwendet wird | Hinweis „Betroffene Themen“; im Thema „Quelle geändert“ mit „Text aus Quelle übernehmen“ | |
 | MT-1.41 | Tabellen-Eintrag auf iPhone und iPad bearbeiten | Zeilen/Spalten hinzufügen und entfernen funktioniert, nichts abgeschnitten | |
 | MT-1.42 | Dichten Goodnotes-Export mit Handschrift importieren (z. B. `LocalSamples/GPG_bearbeitbar.pdf`) | Keine ganzen Zeilen fehlen, keine Zeile mit kyrillischen Zeichen, „unleserlich“ nie über mehrere Zeilen; nachgelesene Zeilen erscheinen als „unsicher“ | |
-| MT-1.43 | Goodnotes-Seite mit eingefügtem Bild (Screenshot eines Arbeitsblatts) und eingescanntem Arbeitsblatt importieren | Gedruckter Text im Bild erscheint in der Prüfansicht an der richtigen Stelle; Pfeile vom Formwerkzeug erzeugen keinen Text | |
+| MT-1.43 | Goodnotes-Seite mit eingefügtem Bild (Screenshot eines Arbeitsblatts) und eingescanntem Arbeitsblatt importieren | Gedruckter Text im Bild erscheint in der Prüfansicht an der richtigen Stelle; Verbindungspfeile vom Formwerkzeug erzeugen keinen Text | |
 | MT-1.44 | Unterstrichene, fett geschriebene Wörter in Anführungszeichen („Syndrom“) | Werden richtig gelesen oder als „unsicher“ markiert, nie stillschweigend falsch | |
 | MT-1.45 | Bestehende Digitalisierungen nach dem Update öffnen | Alte Seiten laden ohne Fehler (Zeilen ohne Absatz-ID); nach „Neu erkennen“ sind Absätze gesetzt | |
+| MT-1.46 | Goodnotes-Seite mit Pfeil aus dem Formwerkzeug mitten in einer Zeile („Kausalkette (→ B.S.35)“) | Der Pfeil steht im erkannten Text an der richtigen Stelle; Pfeile zwischen Kästen erscheinen nicht als Text | |
+| MT-1.47 | Ganze Zeile und einzelnes Wort unterstreichen, importieren, Prüfansicht und Themen-Vorschläge öffnen | Bedeutung „Offen“; Vorschlag bietet „Als Titel des Themas“, „Als Begriff“, „Als Kernaussage“ an; nach Wahl „Überschrift“ erscheint die Zeile als Überschrift | |
 
 ---
 

@@ -82,7 +82,7 @@ struct GoodnotesEmphasisTests {
 
     // MARK: Underlines
 
-    @Test("Unterstreichung: Überschrift Fotosynthese, ganze Zeile, kein Buchstabenteil")
+    @Test("Unterstreichung: Fotosynthese, ganze Zeile, kein Buchstabenteil, Bedeutung offen")
     func underlineMatchesTruth() throws {
         let (loaded, pages) = try allPages()
         let truthUnderlines = loaded.truth.items(ofKind: .underline)
@@ -94,7 +94,7 @@ struct GoodnotesEmphasisTests {
             let expected = Set(truth.relatedItemIDs)
             let highlight = try #require(page.highlights(of: .underline).first { page.itemIDs(of: $0) == expected })
             #expect(highlight.source == .goodnotesShape)
-            #expect(highlight.suggestedMeaning == .heading)
+            #expect(highlight.suggestedMeaning == nil)
             #expect(highlight.status == .confident)
             #expect(highlight.text == "Fotosynthese")
             #expect(highlight.rect.iou(GoodnotesTestSupport.normalized(truth.bbox, truth: loaded.truth)) > 0.8)

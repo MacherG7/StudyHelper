@@ -180,10 +180,12 @@ struct HighlightSuggestion: Identifiable, Equatable {
         case rule
         /// Anything else that was emphasized: a key statement.
         case statement
+        /// Underlined without a meaning yet: heading, term or statement is the user's choice.
+        case open
 
         var entryKind: EntryKind {
             switch self {
-            case .heading, .statement: .keyStatement
+            case .heading, .statement, .open: .keyStatement
             case .term: .term
             case .rule: .rule
             }
@@ -255,7 +257,10 @@ enum HighlightSuggestions {
         case .definition, .important: return .statement
         case nil:
             switch highlight.kind {
-            case .circled, .underline, .doubleUnderline:
+            case .underline, .doubleUnderline:
+                // Underlined is a heading as often as a term: the user decides (D-026).
+                return .open
+            case .circled:
                 // A short emphasized phrase is a term; a whole emphasized sentence is a statement.
                 return text.split(whereSeparator: \.isWhitespace).count <= 4 ? .term : .statement
             default:

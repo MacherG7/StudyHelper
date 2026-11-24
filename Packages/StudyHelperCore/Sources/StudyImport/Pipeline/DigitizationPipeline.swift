@@ -285,6 +285,11 @@ public struct DigitizationPipeline: Sendable {
             usedReduced = true
         }
 
+        // Arrows drawn with the shape tool inside a text row are stamps, not ink: insert them into the text.
+        if settings.insertsShapeArrows {
+            inkLines = ShapeArrows.insert(ShapeArrows.arrows(of: pdfPage), into: inkLines)
+        }
+
         let provisional = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + printed)
 
         // 4. Emphasis from the annotations; formatting highlights of the embedded text without duplicates.

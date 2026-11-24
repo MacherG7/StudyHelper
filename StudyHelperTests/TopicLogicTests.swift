@@ -167,9 +167,20 @@ struct TopicLogicTests {
     func circledSentenceIsStatement() {
         let l = line("Pflanzen bilden Zucker aus Licht", order: 0, y: 0.1)
         let sentence = highlight("Pflanzen bilden Zucker aus Licht", kind: .circled, in: l, word: 0)
-        let word = highlight("Zucker", kind: .underline, in: l, word: 3)
+        let word = highlight("Zucker", kind: .circled, in: l, word: 3)
         #expect(HighlightSuggestions.role(for: sentence, text: sentence.text) == .statement)
         #expect(HighlightSuggestions.role(for: word, text: word.text) == .term)
+    }
+
+    @Test("Unterstrichen ohne Bedeutung: Überschrift oder Begriff entscheidet der Nutzer")
+    func underlinedWithoutMeaningIsOpen() {
+        let l = line("Pflanzen bilden Zucker aus Licht", order: 0, y: 0.1)
+        let word = highlight("Zucker", kind: .underline, in: l, word: 2)
+        let whole = highlight("Pflanzen bilden Zucker aus Licht", kind: .doubleUnderline, in: l, word: 0)
+        #expect(HighlightSuggestions.role(for: word, text: word.text) == .open)
+        #expect(HighlightSuggestions.role(for: whole, text: whole.text) == .open)
+        let chosen = highlight("Zucker", kind: .underline, meaning: .heading, in: l, word: 2)
+        #expect(HighlightSuggestions.role(for: chosen, text: chosen.text) == .heading)
     }
 
     @Test("Vorschlag: Quellenverweis auf die Wortkästen, Definition aus dem Rest der Zeile")

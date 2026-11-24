@@ -25,6 +25,9 @@ enum HandwritingRetry {
     static let secondAttemptScale = 1.5
     /// Default for `PipelineSettings.retryCropLimit`.
     static let defaultCropLimit = 40
+    /// Strokes of the segment's row this close (in line heights) to its ends join it, even if the imprecise box of
+    /// a line in the row above or below claimed them ("Sch" of „Schädigungen“ under a tall first line).
+    static let adjacentGap = 0.6
 
     /// Ink of one pen layer that is read again as one piece (one row, no wide gaps).
     struct Segment: Hashable {
@@ -33,6 +36,11 @@ enum HandwritingRetry {
         var strokes: [Int]
         /// Bounding box of the strokes in page points, origin top-left.
         var box: CGRect
+
+        /// Vertical center of the ink row the segment was cut from, in page points (0: unknown).
+        var rowMid: Double = 0
+        /// The unexplained ink of the segment fits in one row (not a dense list split into rows later).
+        var isSingleRow = true
 
         /// Reading priority: more strokes first.
         var weight: Int { strokes.count }
@@ -89,6 +97,11 @@ enum HandwritingRetry {
             guard !candidates.isEmpty else { continue }
             let all = IllegibleInk.textStrokes(page: page, strokeIndices: strokes, shapeRects: shapeRects, lineHeight: lineHeight)
             let boxes = candidates.map(\.box)
+            let remainingRects = remaining.filter { !$0.rect.isEmpty }.map { line in
+                CGRect(x: line.rect.x * page.size.width, y: line.rect.y * page.size.height,
+                       width: line.rect.width * page.size.width, height: line.rect.height * page.size.height)
+            }
+            var layerSegments: [Segment] = []
             for row in InkRows.bands(of: boxes, lineHeight: lineHeight) {
                 for segment in InkRows.segments(of: row.members, boxes: boxes, lineHeight: lineHeight) {
                     let box = InkRows.union(of: segment, boxes: boxes)
@@ -104,14 +117,60 @@ enum HandwritingRetry {
                             members.insert(stroke.index)
                         }
                     }
-                    let indices = members.sorted()
+                    // Strokes right next to the segment in its row join it, unless a line of this row explains them.
+                    let rowLines = remainingRects.filter { $0.midY >= top && $0.midY <= bottom }
+                    var grown = box
+                    // Only for segments of one row: tall segments (dense lists) are split into rows later and must keep
+                    // exactly their own strokes.
+                    let isSingleRow = box.height <= InkRows.tallBand * lineHeight
+                    var changed = isSingleRow
+                    while changed {
+                        changed = false
+                        for stroke in all where !members.contains(stroke.index) {
+                            let center = CGPoint(x: stroke.box.midX, y: stroke.box.midY)
+                            guard center.y >= top, center.y <= bottom,
+                                  max(grown.minX - stroke.box.maxX, stroke.box.minX - grown.maxX) <= adjacentGap * lineHeight,
+                                  !rowLines.contains(where: { $0.contains(center) }) else { continue }
+                            members.insert(stroke.index)
+                            grown = grown.union(stroke.box)
+                            changed = true
+                        }
+                    }
                     let bounds = all.filter { members.contains($0.index) }.map(\.box)
                     let full = bounds.dropFirst().reduce(bounds.first ?? box) { $0.union($1) }
-                    plan.segments.append(Segment(layer: layer, strokes: indices, box: full))
+                    layerSegments.append(Segment(layer: layer, strokes: members.sorted(), box: full, rowMid: (row.lo + row.hi) / 2, isSingleRow: isSingleRow))
                 }
             }
+            plan.segments += exclusive(layerSegments, strokes: all)
         }
         return plan
+    }
+
+    /// Every stroke in one segment only: a stroke claimed by segments of two rows (a descender reaching into the
+    /// row below) stays with the row whose center is closest to it. Boxes are recomputed from the strokes.
+    /// Tall segments (several rows, split later) keep all their strokes and take no part.
+    static func exclusive(_ segments: [Segment], strokes: [IllegibleInk.Candidate]) -> [Segment] {
+        let boxes = Dictionary(strokes.map { ($0.index, $0.box) }, uniquingKeysWith: { first, _ in first })
+        let single = segments.map(\.isSingleRow)
+        var owner: [Int: Int] = [:]
+        for (position, segment) in segments.enumerated() where single[position] {
+            for index in segment.strokes {
+                guard let box = boxes[index] else { continue }
+                if let current = owner[index],
+                   abs(segments[current].rowMid - box.midY) <= abs(segment.rowMid - box.midY) { continue }
+                owner[index] = position
+            }
+        }
+        return segments.enumerated().compactMap { position, segment in
+            guard single[position] else { return segment }
+            let kept = segment.strokes.filter { owner[$0] == position || boxes[$0] == nil }
+            let bounds = kept.compactMap { boxes[$0] }
+            guard let first = bounds.first else { return nil }
+            var result = segment
+            result.strokes = kept
+            result.box = bounds.dropFirst().reduce(first) { $0.union($1) }
+            return result
+        }
     }
 
     /// A recognized line is suspicious if it is much taller than a normal line and either hardly trusted, read in

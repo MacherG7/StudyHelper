@@ -33,13 +33,16 @@ public struct PipelineSettings: Hashable, Sendable {
     /// Goodnotes ink: lines with a hand-drawn underline are read again in a crop without the underline (on the
     /// whole page the recognizer misreads such words); the first reading stays when the crop spells the same.
     public var rereadsUnderlinedLines: Bool
+    /// Goodnotes: arrows drawn with the shape tool inside a text row ("(→ B.S.35)") are inserted into the line text.
+    public var insertsShapeArrows: Bool
 
     public init(
         multiPass: Bool = false, customWords: [String] = [], renderScale: Double = 2,
         recognitionScale: Double = 3, secondPassScale: Double = 0.7, languages: [String] = ["de-DE"],
         usesLanguageCorrection: Bool = true, prefersDocumentRecognition: Bool = true,
         maximumCandidates: Int = 3, imageQuality: Double = 0.85, retryCropLimit: Int = 40,
-        recognizesImageText: Bool = true, rereadsUnderlinedLines: Bool = true
+        recognizesImageText: Bool = true, rereadsUnderlinedLines: Bool = true,
+        insertsShapeArrows: Bool = true
     ) {
         self.multiPass = multiPass
         self.customWords = customWords
@@ -54,6 +57,7 @@ public struct PipelineSettings: Hashable, Sendable {
         self.retryCropLimit = retryCropLimit
         self.recognizesImageText = recognizesImageText
         self.rereadsUnderlinedLines = rereadsUnderlinedLines
+        self.insertsShapeArrows = insertsShapeArrows
     }
 
     func recognitionOptions(prefersDocumentRecognition: Bool) -> TextRecognitionOptions {

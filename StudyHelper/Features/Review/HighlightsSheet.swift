@@ -120,7 +120,7 @@ private struct HighlightEditor: View {
                 get: { highlight.suggestedMeaning },
                 set: { meaning in apply { try $0.setHighlightMeaning(meaning, id: highlight.id, in: source) } }
             )) {
-                Text("Keine").tag(HighlightMeaning?.none)
+                Text("Offen").tag(HighlightMeaning?.none)
                 ForEach(HighlightMeaning.allCases, id: \.self) { Text($0.germanName).tag(Optional($0)) }
             }
             ColorChoice(color: highlight.color) { color in

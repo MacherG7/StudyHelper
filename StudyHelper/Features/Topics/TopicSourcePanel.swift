@@ -375,6 +375,14 @@ private struct SuggestionsBlock: View {
             } label: { label }
             .accessibilityLabel("Überschrift: \(suggestion.text)")
             .accessibilityHint("Als Titel oder Kernaussage übernehmen")
+        case .open:
+            Menu {
+                Button("Als Titel des Themas", systemImage: "textformat") { onTitle(suggestion) }
+                Button("Als Begriff", systemImage: "character.book.closed") { onTake(suggestion, .term) }
+                Button("Als Kernaussage", systemImage: "text.quote") { onTake(suggestion, .keyStatement) }
+            } label: { label }
+            .accessibilityLabel("Hervorgehoben: \(suggestion.text)")
+            .accessibilityHint("Als Titel, Begriff oder Kernaussage übernehmen")
         case .term:
             Button { onTake(suggestion, nil) } label: { label }
                 .accessibilityLabel("Begriff: \(suggestion.text)")
@@ -396,6 +404,7 @@ private struct SuggestionsBlock: View {
         case .term: "character.book.closed"
         case .rule: "function"
         case .statement: "text.quote"
+        case .open: "underline"
         }
     }
 }

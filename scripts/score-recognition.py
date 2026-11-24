@@ -6,14 +6,18 @@
 Score per page with reference: fuzzy bag-of-words. Each reference word is paired with at most one
 recognized word (exact match first, then the most similar one with similarity >= 0.75); a pair counts
 with its similarity. Recall = credit / reference words, precision = credit / recognized words.
-Reading order does not matter, so two-column pages are scored fairly. Illegible lines count as no text.
+Arrows (→, ->, -->) count as words. Reading order does not matter, so two-column pages are scored fairly. Illegible lines count as no text.
 With --baseline the verdict says whether the new run is better (see docs/DECISIONS.md D-022).
 """
 import argparse, difflib, json, re, sys, unicodedata
 
+ARROW = re.compile(r"-+>|=+>|<-+|<=+")
+
 def words(text):
+    """Words (letters and digits) and arrows; typed arrows ("->", "-->") count as the arrow sign."""
     text = unicodedata.normalize("NFC", text).lower()
-    return [w for w in re.split(r"[^0-9a-zäöüß]+", text) if w]
+    text = ARROW.sub(lambda m: " → " if m.group(0).endswith(">") else " ← ", text)
+    return re.findall(r"[0-9a-zäöüß]+|[←→↑↓↔↕↗↘↙↖]", text)
 
 def score(ref_lines, rec_lines):
     ref = [w for l in ref_lines for w in words(l)]

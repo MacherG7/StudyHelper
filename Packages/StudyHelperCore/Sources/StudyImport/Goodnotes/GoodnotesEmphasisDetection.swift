@@ -330,15 +330,10 @@ enum GoodnotesEmphasisDetection {
                 strokeShapes = [shapes[a.shapeIndex]]
                 kind = .underline
             }
-            let line = boxes[a.line]
             let ordered = wordIndices.sorted { words[$0].order < words[$1].order }
-            let wholeLine = ordered.count == line.words.count
-            let meaning: HighlightMeaning
-            if wholeLine {
-                meaning = .heading
-            } else {
-                meaning = kind == .doubleUnderline ? .important : .term
-            }
+            // No meaning is guessed: an underline marks a heading as often as a term to learn. The user (or, from
+            // phase 3, the AI) decides; the highlight stays "offen" until then (D-026).
+            let meaning: HighlightMeaning? = nil
             var rect = NormalizedRect.zero
             for s in strokeShapes { rect = rect.union(s.stroke.boundingBox(pageSize: page.size)) }
             result.append(RecognizedHighlight(

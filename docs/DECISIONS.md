@@ -206,6 +206,26 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   5. `scripts/publish-source.sh` lädt in dieser Reihenfolge hoch: Icon, `.ipa` (Release), zuletzt `source.json`. Eine neue Version erscheint so erst, wenn ihr Download existiert. Jede Version/Build-Kombination nur einmal (sonst `--replace`).
 - **Konsequenzen:** Jede Beta braucht eine höhere `MARKETING_VERSION` oder `CURRENT_PROJECT_VERSION` in `project.yml`. Wer die Source-URL kennt, kann die App laden. Neue Berechtigungen (z. B. Mikrofon in einer späteren Phase) gelangen automatisch in die Source. Die App hat noch kein eigenes Icon; `distribution/icon.svg` ist ein Platzhalter. StikStore unterstützt laut Entwickler AltStore-Sources, sein Format ist aber nicht separat dokumentiert (MT-S.3). Skript-Tests (Python, `scripts/tests/`) und `update-source.py --check` laufen in `scripts/test.sh`.
 
+## D-025 Formpfeile in Textzeilen und weitere Erkennungsregeln
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers, gemessen nach D-022)
+- **Kontext:** Auf S. 9 der Testdatei fehlte in „Kausalkette (→ B.S.35)“ der Pfeil, und „S.“ wurde als „5.“ gelesen. Auf S. 6 fehlte „Sch“ von „Schädigungen“, und hinter „Globaler Wandel“ stand eine „9“.
+- **Entscheidung:**
+  1. **Formpfeile:** Pfeile aus dem Goodnotes-Formwerkzeug sind Stamp-Annotationen, keine Tinte; die Texterkennung sieht sie nie. Ihr Erscheinungsbild wird gelesen (Schaft + Spitze als eigener kurzer Pfad, auch beidseitig), die Richtung ergibt „→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖“. Liegt ein Pfeil in einer Textzeile (Mitte innerhalb der Zeilenhöhe, höchstens 1,5 Zeilenhöhen hoch, höchstens 1,5 Zeilenhöhen vom Zeilenende), wird das Zeichen an seiner Stelle in den Text eingesetzt (`insertsShapeArrows`, Standard an). Verbindungspfeile zwischen Kästen und Zeilen, Kästen und einfache Linien bleiben Grafik. Korrigierte Zeilen werden nicht verändert.
+  2. **„B.5.35“ → „B.S.35“:** „5.“ direkt nach einem einzelnen Großbuchstaben mit Punkt und vor einer Zahl ist die Abkürzung „S.“ (nicht nach „z.B.“). Die alte Lesung bleibt Alternative.
+  3. **Nachlesen zeilentreu:** Ein Ausschnitt einer einzelnen Zeile übernimmt angrenzende Striche seiner Zeile (bis 0,6 Zeilenhöhen), auch wenn der zu große Kasten der Zeile darüber sie beansprucht hat. Ein Strich, den Ausschnitte zweier Zeilen beanspruchen (Unterlänge), gehört nur zur näheren Zeile. Hohe Ausschnitte (dichte Listen, die später zeilenweise geteilt werden) bleiben unverändert – sonst gingen die Listennummern auf S. 8 verloren (gemessen, zuerst verworfen).
+  4. **Messung:** Pfeile zählen in der Bewertung als Wort („->“, „-->“ gelten als „→“); S. 9 ist jetzt Referenzseite. F1 0,9451 → 0,9613 (Pfeile, S.) → 0,9625 (Nachlesen).
+- **Konsequenzen:** Handgezeichnete Pfeile (Tinte) werden weiter von der Texterkennung gelesen oder als Strich übergangen. Offene Fehler auf S. 6: „f“ wird teils als „t“ gelesen („Eingrifte“, „tasst“), ä teils als a; schließende Anführungszeichen werden mitunter als Buchstabe gelesen („Wandeli“).
+
+## D-026 Unterstreichung ohne vermutete Bedeutung
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Bisher wurde eine ganz unterstrichene Zeile als „Überschrift“ vorgeschlagen, ein unterstrichener Teil als „Fachbegriff“. Unterstrichen bedeutet aber nicht immer Überschrift.
+- **Entscheidung:** Unterstreichungen (einfach und doppelt) bekommen keine vermutete Bedeutung; sie bleibt „Offen“. Ob es eine Überschrift, ein wichtiger Fachbegriff oder eine Kernaussage ist, entscheidet der Nutzer (Bedeutung in der Prüfansicht, Vorschlag in der Themenansicht mit „Als Titel des Themas“, „Als Begriff“, „Als Kernaussage“) oder ab Phase 3 die KI. Andere Hervorhebungen (Textmarker → „wichtig“, Kreis → Begriff, große Schrift im PDF-Text → Überschrift) bleiben unverändert.
+- **Konsequenzen:** Der Originaltext-Markdown macht aus unterstrichenen Zeilen keine `##`-Überschrift mehr, solange niemand „Überschrift“ gewählt hat; die Unterstreichung bleibt als `<u>` sichtbar.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

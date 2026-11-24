@@ -90,4 +90,22 @@ struct RecognitionHeuristicsTests {
         #expect(IllegibleInk.verticalShare(of: CGRect(x: 10, y: 105, width: 10, height: 10), in: line) == 1)
         #expect(IllegibleInk.verticalShare(of: CGRect(x: 10, y: 110, width: 10, height: 0.2), in: line) == 1, "flacher Strich: Mitte zählt")
     }
+
+    @Test("Nachlesen: ein Strich, den zwei Zeilen beanspruchen, gehört zur näheren Zeile; hohe Ausschnitte behalten alles")
+    func exclusiveStrokes() {
+        let strokes = [
+            IllegibleInk.Candidate(index: 1, box: CGRect(x: 0, y: 70, width: 10, height: 10)),
+            IllegibleInk.Candidate(index: 2, box: CGRect(x: 20, y: 78, width: 6, height: 14)),  // descender, center 85
+            IllegibleInk.Candidate(index: 3, box: CGRect(x: 0, y: 95, width: 10, height: 10)),
+        ]
+        let upper = HandwritingRetry.Segment(layer: 0, strokes: [1, 2], box: .zero, rowMid: 80)
+        let lower = HandwritingRetry.Segment(layer: 0, strokes: [2, 3], box: .zero, rowMid: 100)
+        let result = HandwritingRetry.exclusive([upper, lower], strokes: strokes)
+        #expect(result.map(\.strokes) == [[1, 2], [3]])
+        #expect(result[1].box == CGRect(x: 0, y: 95, width: 10, height: 10))
+
+        var tall = lower
+        tall.isSingleRow = false
+        #expect(HandwritingRetry.exclusive([upper, tall], strokes: strokes).map(\.strokes) == [[1, 2], [2, 3]])
+    }
 }
