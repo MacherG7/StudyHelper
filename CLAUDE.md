@@ -62,6 +62,9 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 - Signieren immer mit dem eigenen Xcode-Account des Entwicklers (Team RL9PPXX5GV, kostenlos); alle App-IDs
   enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Andere installierte Teams nicht verwenden.
+- Signierte .ipa nur lokal (Xcode, `scripts/build-ipa.sh`), nie veröffentlichen: Eine signierte .ipa enthält
+  die Apple-ID (E-Mail) des Entwicklerzertifikats. Auf GitHub, in Releases und in der Source nur unsignierte
+  .ipa (`scripts/build-ipa.sh --unsigned`, macht `scripts/beta-release.sh` automatisch, D-030).
 - iOS 18 Minimum, iPhone + iPad, SwiftUI, SwiftData. Swift 6 Sprachmodus;
   App-Target mit Default-Isolation `MainActor`, Package-Code nicht.
 - Unit-Tests mit Swift Testing, XCTest nur für UI-Tests. Testnamen (`@Test("…")`) auf Deutsch.
@@ -75,8 +78,7 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - KI-Ausgaben strukturiert anfordern und robust parsen; fehlerhafte Ausgaben dürfen nie abstürzen.
 - API-Parameter (Modelle, Reasoning, Usage, Streaming) aus der aktuellen offiziellen
   Doku von Anthropic und OpenAI, nicht aus dem Gedächtnis.
-- Keine E-Mail-Adressen in Dateien, Commits, Tags oder Releases (auch nicht die des Entwicklers); auf GitHub
-  nur unsignierte .ipa, denn eine signierte enthält die Apple-ID des Zertifikats (D-030).
+- Keine E-Mail-Adressen in Dateien, Commits, Tags oder Releases (auch nicht die des Entwicklers, D-030).
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
 - App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
   `scripts/bump-version.sh` (D +1). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
