@@ -1,0 +1,33 @@
+{
+  "name": "StudyHelper",
+  "identifier": "MiloG.StudyHelper1.source",
+  "subtitle": "Beta-Versionen von StudyHelper",
+  "description": "Source für SideStore, AltStore und StikStore. Enthält die aktuellen Beta-Versionen von StudyHelper. Die App wird beim Installieren mit deiner eigenen Apple-ID signiert.",
+  "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/icon.png",
+  "website": "https://github.com/MacherG7/StudyHelper-Source",
+  "sourceURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/source.json",
+  "tintColor": "#2F64E0",
+  "featuredApps": [
+    "MiloG.StudyHelper1"
+  ],
+  "apps": [
+    {
+      "name": "StudyHelper",
+      "bundleIdentifier": "MiloG.StudyHelper1",
+      "developerName": "MacherG7",
+      "subtitle": "Lernstoff digitalisieren und lernen",
+      "localizedDescription": "StudyHelper digitalisiert deinen Lernstoff einmalig – Fotos von Buchseiten, PDFs und Goodnotes-Exporte – und speichert ihn dauerhaft als Text mit Hervorhebungen. Du ordnest ihn in Fächer und Themen; jeder Eintrag verweist auf die Seite, aus der er stammt.\n\nGoodnotes: „Teilen → Exportieren → PDF“ und dann „In StudyHelper öffnen“.\n\nIn Arbeit: KI-Abfragen, Chat und Karteikarten – ausschließlich mit Inhalten aus deinem Lernstoff.\n\nBeta-Version, benötigt iOS 18 oder neuer.",
+      "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/icon.png",
+      "tintColor": "#2F64E0",
+      "category": "utilities",
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen."
+        }
+      },
+      "versions": []
+    }
+  ],
+  "news": []
+}

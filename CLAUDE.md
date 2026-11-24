@@ -31,6 +31,8 @@ scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ me
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push nach GitHub, Xcode-Checkout nachziehen
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (für Beta-Releases auf GitHub)
+scripts/build-ipa.sh --unsigned           # unsignierte .ipa für die Source (SideStore/AltStore/StikStore)
+scripts/publish-source.sh "Was ist neu"   # Beta in die Source stellen (öffentliches Repo, D-024)
 ```
 
 Simulator: `SIM_DEVICE` (Standard „iPhone 17“), iPad: `IPAD_DEVICE`.
@@ -48,7 +50,8 @@ Packages/StudyHelperCore/       Swift-Package
   Sources/StudyCore/            Kernlogik, nur Foundation
   Sources/TestFixtures/         synthetische Goodnotes-PDFs + Ground Truth (nur Tests)
   Sources/make-fixtures/        Generator für die Fixtures
-scripts/                        Build-, Test- und Hilfsskripte
+scripts/                        Build-, Test- und Hilfsskripte (Python-Tests in scripts/tests/)
+distribution/                   Source für SideStore/AltStore/StikStore (source.json, Icon, README)
 docs/                           Spezifikation, Plan, Phasen, Entscheidungen, manuelle Tests
 ```
 
@@ -88,6 +91,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   (D-022: Text in Bildern/Stamps, unterstrichene Zeilen, dichte Zeilen; F1 0,78 → 0,97). Bekannte Grenze:
   einzelne Ziffern neben Strichen bleiben unleserlich; Fotos nur mit Schriftprüfung.
   Zusammenhängende Zeilen werden als Absätze gespeichert (`paragraphID` je Zeile, D-023).
+  Verteilung über eine Source für SideStore, AltStore und StikStore vorbereitet (D-024,
+  `distribution/README.md`); das öffentliche Repository `MacherG7/StudyHelper-Source` legt der Entwickler an.
 - **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.44 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
