@@ -32,7 +32,7 @@ Wer die Source-URL kennt, kann die App herunterladen.
    scripts/publish-source.sh "Was ist neu in dieser Version"
    ```
 
-   Das Skript baut eine unsignierte `.ipa` (`scripts/build-ipa.sh --unsigned`), liest Bundle-ID, Version,
+   Das Skript baut eine unsignierte `.ipa` (`scripts/build-ipa.sh`, immer unsigniert), liest Bundle-ID, Version,
    Build, Mindest-iOS, Datenschutz-Texte und Entitlements aus der `.ipa`, trägt Größe und SHA-256 ein, lädt die
    `.ipa` als Release `v<Version>-<Build>` hoch und veröffentlicht danach `icon.png` und `source.json`.
 3. `distribution/source.json` committen und `scripts/publish.sh` ausführen.

@@ -33,8 +33,7 @@ scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Check
 scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen)
 scripts/publish.sh --final  # Vollversion statt Beta (nur nach Zusage des Entwicklers, D-032; vorher --dry-run)
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
-scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (nur lokal, nie veröffentlichen)
-scripts/build-ipa.sh --unsigned           # unsignierte .ipa für die Source (SideStore/AltStore/StikStore)
+scripts/build-ipa.sh        # unsignierte .ipa nach build/ipa/ (eine signierte gibt es nicht, D-030)
 scripts/publish-source.sh "Was ist neu"   # Beta in die Source stellen (öffentliches Repo, D-024)
 ```
 
@@ -62,9 +61,9 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 - Signieren immer mit dem eigenen Xcode-Account des Entwicklers (Team RL9PPXX5GV, kostenlos); alle App-IDs
   enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Andere installierte Teams nicht verwenden.
-- Signierte .ipa nur lokal (Xcode, `scripts/build-ipa.sh`), nie veröffentlichen: Eine signierte .ipa enthält
-  die Apple-ID (E-Mail) des Entwicklerzertifikats. Auf GitHub, in Releases und in der Source nur unsignierte
-  .ipa (`scripts/build-ipa.sh --unsigned`, macht `scripts/beta-release.sh` automatisch, D-030).
+- Eine .ipa wird nie signiert, auch nicht lokal: Eine signierte .ipa enthält die Apple-ID (E-Mail) des
+  Entwicklerzertifikats. `scripts/build-ipa.sh` baut immer unsigniert; installiert wird mit SideStore, AltStore,
+  StikStore oder Sideloadly. Auf dem eigenen Gerät ohne diese Apps: aus Xcode starten (D-030).
 - iOS 18 Minimum, iPhone + iPad, SwiftUI, SwiftData. Swift 6 Sprachmodus;
   App-Target mit Default-Isolation `MainActor`, Package-Code nicht.
 - Unit-Tests mit Swift Testing, XCTest nur für UI-Tests. Testnamen (`@Test("…")`) auf Deutsch.
