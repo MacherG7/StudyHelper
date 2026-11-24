@@ -87,6 +87,7 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.39 | VoiceOver im Themen-Editor und in der Themenprüfung | Herkunft (Original/Eigene Eingabe) und Hervorhebung werden angesagt; Übernahme wird angesagt | |
 | MT-1.40 | Zeile korrigieren, die in einem Thema verwendet wird | Hinweis „Betroffene Themen“; im Thema „Quelle geändert“ mit „Text aus Quelle übernehmen“ | |
 | MT-1.41 | Tabellen-Eintrag auf iPhone und iPad bearbeiten | Zeilen/Spalten hinzufügen und entfernen funktioniert, nichts abgeschnitten | |
+| MT-1.42 | Dichten Goodnotes-Export mit Handschrift importieren (z. B. `LocalSamples/GPG_bearbeitbar.pdf`) | Keine ganzen Zeilen fehlen, keine Zeile mit kyrillischen Zeichen, „unleserlich“ nie über mehrere Zeilen; nachgelesene Zeilen erscheinen als „unsicher“ | |
 
 ---
 

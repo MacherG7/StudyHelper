@@ -73,7 +73,10 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
 - **Fertig:** Phase 0 und Phase 1 (1a Datenmodell/Import/Erkennung, 1b Fächer/Import-UI/Prüfansicht/
   „Öffnen in“, 1c manuelle Strukturierung mit Quellenverweisen, „Quelle geändert“, Bestätigung).
   Kostenloser Developer-Account: keine Share-Extension/App Groups (D-013).
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.41 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+  Nach Gerätetest: übergangene Handschrift wird zeilenweise nachgelesen, Schriftprüfung (D-019),
+  nachgelesene Zeilen sind „unsicher“ (D-020). Bekannte Grenze: eng gestapelte Listen mit
+  Ziffernspalte (Testdatei S. 8) teils noch unleserlich; Fotos nur mit Schriftprüfung.
+- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.42 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
   API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf

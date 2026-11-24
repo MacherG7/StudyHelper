@@ -91,7 +91,7 @@ struct HandwritingRetryTests {
 
     // MARK: Skipped line
 
-    @Test("Eine auf der ganzen Seite übersprungene Zeile wird im Ausschnitt gelesen: Text, Seitenposition und Farbe stimmen")
+    @Test("Eine auf der ganzen Seite übersprungene Zeile wird im Ausschnitt gelesen: Text, Seitenposition, Farbe stimmen, Zeile ist „nachgelesen“ unsicher")
     func skippedLineIsRecovered() async throws {
         let recognizer = CountingRecognizer { _, image, _ in
             if self.isFullPage(image) {
@@ -102,7 +102,10 @@ struct HandwritingRetryTests {
         let result = try await run(recognizer)
         let found = try #require(result.lines.first { $0.text == "in chemische Energie um" })
         #expect(found.rect.iou(lineRect("p1-line03")) > 0.7, "Rect \(found.rect) statt \(lineRect("p1-line03"))")
-        #expect(found.status == .confident)
+        // Read only in the second pass: uncertain with its own reason, the words keep the recognizer's status.
+        #expect(found.status == .uncertain && found.reviewReasons == [.reReadSeparately])
+        #expect(found.needsReview && found.words.allSatisfy { $0.status == .confident })
+        #expect(result.lines.filter { $0.text != found.text && $0.status != .illegible }.allSatisfy { !$0.reviewReasons.contains(.reReadSeparately) })
         #expect(found.color?.hex == "#000000" && found.words.allSatisfy { $0.color?.hex == "#000000" })
         #expect(found.words.allSatisfy { $0.rect.coverage(by: found.rect.insetBy(dx: -0.002, dy: -0.002)) > 0.9 })
         #expect(result.lines.filter { $0.status == .illegible }.isEmpty, "nichts unleserlich: \(result.lines.map(\.rect))")
@@ -198,6 +201,7 @@ struct HandwritingRetryTests {
         }
         let tall = result.lines.filter { $0.rect.height > 1.8 * medianHeight(result.lines) }
         #expect(tall.isEmpty, "hohe Zeilen: \(tall.map(\.text))")
+        #expect(rows.allSatisfy { $0.status == .uncertain && $0.reviewReasons.contains(.reReadSeparately) })
         #expect(result.lines.filter { $0.status == .illegible }.isEmpty)
         #expect(result.lines.map(\.order) == Array(0..<result.lines.count))
     }

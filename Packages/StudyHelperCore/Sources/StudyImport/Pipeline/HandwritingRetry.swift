@@ -170,6 +170,15 @@ enum HandwritingRetry {
         return line
     }
 
+    /// A line read in a crop is shown as uncertain with reason `.reReadSeparately` (see docs/DECISIONS.md D-020);
+    /// its words keep their own status, so only doubtful words are marked inside the line.
+    static func markedAsReRead(_ line: RecognizedLine) -> RecognizedLine {
+        var line = line
+        line.status = line.status.atLeastUncertain
+        if !line.reviewReasons.contains(.reReadSeparately) { line.reviewReasons.append(.reReadSeparately) }
+        return line
+    }
+
     /// Whether the retry of `segment` replaces `line` (the segment sits inside the line's box).
     static func segment(_ segment: Segment, belongsTo line: RecognizedLine, pageSize: PageSize) -> Bool {
         let rect = CGRect(
@@ -260,6 +269,6 @@ extension DigitizationPipeline {
                     && ScriptGuard.isPlausible(line.text)
                     && !line.rect.isEmpty
             }
-            .map { Self.colored(HandwritingRetry.mapToPage($0, cropRect: crop.rect), with: color) }
+            .map { HandwritingRetry.markedAsReRead(Self.colored(HandwritingRetry.mapToPage($0, cropRect: crop.rect), with: color)) }
     }
 }

@@ -27,6 +27,9 @@ public enum ReviewReason: String, Codable, Hashable, Sendable, CaseIterable {
     case confirmedByReducedPDF
     /// Recognizer could not read it at all.
     case unreadable
+    /// Read only in a second pass on a cut-out part of the page ("Nachlesen"); the first pass had skipped or
+    /// merged it, so the user should check it.
+    case reReadSeparately
 }
 
 /// Semantic block a line belongs to, when the recognizer knows it (iOS 26 document API, embedded text).

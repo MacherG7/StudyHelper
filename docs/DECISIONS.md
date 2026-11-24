@@ -154,6 +154,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Nach dem ersten Durchgang wird nicht erklärte Tinte je Stiftfarbe in Textzeilen und Abschnitte zerlegt, einzeln gerendert und noch einmal erkannt (Maßstab 3, sonst 4,5; höchstens `retryCropLimit` = 40 Aufrufe pro Seite). Verdächtige Zeilen (höher als 1,8 Zeilenhöhen und unsicher, fremde Schrift oder mehrere Tintenzeilen) werden verworfen und zeilenweise nachgelesen. Eine Schriftprüfung (`ScriptGuard`) ersetzt Zeilen mit nicht-lateinischen Zeichen durch eine lateinische Alternative oder markiert sie als unsicher. „Unleserlich“ entsteht nur noch je Textzeile.
 - **Konsequenzen:** Etwa 5–10 % mehr Rechenzeit pro Seite. Sehr eng gestapelte Listen mit Ziffernspalten werden teilweise noch nicht gelesen. Für Fotos gibt es bisher nur die Schriftprüfung. Die Testdatei bleibt lokal in `LocalSamples/`.
 
+## D-020 Nachgelesene Zeilen sind „unsicher“
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Entscheidung des Entwicklers)
+- **Kontext:** Zeilen aus dem Nachlesen (D-019) behalten Visions Sicherheit, die Textqualität im Ausschnitt ist aber oft nur mittelmäßig („Teilberreichen“, „wusserbauliche“). Ohne Markierung fallen sie in der Prüfansicht nicht auf.
+- **Entscheidung:** Jede Zeile, die erst beim Nachlesen erkannt wurde, ist mindestens „unsicher“ mit dem Prüfgrund `reReadSeparately`. Die Wörter behalten ihren eigenen Status, damit innerhalb der Zeile nur zweifelhafte Wörter markiert sind.
+- **Konsequenzen:** Mehr offene Stellen in der Prüfansicht (auf der Testdatei 11 von 266 Zeilen). Eine Korrektur oder Bestätigung durch den Nutzer hebt die Markierung wie bei anderen unsicheren Zeilen auf.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).
