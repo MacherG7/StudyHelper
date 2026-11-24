@@ -84,6 +84,7 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   nachgelesene Zeilen sind „unsicher“ (D-020). Erkennung an der echten Testdatei gemessen und verbessert
   (D-022: Text in Bildern/Stamps, unterstrichene Zeilen, dichte Zeilen; F1 0,78 → 0,97). Bekannte Grenze:
   einzelne Ziffern neben Strichen bleiben unleserlich; Fotos nur mit Schriftprüfung.
+  Zusammenhängende Zeilen werden als Absätze gespeichert (`paragraphID` je Zeile, D-023).
 - **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.44 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
 - **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
   Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).

@@ -154,6 +154,22 @@ struct DigitizationTests {
         #expect(repo.openReviewCount(for: source) == 0)
     }
 
+    @Test("Absätze werden mit den Zeilen gespeichert; eine korrigierte Zeile ändert den Absatztext")
+    func paragraphsStored() throws {
+        let (repo, _) = try makeRepo()
+        let (_, batch) = try makeSource(repo)
+        let source = batch.sources[0]
+        let first = line("Die Fotosynthese findet in den", y: 0.10, order: 0)
+        let second = line("Chloroplasten statt.", y: 0.14, order: 1)
+        let separate = line("Neuer Absatz", y: 0.30, order: 2)
+        try repo.saveDigitization(result(ParagraphGrouping.assign([first, second, separate])), for: source)
+        let digitization = try #require(source.currentDigitization)
+        #expect(digitization.paragraphs.map(\.text) == ["Die Fotosynthese findet in den Chloroplasten statt.", "Neuer Absatz"])
+        #expect(digitization.paragraphs[0].lineIDs == [first.id, second.id])
+        try repo.correctLine(source: source, lineID: second.id, newText: "Chloroplasten statt!")
+        #expect(source.currentDigitization?.paragraphs.first?.text == "Die Fotosynthese findet in den Chloroplasten statt!")
+    }
+
     @Test("Wiederholtes Korrigieren derselben Zeile legt keine zweite Korrektur an")
     func correctionUpserts() throws {
         let (repo, _) = try makeRepo()

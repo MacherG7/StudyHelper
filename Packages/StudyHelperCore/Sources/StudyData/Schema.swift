@@ -228,6 +228,10 @@ public enum SchemaV1: VersionedSchema {
             }
         }
 
+        /// The stored text as paragraphs: lines with the same `paragraphID` joined, with their position. Built from
+        /// the stored lines, so corrections of a line are part of its paragraph.
+        public var paragraphs: [TextParagraph] { ParagraphGrouping.paragraphs(of: lines) }
+
         public var highlights: [RecognizedHighlight] {
             get {
                 do { return try decodedHighlights() } catch {

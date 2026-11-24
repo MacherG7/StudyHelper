@@ -52,7 +52,7 @@ try await pipeline.digitizePDFPages(data: data, pageIndices: selected.isEmpty ? 
         pages.append(BenchPage(
             page: page.pageIndex + 1,
             lines: lines.map { BenchLine(text: $0.text, status: $0.status.rawValue, reasons: $0.reviewReasons.map(\.rawValue), rect: box($0.rect)) },
-            paragraphs: [],
+            paragraphs: page.result.paragraphs.map { BenchParagraph(text: $0.text, rect: box($0.rect), lines: $0.lineIDs.count) },
             warnings: page.result.warnings, error: nil))
     case .failure(let failure):
         pages.append(BenchPage(page: failure.pageIndex + 1, lines: [], paragraphs: [], warnings: [], error: "\(failure)"))

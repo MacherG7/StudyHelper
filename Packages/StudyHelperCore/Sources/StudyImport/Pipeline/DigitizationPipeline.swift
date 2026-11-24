@@ -384,7 +384,9 @@ public struct DigitizationPipeline: Sendable {
         lines: [RecognizedLine], highlights: [RecognizedHighlight], method: RecognitionMethod, engineVersion: String?,
         passes: Int, usedReducedPDF: Bool, pageSize: PageSize, customWordsCount: Int? = nil, warnings: [String]
     ) -> DigitizationResult {
-        DigitizationResult(
+        // Consecutive rows of one text are stored as a paragraph (each line carries its paragraph id).
+        let lines = ParagraphGrouping.assign(lines)
+        return DigitizationResult(
             lines: lines, highlights: highlights,
             metadata: RecognitionMetadata(
                 method: method, engineVersion: engineVersion, osVersion: environment.osVersion,

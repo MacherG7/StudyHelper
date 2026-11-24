@@ -185,6 +185,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   Verworfen (nicht besser): zweiter Leseversuch ohne Sprachkorrektur.
 - **Konsequenzen:** Einzelne Ziffern neben Strichen (S. 8) bleiben „unleserlich“ – so gewollt: was sich nicht lesen lässt, wird nicht geraten. Die Referenz deckt nur vier Seiten ab; die Regeln sind deshalb allgemein gehalten und durch Unit-Tests abgesichert.
 
+## D-023 Absätze: zusammenhängende Zeilen werden gemeinsam gespeichert
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Zeilen, die direkt untereinander stehen und einen Text bilden, sollen nach der Digitalisierung zusammengefügt gespeichert werden, mit Position im PDF.
+- **Entscheidung:** Jede Zeile trägt eine `paragraphID` (im vorhandenen JSON der Zeilen, kein neues SwiftData-Schema nötig, alte Daten bleiben lesbar). `ParagraphGrouping.assign` setzt sie bei jeder Digitalisierung; `DigitizationResult.paragraphs` und `Digitization.paragraphs` liefern `TextParagraph` (zusammengefügter Text, Rechteck als Vereinigung der Zeilen, Zeilen-IDs, Listenpunkt ja/nein). Der Text wird aus den gespeicherten Zeilen gebildet, Korrekturen einer Zeile erscheinen also im Absatz. Regeln: Eine Zeile setzt den Absatz fort, unter dessen letzter Reihe sie steht (höchstens eine halbe Zeilenhöhe Abstand; bei Drucktext 1,2 eigene Zeilenhöhen), horizontal überlappend, gleiche Farbe, kein neuer Listenpunkt (-, •, 1., „15 Niger“ …). Nach einer kurzen Reihe (Überschrift, Listeneintrag) nur bei Trennstrich oder Kleinbuchstaben. Teile einer Reihe nebeneinander gehören dazu (Blocksatz-Stücke im Druck auch mit großen Lücken). Hängender Einzug trennt Einträge. Trennstriche am Zeilenende werden aufgelöst, Ergänzungsstriche („Schnee- und“) bleiben. Unleserliches ist ein eigener Absatz.
+- **Konsequenzen:** Die Prüfansicht bleibt zeilenweise (Korrektur und Markierung pro Zeile). Der Originaltext-Markdown behält die Zeilenumbrüche der Vorlage. Absätze sind die Grundlage für KI-Aufgaben ab Phase 2. Auf der Testdatei werden aus 348 Zeilen 246 Absätze.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

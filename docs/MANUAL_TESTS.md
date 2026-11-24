@@ -90,6 +90,7 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 | MT-1.42 | Dichten Goodnotes-Export mit Handschrift importieren (z. B. `LocalSamples/GPG_bearbeitbar.pdf`) | Keine ganzen Zeilen fehlen, keine Zeile mit kyrillischen Zeichen, „unleserlich“ nie über mehrere Zeilen; nachgelesene Zeilen erscheinen als „unsicher“ | |
 | MT-1.43 | Goodnotes-Seite mit eingefügtem Bild (Screenshot eines Arbeitsblatts) und eingescanntem Arbeitsblatt importieren | Gedruckter Text im Bild erscheint in der Prüfansicht an der richtigen Stelle; Pfeile vom Formwerkzeug erzeugen keinen Text | |
 | MT-1.44 | Unterstrichene, fett geschriebene Wörter in Anführungszeichen („Syndrom“) | Werden richtig gelesen oder als „unsicher“ markiert, nie stillschweigend falsch | |
+| MT-1.45 | Bestehende Digitalisierungen nach dem Update öffnen | Alte Seiten laden ohne Fehler (Zeilen ohne Absatz-ID); nach „Neu erkennen“ sind Absätze gesetzt | |
 
 ---
 

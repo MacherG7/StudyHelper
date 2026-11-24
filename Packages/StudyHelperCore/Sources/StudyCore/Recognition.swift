@@ -102,18 +102,22 @@ public struct RecognizedLine: Codable, Hashable, Sendable, Identifiable {
     /// Raw automatic text, kept when a correction replaced `text` (nil = never corrected).
     /// Needed for per-method comparisons and error rates (SPEC §10).
     public var recognizedText: String?
+    /// Lines with the same id form one paragraph (consecutive rows of one text, see `ParagraphGrouping`).
+    /// nil: not grouped (digitized before paragraphs existed); such a line is a paragraph of its own.
+    public var paragraphID: UUID?
 
     public init(
         id: UUID = UUID(), text: String, rect: NormalizedRect, confidence: Double = 1,
         candidates: [String] = [], words: [RecognizedWord] = [],
         status: ConfidenceStatus = .confident, reviewReasons: [ReviewReason] = [],
         color: RGBColor? = nil, blockKind: LineBlockKind? = nil, order: Int = 0,
-        isUserCorrected: Bool = false, recognizedText: String? = nil
+        isUserCorrected: Bool = false, recognizedText: String? = nil, paragraphID: UUID? = nil
     ) {
         self.id = id
         self.text = text
         self.rect = rect
         self.confidence = confidence
+        self.paragraphID = paragraphID
         self.candidates = candidates
         self.words = words
         self.status = status
@@ -148,6 +152,7 @@ public struct RecognizedLine: Codable, Hashable, Sendable, Identifiable {
         order = try c.decodeIfPresent(Int.self, forKey: .order) ?? 0
         isUserCorrected = try c.decodeIfPresent(Bool.self, forKey: .isUserCorrected) ?? false
         recognizedText = try c.decodeIfPresent(String.self, forKey: .recognizedText)
+        paragraphID = try c.decodeIfPresent(UUID.self, forKey: .paragraphID)
     }
 }
 
@@ -339,6 +344,9 @@ public struct DigitizationResult: Codable, Hashable, Sendable {
         self.pageSize = pageSize
         self.warnings = warnings
     }
+
+    /// The text as paragraphs: lines that belong together joined, with their position (see `ParagraphGrouping`).
+    public var paragraphs: [TextParagraph] { ParagraphGrouping.paragraphs(of: lines) }
 
     /// Number of lines that still need the user's attention.
     public var openReviewCount: Int {
