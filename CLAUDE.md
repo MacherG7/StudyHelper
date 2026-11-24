@@ -59,8 +59,9 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 ## Konventionen
 
-- Signieren immer mit dem eigenen Xcode-Account des Entwicklers (Team RL9PPXX5GV, kostenlos); alle App-IDs
-  enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Andere installierte Teams nicht verwenden.
+- Alle App-IDs enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Das Team RL9PPXX5GV in
+  `project.yml` nutzt nur Xcode, wenn die App direkt aus Xcode auf dem eigenen Gerät läuft; andere installierte
+  Teams nicht verwenden.
 - Eine .ipa wird nie signiert, auch nicht lokal: Eine signierte .ipa enthält die Apple-ID (E-Mail) des
   Entwicklerzertifikats. `scripts/build-ipa.sh` baut immer unsigniert; installiert wird mit SideStore, AltStore,
   StikStore oder Sideloadly. Auf dem eigenen Gerät ohne diese Apps: aus Xcode starten (D-030).
