@@ -29,6 +29,14 @@ public enum ReasoningLevel: String, Codable, Sendable, CaseIterable, Hashable, C
     }
 }
 
+/// How a model switches reasoning off (Claude: `thinking.type`).
+public enum ReasoningOffMode: String, Codable, Sendable, Hashable {
+    /// `thinking: {type: "disabled"}`.
+    case disabled
+    /// `thinking: {type: "between_tools"}` (models that cannot fully disable thinking).
+    case betweenTools
+}
+
 /// What a model can do. Comes from the provider's model list (Claude `/v1/models`, Ollama `/api/show`), from a
 /// maintained table (OpenAI) or from the user's setting ("Modell kann Bilder verarbeiten").
 public struct ProviderCapabilities: Codable, Sendable, Hashable {
@@ -44,11 +52,14 @@ public struct ProviderCapabilities: Codable, Sendable, Hashable {
     public var contextSize: Int?
     /// Largest output in tokens, if known.
     public var maxOutputTokens: Int?
+    /// How `ReasoningLevel.off` is sent, if `reasoningLevels` contains `.off` (nil = provider default).
+    public var reasoningOffMode: ReasoningOffMode?
 
     public init(
         supportsImages: Bool = false, supportsTools: Bool = false, supportsStreaming: Bool = true,
         supportsStructuredOutput: Bool = false, reasoningLevels: [ReasoningLevel] = [],
-        defaultReasoning: ReasoningLevel? = nil, contextSize: Int? = nil, maxOutputTokens: Int? = nil
+        defaultReasoning: ReasoningLevel? = nil, contextSize: Int? = nil, maxOutputTokens: Int? = nil,
+        reasoningOffMode: ReasoningOffMode? = nil
     ) {
         self.supportsImages = supportsImages
         self.supportsTools = supportsTools
@@ -58,6 +69,7 @@ public struct ProviderCapabilities: Codable, Sendable, Hashable {
         self.defaultReasoning = defaultReasoning
         self.contextSize = contextSize
         self.maxOutputTokens = maxOutputTokens
+        self.reasoningOffMode = reasoningOffMode
     }
 }
 
