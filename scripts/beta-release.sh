@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Publishes the current commit as a beta on GitHub (D-028): builds the signed .ipa on this Mac
-# (scripts/build-ipa.sh, Personal Team of <Apple-ID>) and creates the pre-release "v<A.B.C.D>" with the
+# Publishes the current commit as a beta on GitHub (D-028): builds the unsigned .ipa on this Mac
+# (scripts/build-ipa.sh --unsigned; a signed one would carry the developer's Apple ID, D-030) and creates the
+# pre-release "v<A.B.C.D>" with the
 # .ipa, tagged on the commit. Runs automatically at the end of scripts/publish.sh, i.e. after every commit.
 #   scripts/beta-release.sh             current commit (must be pushed to origin/main)
 # A version that already has a release is skipped (the version was not raised, see scripts/bump-version.sh).
@@ -18,7 +19,7 @@ fi
 [[ -z "$(git -C "$ROOT" status --porcelain -- StudyHelper Packages project.yml)" ]] \
     || fail "Uncommittete Änderungen an der App – die .ipa entspräche nicht dem Commit. Erst committen."
 
-"$ROOT/scripts/build-ipa.sh"
+"$ROOT/scripts/build-ipa.sh" --unsigned
 ASSET="$ROOT/build/ipa/StudyHelper-$VERSION.ipa"
 mv "$ROOT/build/ipa/StudyHelper.ipa" "$ASSET"
 
@@ -32,9 +33,8 @@ NOTES="$ROOT/build/ipa/notes.md"
     echo
     echo "## Installieren"
     echo
-    echo "Signiert mit dem kostenlosen Team von <Apple-ID> (App-ID \`MiloG.StudyHelper1\`). Installierbar nur auf"
-    echo "Geräten, die bei diesem Team registriert sind, z. B. über Xcode → Window → Devices and Simulators → „+“."
-    echo "Das Profil läuft nach einigen Tagen ab; dann die neueste Beta installieren."
+    echo "Unsignierte .ipa (App-ID \`MiloG.StudyHelper1\`). Installieren mit SideStore, AltStore, StikStore oder"
+    echo "Sideloadly: sie signieren die App beim Installieren mit deiner eigenen Apple-ID."
 } > "$NOTES"
 
 step "Beta-Release $TAG auf GitHub"

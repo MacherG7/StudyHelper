@@ -239,7 +239,7 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Datum:** 2026-11-24
 - **Status:** angenommen (Wunsch des Entwicklers)
 - **Kontext:** Version 0.0.1.0 erschien nicht unter den Releases: `scripts/publish.sh` hat nur gepusht, eine `.ipa` als Release gab es bisher nur von Hand (v0.1.0-beta.1). Gewünscht ist, dass nach jedem Commit die auf dem Mac gebaute `.ipa` automatisch als Beta unter der vereinbarten Versionsnummer erscheint.
-- **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf. Es baut die signierte Development-`.ipa` (`scripts/build-ipa.sh`, Team RL9PPXX5GV) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
+- **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf. Es baut die `.ipa` (seit D-030 unsigniert, `scripts/build-ipa.sh --unsigned`) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
 - **Konsequenzen:** Jeder Commit dauert durch den Release-Build einige Minuten länger und braucht den angemeldeten Xcode-Account und `gh`. Schlägt der Build fehl, ist der Push schon erfolgt; das Release lässt sich mit `scripts/beta-release.sh` nachholen. 0.0.1.0 wurde nachträglich veröffentlicht. Die Source für SideStore/AltStore/StikStore (D-024) bleibt ein eigener, bewusster Schritt.
 
 ## D-029 Commit in der App sichtbar
@@ -249,6 +249,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Kontext:** Neben der Version soll man in der App sehen, aus welchem Commit sie gebaut wurde.
 - **Entscheidung:** Eine Build-Phase des App-Targets (`scripts/embed-commit.sh`, in `project.yml`) schreibt bei jedem Build den kurzen Hash von `HEAD` als `StudyHelperCommit` in die gebaute `Info.plist` – in Xcode, bei Tests und bei der Release-`.ipa`. Hat der Build uncommittete Änderungen an `StudyHelper/`, `Packages/` oder `project.yml`, bekommt der Hash ein „+“; die Einstellungen zeigen dann „ec2c94b*“ mit dem Hinweis „Mit lokalen, noch nicht committeten Änderungen gebaut“. Weil die Phase das Git-Repository liest, ist `ENABLE_USER_SCRIPT_SANDBOXING` im App-Target aus.
 - **Konsequenzen:** Die Beta-Releases (D-028) werden nach dem Commit gebaut und zeigen dessen Hash ohne Stern. Ohne Git (z. B. Quellcode-Archiv) steht „unbekannt“.
+
+## D-030 Keine E-Mail-Adressen, nur unsignierte .ipa auf GitHub
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Die E-Mail des Entwicklers stand in Dateien, einer Commit-Nachricht, als Autor alter Commits und Tags und – über das Entwicklerzertifikat – in jeder signierten .ipa der Beta-Releases.
+- **Entscheidung:** Alle Releases wurden gelöscht, die Git-Historie umgeschrieben (Autor/Committer auf die GitHub-noreply-Adresse, die E-Mail in alten Dateiständen und Nachrichten durch „<Apple-ID>“ ersetzt, Tags neu gesetzt) und per Force-Push ersetzt; der offene PR #2 wurde mit umgeschrieben. Beta-Releases (D-028) enthalten ab jetzt eine unsignierte .ipa (`scripts/build-ipa.sh --unsigned`); installiert wird sie mit SideStore, AltStore, StikStore oder Sideloadly, die mit der eigenen Apple-ID signieren. Signierte .ipa nur lokal. Keine E-Mail-Adressen mehr in Dateien, Commits, Tags oder Release-Texten.
+- **Konsequenzen:** Alle Commit-Hashes haben sich geändert; Hashes in älteren Texten (z. B. „Commit ec2c94b“) gelten nicht mehr. GitHub hält die alten Commits des gemergten PR #1 (`refs/pull/1/head`) weiter vor – endgültig entfernen kann sie nur der GitHub-Support. Direkt über die Xcode-Geräteliste lässt sich die Release-.ipa nicht mehr installieren; dafür aus Xcode bauen.
 
 ## Offene Punkte (spätere Phasen)
 

@@ -32,7 +32,7 @@ scripts/bump-version.sh     # vor jedem Commit: letzte Stelle der Version +1 (--
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Checkout nachziehen, Beta-Release mit .ipa (D-028)
 scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen)
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
-scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (für Beta-Releases auf GitHub)
+scripts/build-ipa.sh        # signierte Development-.ipa nach build/ipa/ (nur lokal, nie veröffentlichen)
 scripts/build-ipa.sh --unsigned           # unsignierte .ipa für die Source (SideStore/AltStore/StikStore)
 scripts/publish-source.sh "Was ist neu"   # Beta in die Source stellen (öffentliches Repo, D-024)
 ```
@@ -59,7 +59,7 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 
 ## Konventionen
 
-- Signieren immer mit dem Xcode-Account <Apple-ID> (Team RL9PPXX5GV, kostenlos); alle App-IDs
+- Signieren immer mit dem eigenen Xcode-Account des Entwicklers (Team RL9PPXX5GV, kostenlos); alle App-IDs
   enden auf 1 (`MiloG.StudyHelper1`, `…Tests1`, `…UITests1`). Andere installierte Teams nicht verwenden.
 - iOS 18 Minimum, iPhone + iPad, SwiftUI, SwiftData. Swift 6 Sprachmodus;
   App-Target mit Default-Isolation `MainActor`, Package-Code nicht.
@@ -74,13 +74,15 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - KI-Ausgaben strukturiert anfordern und robust parsen; fehlerhafte Ausgaben dürfen nie abstürzen.
 - API-Parameter (Modelle, Reasoning, Usage, Streaming) aus der aktuellen offiziellen
   Doku von Anthropic und OpenAI, nicht aus dem Gedächtnis.
+- Keine E-Mail-Adressen in Dateien, Commits, Tags oder Releases (auch nicht die des Entwicklers); auf GitHub
+  nur unsignierte .ipa, denn eine signierte enthält die Apple-ID des Zertifikats (D-030).
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
 - App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
   `scripts/bump-version.sh` (D +1). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
   vorschlagen, ihn als größere Version (`--set A.B.C`) zu veröffentlichen, und erst nach Zustimmung setzen.
 - Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
   `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, privat; Branch `main`; danach automatisch Beta-Release
-  `v<Version>` mit der auf dem Mac gebauten .ipa), nach jeder fertigen Phase
+  `v<Version>` mit der auf dem Mac gebauten, unsignierten .ipa), nach jeder fertigen Phase
   `scripts/release.sh`. Das Repository `StudyHelper-Test` nie anfassen. Der Haupt-Checkout
   `/Users/milogotz/Documents/StudyHelper` (für Xcode) wird per Fast-Forward nachgezogen; der Hook
   `scripts/git-hooks/post-merge` erzeugt dort das Xcode-Projekt neu (`git config core.hooksPath scripts/git-hooks`).

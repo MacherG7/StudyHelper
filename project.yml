@@ -12,7 +12,7 @@ options:
 
 settings:
   base:
-    # Team of the Xcode account <Apple-ID> (free Personal Team); IDs end in 1 (see CLAUDE.md).
+    # Team of the developer's own Xcode account (free Personal Team); IDs end in 1 (see CLAUDE.md).
     DEVELOPMENT_TEAM: RL9PPXX5GV
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
@@ -20,7 +20,7 @@ settings:
     # App version A.B.C.D shown in the settings: A.B.C = MARKETING_VERSION, D = build. Raise D with
     # scripts/bump-version.sh before every commit (D-027).
     MARKETING_VERSION: "0.0.1"
-    CURRENT_PROJECT_VERSION: "2"
+    CURRENT_PROJECT_VERSION: "3"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
