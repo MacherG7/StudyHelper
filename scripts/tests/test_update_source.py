@@ -117,7 +117,7 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(newest["version"], "0.1.0")
         self.assertEqual(newest["buildVersion"], "1")
         self.assertEqual(newest["size"], len(raw))
-        self.assertEqual(newest["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertNotIn("sha256", newest)  # optional; StikStore rejected it (D-035)
         self.assertEqual(newest["minOSVersion"], "18.0")
         self.assertEqual(newest["downloadURL"],
                          "https://github.com/%s/releases/download/v0.1.0.1/StudyHelper-0.1.0.1.ipa" % REPO)

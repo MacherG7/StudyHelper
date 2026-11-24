@@ -287,6 +287,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Das alte Repository wurde in `StudyHelper-alt` umbenannt; ein neues, **öffentliches** `MacherG7/StudyHelper` enthält die bereinigte Historie (Branch `main`, Tags, Branch von PR #3), die Releases v0.0.1.3–v0.0.1.7 wurden mit ihren unsignierten .ipa neu angelegt; danach wird das alte Repository gelöscht. Die Source ist `distribution/source.json` (URL `https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.json`), die Downloads zeigen auf die Releases `v<A.B.C.D>`. Nach jedem Release trägt `scripts/beta-release.sh` die Version ein und committet/pusht das als „Source: …“ (einziger Commit ohne Versionserhöhung); `--source-only --tag=…` trägt ein vorhandenes Release nach. `scripts/publish-source.sh` und das separate Repository `MacherG7/StudyHelper-Source` werden nicht mehr gebraucht.
 - **Konsequenzen:** Quellcode, Historie und Doku sind öffentlich; Prüfung vor dem Umzug: keine Schlüssel, keine echten Notizen, nur noreply-Adressen. PR #3 (D-031, Workflow für das separate Source-Repository) ist damit überholt. Wer die Source-URL kennt, kann die App installieren.
 
+## D-035 Source ohne SHA-256
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Fehler in StikStore)
+- **Kontext:** StikStore brach die Installation mit „The download doesn't match the checksum its source published“ ab, obwohl die heruntergeladene .ipa genau die SHA-256 der Source hatte (ohne Anmeldung nachgeprüft, auch über die Weiterleitung von GitHub). Wie StikStore die Prüfsumme bildet, ist nicht dokumentiert und der Code nicht öffentlich.
+- **Entscheidung:** `scripts/update-source.py` schreibt kein `sha256` mehr in die Versionen (das Feld ist im AltSource-Format optional). Größe, Version, Build, Mindest-iOS, Entitlements und Datenschutz-Texte bleiben.
+- **Konsequenzen:** Die Store-Apps prüfen die .ipa nicht mehr gegen eine Prüfsumme; die Datei kommt über HTTPS direkt aus dem Release. Funktioniert StikStore damit, bleibt es so (MT-S.3); sonst liegt der Fehler woanders und das Feld kann zurückkommen.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

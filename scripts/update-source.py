@@ -170,7 +170,8 @@ def add_version(source, meta, repo, notes, date, replace=False):
         "localizedDescription": notes,
         "downloadURL": links["download"].format(tag=tag, asset=asset),
         "size": meta["size"],
-        "sha256": meta["sha256"],
+        # No "sha256": it is optional in the AltSource format, and StikStore rejected the matching hash
+        # ("doesn't match the checksum its source published") although file and source agreed (D-035).
     }
     if meta.get("minOSVersion"):
         entry["minOSVersion"] = meta["minOSVersion"]

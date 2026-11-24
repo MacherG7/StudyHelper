@@ -34,7 +34,6 @@
           "localizedDescription": "Erste Beta: Lernstoff (Fotos, PDFs, Goodnotes-Exporte) digitalisieren, prüfen und in Themen strukturieren.",
           "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.1.7/StudyHelper-0.0.1.7.ipa",
           "size": 1307323,
-          "sha256": "d2292ac163441c0c785d0df4300128963d2eafb736671174afb79d9b147a10bc",
           "minOSVersion": "18.0"
         }
       ],
