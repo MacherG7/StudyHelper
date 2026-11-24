@@ -10,6 +10,7 @@
 #   --dry-run                           only print what would be published
 #   --force                             beta even if nothing in the .ipa changed
 #   --source-only [--tag=vA.B.C.D]      only add an existing release (default v<current version>) to the source
+#   --notes=TEXT                        "what's new" in the source (default: subject of the release commit)
 # After the release the version is added to distribution/source.json (the source for SideStore, AltStore and
 # StikStore, D-034) and committed and pushed as "Source: …" – the only commit without a version bump.
 # A beta is only published if something that goes into the .ipa changed since the last release (IPA_PATHS below;
@@ -21,6 +22,7 @@ DRY=0
 FORCE=0
 SOURCE_ONLY=0
 SOURCE_TAG=""
+SOURCE_NOTES=""
 for arg in "$@"; do
     case "$arg" in
         --final) FINAL=1 ;;
@@ -28,6 +30,7 @@ for arg in "$@"; do
         --force) FORCE=1 ;;
         --source-only) SOURCE_ONLY=1 ;;
         --tag=*) SOURCE_TAG="${arg#--tag=}" ;;
+        --notes=*) SOURCE_NOTES="${arg#--notes=}" ;;
         *) fail "Unbekannte Option: $arg (erlaubt: --final, --dry-run, --force, --source-only)" ;;
     esac
 done
@@ -54,7 +57,8 @@ command -v gh >/dev/null 2>&1 || fail "gh fehlt (brew install gh, dann gh auth l
 # Adds the release's .ipa ($1) to distribution/source.json and commits and pushes that (D-034).
 update_source() {
     local ipa="$1" notes
-    notes="$(git -C "$ROOT" log -1 --format=%s "$TAG^{commit}" 2>/dev/null || git -C "$ROOT" log -1 --format=%s)"
+    notes="$SOURCE_NOTES"
+    [[ -n "$notes" ]] || notes="$(git -C "$ROOT" log -1 --format=%s "$TAG^{commit}" 2>/dev/null || git -C "$ROOT" log -1 --format=%s)"
     step "Source für SideStore, AltStore und StikStore aktualisieren"
     python3 "$ROOT/scripts/update-source.py" --ipa "$ipa" --source "$ROOT/distribution/source.json" \
         --repo "$REPO" --notes "$notes" >/dev/null
