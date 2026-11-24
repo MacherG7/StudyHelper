@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the local checks. Unit tests never call real AI models or APIs.
 # Usage: scripts/test.sh [--core] [--ui]
-#   --core  only secret check + package tests on the Mac (fast)
+#   --core  only secret check, script tests + package tests on the Mac (fast)
 #   --ui    additionally run the XCTest UI tests on the simulator
 source "$(dirname "$0")/common.sh"
 
@@ -18,6 +18,10 @@ done
 [[ $CORE_ONLY == 1 && $WITH_UI == 1 ]] && fail "--core und --ui schließen sich aus."
 
 "$ROOT/scripts/check-secrets.sh"
+
+step "Skript-Tests und Source für SideStore/AltStore/StikStore prüfen"
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s "$ROOT/scripts/tests" -q
+python3 "$ROOT/scripts/update-source.py" --check "$ROOT/distribution/source.json"
 
 step "Package-Tests auf dem Mac (swift test)"
 swift test --package-path "$PACKAGE_DIR"

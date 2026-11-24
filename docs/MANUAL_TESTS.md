@@ -104,6 +104,22 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 
 ---
 
+## Verteilung über SideStore, AltStore und StikStore (D-024)
+
+Voraussetzung: öffentliches Repository angelegt, `scripts/publish-source.sh` einmal erfolgreich ausgeführt (siehe `distribution/README.md`).
+
+| ID | Prüfung | Erwartung | Ergebnis |
+|---|---|---|---|
+| MT-S.1 | Source-URL in **SideStore** hinzufügen, StudyHelper installieren und starten | Source mit Icon, Beschreibung und Version; Installation ohne Fehlermeldung zu Berechtigungen, Hash oder Version; App startet | |
+| MT-S.2 | Source-URL in **AltStore (Classic)** hinzufügen und installieren | Wie MT-S.1; beim Installieren wird die Kamera-Berechtigung angezeigt | |
+| MT-S.3 | Source-URL in **StikStore** hinzufügen und installieren | Source wird gelesen, App installierbar; sonst Fehlermeldung notieren | |
+| MT-S.4 | App aus Xcode **und** aus der Source auf demselben Gerät | Notieren, ob die Store-App die Bundle-ID ändert (zwei Apps, getrennte Daten) oder die Xcode-Installation ersetzt | |
+| MT-S.5 | Neue Version veröffentlichen (Build erhöht), Store-App aktualisieren lassen | Update wird angeboten; nach dem Update sind Fächer, Importe und Themen noch da | |
+| MT-S.6 | 7 Tage warten bzw. in der Store-App „Refresh“ | App wird aufgefrischt und startet weiter; Daten bleiben erhalten | |
+| MT-S.7 | Kamera (Scan/Foto) in der Source-Installation | Systemabfrage mit dem deutschen Text; Scannen funktioniert | |
+
+---
+
 ## Phase 2 – Anbieter
 
 | ID | Prüfung | Erwartung | Ergebnis |

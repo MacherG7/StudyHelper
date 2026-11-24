@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Source icon for SideStore/AltStore/StikStore (placeholder until the app has its own icon). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A80F0"/>
+      <stop offset="1" stop-color="#2148C0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- open book -->
+  <path d="M512 330 C 430 280 320 268 210 290 L 210 740 C 320 718 430 730 512 780 Z" fill="#FFFFFF"/>
+  <path d="M512 330 C 594 280 704 268 814 290 L 814 740 C 704 718 594 730 512 780 Z" fill="#EEF3FF"/>
+  <path d="M512 330 L 512 780" stroke="#C9D6F5" stroke-width="6"/>
+  <!-- text lines, left page -->
+  <g stroke="#B5C3E6" stroke-width="22" stroke-linecap="round">
+    <line x1="270" y1="400" x2="450" y2="418"/>
+    <line x1="270" y1="470" x2="450" y2="485"/>
+    <line x1="270" y1="540" x2="410" y2="552"/>
+    <line x1="270" y1="610" x2="450" y2="622"/>
+  </g>
+  <!-- right page: highlighted line -->
+  <line x1="560" y1="479" x2="768" y2="462" stroke="#FFD43B" stroke-width="64" stroke-linecap="round"/>
+  <line x1="574" y1="478" x2="754" y2="463" stroke="#33458A" stroke-width="22" stroke-linecap="round"/>
+  <g stroke="#B5C3E6" stroke-width="22" stroke-linecap="round">
+    <line x1="574" y1="400" x2="754" y2="384"/>
+    <line x1="574" y1="552" x2="714" y2="541"/>
+    <line x1="574" y1="622" x2="754" y2="611"/>
+  </g>
+</svg>
