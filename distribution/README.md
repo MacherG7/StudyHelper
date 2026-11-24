@@ -39,6 +39,12 @@ Wird in `MacherG7/StudyHelper` ein Release veröffentlicht, an dem eine `.ipa` h
 Source, passiert nichts – für eine neue Beta also `MARKETING_VERSION` oder `CURRENT_PROJECT_VERSION` in
 `project.yml` erhöhen. Releases ohne `.ipa` (z. B. `phase-N`) werden übersprungen.
 
+Die `.ipa` wird auf dem Mac gebaut (`scripts/build-ipa.sh`) und ans Release gehängt – gern auch erst nach dem
+Veröffentlichen: Der Workflow wartet nach „published“ bis zu 20 Minuten auf die Datei. Für später angehängte
+Dateien gibt es bei GitHub kein Ereignis; deshalb läuft er zusätzlich alle 6 Stunden und übernimmt das neueste
+Release mit `.ipa`, falls es noch fehlt. Am schnellsten: Release gleich mit Datei anlegen,
+`gh release create v0.2.0 build/ipa/StudyHelper.ipa --repo MacherG7/StudyHelper --prerelease --generate-notes`.
+
 Von Hand starten (z. B. für ein schon vorhandenes Release): Actions → „Source aktualisieren“ →
 „Run workflow“; ohne Tag nimmt er das neueste Release mit `.ipa`.
 

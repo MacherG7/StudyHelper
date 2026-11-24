@@ -1,11 +1,16 @@
 # Puts the .ipa of every StudyHelper release into the public source for SideStore, AltStore and StikStore
-# (docs/DECISIONS.md D-024). Needs the secret SOURCE_REPO_TOKEN: fine-grained token with
-# "Contents: Read and write" on MacherG7/StudyHelper-Source only (see distribution/README.md).
+# (docs/DECISIONS.md D-024, D-025). The .ipa is built on the Mac and often attached after the release is
+# published; GitHub has no event for an added asset, so a release run waits for it (up to 20 minutes) and a
+# scheduled run every 6 hours catches anything missed. Already published versions are skipped.
+# Needs the secret SOURCE_REPO_TOKEN: fine-grained token with "Contents: Read and write" on
+# MacherG7/StudyHelper-Source only (see distribution/README.md).
 name: Source aktualisieren
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       tag:
@@ -22,6 +27,7 @@ concurrency:
 jobs:
   source:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       SOURCE_REPO: ${{ vars.SOURCE_REPO || 'MacherG7/StudyHelper-Source' }}
     steps:
@@ -35,6 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          ACTION: ${{ github.event.action }}
         run: |
           set -euo pipefail
           if [[ -z "$TAG" ]]; then
@@ -44,9 +51,21 @@ jobs:
               fi
             done
           fi
+          ipa_of() {
+            gh release view "$1" --repo "$GITHUB_REPOSITORY" --json assets \
+              -q '[.assets[] | select(.name | endswith(".ipa")) | select(.state == "uploaded") | .name][0] // ""'
+          }
           ASSET=""
-          [[ -n "$TAG" ]] && ASSET="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
-            -q '[.assets[].name | select(endswith(".ipa"))][0] // ""')"
+          if [[ -n "$TAG" ]]; then ASSET="$(ipa_of "$TAG")"; fi
+          # Just published: the .ipa is usually attached from the Mac a few minutes later.
+          if [[ -z "$ASSET" && "$GITHUB_EVENT_NAME" == "release" && "$ACTION" == "published" ]]; then
+            for _ in $(seq 40); do
+              echo "Warte auf .ipa in $TAG …"
+              sleep 30
+              ASSET="$(ipa_of "$TAG")"
+              if [[ -n "$ASSET" ]]; then break; fi
+            done
+          fi
           if [[ -z "$ASSET" ]]; then
             echo "::notice::Kein Release mit .ipa gefunden (${TAG:-keins}) – nichts zu tun."
             echo "skip=true" >> "$GITHUB_OUTPUT"
