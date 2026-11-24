@@ -61,12 +61,51 @@ enum InkLayerRendering {
 
         // PDF user space (origin bottom-left, points) maps straight onto the bitmap (origin bottom-left).
         context.scaleBy(x: Double(width) / page.size.width, y: Double(height) / page.size.height)
+        drawStrokes(selected, of: page, in: context)
+        return context.makeImage()
+    }
+
+    /// Largest side of a crop in pixels.
+    static let maxCropSide = 6000
+
+    /// Renders only the given strokes (black on white) into an image of the page region `crop` (normalized,
+    /// origin top-left). The region is rounded up to whole pixels at `scale` (pixels per point); the rect that
+    /// the image really covers is returned together with it, so that recognized rects can be mapped back exactly.
+    static func renderStrokes(
+        page: GoodnotesPage, indices: [Int], crop: NormalizedRect, scale: Double
+    ) -> (image: CGImage, rect: NormalizedRect)? {
+        guard scale > 0, scale.isFinite, page.size.width > 0, page.size.height > 0, !crop.isEmpty else { return nil }
+        let pageWidth = page.size.width, pageHeight = page.size.height
+        let left = crop.x * pageWidth, top = crop.y * pageHeight
+        let width = Int((crop.width * pageWidth * scale).rounded(.up))
+        let height = Int((crop.height * pageHeight * scale).rounded(.up))
+        guard width > 0, height > 0, width <= maxCropSide, height <= maxCropSide else { return nil }
+        let coveredWidth = Double(width) / scale, coveredHeight = Double(height) / scale
+        guard let context = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue
+        ) else { return nil }
+        context.setAllowsAntialiasing(true)
+        context.setShouldAntialias(true)
+        context.interpolationQuality = .high
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        // Region origin in PDF user space (bottom-left): the region's bottom edge.
+        context.scaleBy(x: scale, y: scale)
+        context.translateBy(x: -left, y: -(pageHeight - top - coveredHeight))
+        drawStrokes(indices, of: page, in: context)
+        guard let image = context.makeImage() else { return nil }
+        return (image, NormalizedRect(
+            x: left / pageWidth, y: top / pageHeight, width: coveredWidth / pageWidth, height: coveredHeight / pageHeight))
+    }
+
+    /// Draws strokes black in a context whose user space is the PDF page space.
+    private static func drawStrokes(_ indices: [Int], of page: GoodnotesPage, in context: CGContext) {
         context.setStrokeColor(gray: 0, alpha: 1)
         context.setFillColor(gray: 0, alpha: 1)
         context.setLineCap(.round)
         context.setLineJoin(.round)
-
-        for index in selected {
+        for index in indices where index < page.strokes.count {
             let stroke = page.strokes[index]
             guard let first = stroke.points.first else { continue }
             let lineWidth = max(stroke.width, 0.25)
@@ -81,6 +120,5 @@ enum InkLayerRendering {
             for p in stroke.points.dropFirst() { context.addLine(to: CGPoint(x: p.x, y: p.y)) }
             context.strokePath()
         }
-        return context.makeImage()
     }
 }

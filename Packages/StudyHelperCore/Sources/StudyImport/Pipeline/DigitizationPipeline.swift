@@ -249,19 +249,35 @@ public struct DigitizationPipeline: Sendable {
             passes = max(passes, outcome.passes)
             variedWords += outcome.variedWords
         }
-        var inkLines = LineMerging.mergeLayerFragments(
-            layerOutcomes.flatMap { entry in entry.outcome.lines.map { LineMerging.LayerLine(line: $0, layer: entry.layer) } })
+        var layerLines = layerOutcomes.map(\.outcome.lines)
+        func mergedInk() -> [RecognizedLine] {
+            LineMerging.mergeLayerFragments(
+                layerLines.enumerated().flatMap { entry in entry.element.map { LineMerging.LayerLine(line: $0, layer: entry.offset) } })
+        }
+        var inkLines = mergedInk()
 
-        // 2. Cross-check with the reduced PDF (its text layer is Goodnotes' own, error-prone recognition).
+        // Visible worksheet text of the page and exact text of FreeText boxes.
+        let embedded = EmbeddedTextExtractor.extract(from: pdfPage)
+        let freeText = LineMerging.freeTextLines(page.freeTexts)
+
+        // 2. Second chance: ink the first pass skipped, and lines that swallowed several rows, are read again row by row.
+        if settings.retryCropLimit > 0 {
+            let preliminary = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText)
+            let detectedFirst = GoodnotesEmphasisDetector.detect(page: page, lines: preliminary)
+            let shapes = Self.shapeRects(of: detectedFirst)
+            let retried = try await retryUnreadInk(page: page, layerLines: layerLines, shapeRects: shapes)
+            if retried != layerLines {
+                layerLines = retried
+                inkLines = mergedInk()
+            }
+        }
+
+        // 3. Cross-check with the reduced PDF (its text layer is Goodnotes' own, error-prone recognition).
         var usedReduced = false
         if let reducedPage {
             inkLines = ReducedPDFComparator.crossCheck(lines: inkLines, against: reducedPage)
             usedReduced = true
         }
-
-        // 3. Visible worksheet text of the page and exact text of FreeText boxes.
-        let embedded = EmbeddedTextExtractor.extract(from: pdfPage)
-        let freeText = LineMerging.freeTextLines(page.freeTexts)
 
         let provisional = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText)
 
@@ -270,8 +286,7 @@ public struct DigitizationPipeline: Sendable {
         let highlights = detected + Self.nonDuplicate(embedded?.highlights ?? [], comparedTo: detected)
 
         // 5. Ink that no recognized handwritten word explains becomes an illegible line (the recognizer drops what it cannot read).
-        let shapeRects = detected.filter { $0.source == .goodnotesShape && [.underline, .doubleUnderline, .circled].contains($0.kind) }.map(\.rect)
-        let illegible = IllegibleInk.lines(page: page, recognized: inkLines, shapeRects: shapeRects)
+        let illegible = IllegibleInk.lines(page: page, recognized: inkLines, shapeRects: Self.shapeRects(of: detected))
         let allLines = illegible.isEmpty
             ? provisional
             : LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + freeText + illegible)
@@ -289,7 +304,12 @@ public struct DigitizationPipeline: Sendable {
         return PageDigitization(pageIndex: index, result: result, imageData: try pageImage(pdfPage, index: index))
     }
 
-    private static func colored(_ line: RecognizedLine, with color: StudyColor) -> RecognizedLine {
+    /// Areas of ink shapes (underlines, circles) among the detected emphasis; the strokes inside are not text.
+    static func shapeRects(of highlights: [RecognizedHighlight]) -> [NormalizedRect] {
+        highlights.filter { $0.source == .goodnotesShape && [.underline, .doubleUnderline, .circled].contains($0.kind) }.map(\.rect)
+    }
+
+    static func colored(_ line: RecognizedLine, with color: StudyColor) -> RecognizedLine {
         var line = line
         line.color = color
         for index in line.words.indices { line.words[index].color = color }
@@ -322,7 +342,7 @@ public struct DigitizationPipeline: Sendable {
         try Task.checkCancellation()
         let options = settings.recognitionOptions(prefersDocumentRecognition: prefersDocumentRecognition)
         let first = try await recognizer.recognize(image, options: options)
-        let firstLines = Self.markIllegible(first.lines)
+        let firstLines = Self.markIllegible(ScriptGuard.apply(to: first.lines))
         guard settings.multiPass, let scaled = PageRenderer.scaled(image, by: settings.secondPassScale) else {
             return RecognitionOutcome(
                 lines: firstLines, engineVersion: first.engineVersion, method: first.method, passes: 1, variedWords: 0)
@@ -387,7 +407,7 @@ public struct DigitizationPipeline: Sendable {
 }
 
 /// Runs `transform` over `items` with at most `maxConcurrent` operations at a time; results keep the input order.
-private func concurrentMap<Item: Sendable, Output: Sendable>(
+func concurrentMap<Item: Sendable, Output: Sendable>(
     _ items: [Item], maxConcurrent: Int, _ transform: @escaping @Sendable (Item) async throws -> Output
 ) async throws -> [Output] {
     try await withThrowingTaskGroup(of: (Int, Output).self) { group in

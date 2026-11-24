@@ -146,6 +146,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Lernbereit ist ein Thema nur, wenn es bestätigt und seit der Bestätigung nicht geändert wurde (`modifiedAt == nil`). Wird ein unbestätigtes Thema in ein bestätigtes zusammengelegt, ist das Ziel wieder unbestätigt. Wird der Text eines Original-Eintrags bearbeitet, wird er zur „Eigenen Eingabe“, behält aber seinen Quellenverweis; ohne Quellenverweis kann ein Eintrag nicht „Original“ sein. Eine Hervorhebung wird einem übernommenen Eintrag nur zugeordnet, wenn sie mindestens die Hälfte der übernommenen Wörter abdeckt. Ändert sich die Quelle eines Eintrags (Korrektur, Neuerkennung, Version wiederhergestellt, Hervorhebung bearbeitet), markiert die App den Eintrag mit „Quelle geändert“ und bietet „Text aus Quelle übernehmen“ oder „Ignorieren“ an.
 - **Konsequenzen:** Lernmodi (ab Phase 5) dürfen nur lernbereite Themen verwenden. Löschen eines Imports nennt die betroffenen Themen; deren Einträge zeigen danach „Quelle nicht mehr vorhanden“.
 
+## D-019 Nachlesen übergangener Handschrift (Befund an echtem Goodnotes-Export)
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen
+- **Kontext:** Auf einem echten Export (17 Seiten) hat Vision auf der ganzen Seite dichte Handschriftzeilen ausgelassen (z. B. drei Zeilen am Stück) und vereinzelt mehrere Zeilen zu einer Beobachtung mit niedriger Sicherheit und fremden Schriftzeichen verschmolzen. Die Unleserlich-Erkennung fasste die übrige Tinte zu mehrzeiligen Kästen zusammen.
+- **Entscheidung:** Nach dem ersten Durchgang wird nicht erklärte Tinte je Stiftfarbe in Textzeilen und Abschnitte zerlegt, einzeln gerendert und noch einmal erkannt (Maßstab 3, sonst 4,5; höchstens `retryCropLimit` = 40 Aufrufe pro Seite). Verdächtige Zeilen (höher als 1,8 Zeilenhöhen und unsicher, fremde Schrift oder mehrere Tintenzeilen) werden verworfen und zeilenweise nachgelesen. Eine Schriftprüfung (`ScriptGuard`) ersetzt Zeilen mit nicht-lateinischen Zeichen durch eine lateinische Alternative oder markiert sie als unsicher. „Unleserlich“ entsteht nur noch je Textzeile.
+- **Konsequenzen:** Etwa 5–10 % mehr Rechenzeit pro Seite. Sehr eng gestapelte Listen mit Ziffernspalten werden teilweise noch nicht gelesen. Für Fotos gibt es bisher nur die Schriftprüfung. Die Testdatei bleibt lokal in `LocalSamples/`.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

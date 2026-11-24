@@ -24,12 +24,15 @@ public struct PipelineSettings: Hashable, Sendable {
     public var maximumCandidates: Int
     /// JPEG quality of the stored page image.
     public var imageQuality: Double
+    /// Goodnotes ink: at most this many extra recognizer calls per page to read again ink the first pass skipped
+    /// or merged ("Nachlesen"). 0 switches the second chance off.
+    public var retryCropLimit: Int
 
     public init(
         multiPass: Bool = false, customWords: [String] = [], renderScale: Double = 2,
         recognitionScale: Double = 3, secondPassScale: Double = 0.7, languages: [String] = ["de-DE"],
         usesLanguageCorrection: Bool = true, prefersDocumentRecognition: Bool = true,
-        maximumCandidates: Int = 3, imageQuality: Double = 0.85
+        maximumCandidates: Int = 3, imageQuality: Double = 0.85, retryCropLimit: Int = 40
     ) {
         self.multiPass = multiPass
         self.customWords = customWords
@@ -41,6 +44,7 @@ public struct PipelineSettings: Hashable, Sendable {
         self.prefersDocumentRecognition = prefersDocumentRecognition
         self.maximumCandidates = maximumCandidates
         self.imageQuality = imageQuality
+        self.retryCropLimit = retryCropLimit
     }
 
     func recognitionOptions(prefersDocumentRecognition: Bool) -> TextRecognitionOptions {

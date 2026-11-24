@@ -1,16 +1,875 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
-    "Core %@" : {
+    "" : {
 
     },
-    "Hier erscheinen bald deine Fächer und dein Lernstoff." : {
+    "„%@“" : {
+
+    },
+    "„%@“ (%@) wird entfernt. Das bleibt auch bei „Neu erkennen“ so." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "„%1$@“ (%2$@) wird entfernt. Das bleibt auch bei „Neu erkennen“ so."
+          }
+        }
+      }
+    },
+    "„%@“ hat noch keine Einträge, die verschoben werden könnten." : {
+
+    },
+    "„%@“ wird mit allen Einträgen gelöscht. Die Seiten und ihr Text bleiben erhalten. Das kann nicht rückgängig gemacht werden." : {
+
+    },
+    "„%@“ wird mit allen Importen, erkannten Texten, Korrekturen und Themen gelöscht. Das kann nicht rückgängig gemacht werden." : {
+
+    },
+    "„%@“ wurde noch nicht importiert. Wenn du sie verwirfst, wird die Kopie in StudyHelper gelöscht; die Originaldatei bleibt in der anderen App." : {
+
+    },
+    "„%@“: %lld Seiten\n„%@“: %lld Seiten" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "„%1$@“: %2$lld Seiten\n„%3$@“: %4$lld Seiten"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ Dieser Eintrag zeigt noch den Stand vom Übernehmen. Übernimm den aktuellen Text aus der Quelle oder ignoriere die Änderung." : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld Importe" : {
+
+    },
+    "%lld KI-Ergänzungen offen" : {
+
+    },
+    "%lld offen" : {
+
+    },
+    "%lld Seiten beschädigt" : {
+
+    },
+    "%lld Seiten fehlgeschlagen" : {
+
+    },
+    "%lld Seiten warten auf Erkennung" : {
+
+    },
+    "%lld Stellen offen" : {
+
+    },
+    "%lld Wörter gewählt" : {
+
+    },
+    "1 Import" : {
+
+    },
+    "1 KI-Ergänzung offen" : {
+
+    },
+    "1 Seite beschädigt" : {
+
+    },
+    "1 Seite fehlgeschlagen" : {
+
+    },
+    "1 Seite wartet auf Erkennung" : {
+
+    },
+    "1 Stelle offen" : {
+
+    },
+    "1 Wort gewählt" : {
+
+    },
+    "Abbrechen" : {
+
+    },
+    "Abgelehnt" : {
+
+    },
+    "aktuell" : {
+
+    },
+    "Alle Stellen dieser Seite sind geprüft." : {
+
+    },
+    "Alles geprüft" : {
+
+    },
+    "Als Begriff übernehmen" : {
+
+    },
+    "Als Formel oder Regel übernehmen" : {
+
+    },
+    "Als Kernaussage" : {
+
+    },
+    "Als Kernaussage übernehmen" : {
+
+    },
+    "Als Titel des Themas" : {
+
+    },
+    "Als Titel oder Kernaussage übernehmen" : {
+
+    },
+    "Angaben" : {
+
+    },
+    "Angenommen" : {
+
+    },
+    "Ansicht" : {
+
+    },
+    "Anzeigen und verwerfen" : {
+
+    },
+    "Art" : {
+
+    },
+    "Auf dieser Seite wurde kein Text gefunden." : {
+
+    },
+    "Auf erkannten Text zurücksetzen" : {
+
+    },
+    "Aufteilen" : {
+
+    },
+    "Aus diesem Thema entfernen" : {
+
+    },
+    "ausgeblendet" : {
+
+    },
+    "ausgewählt" : {
+
+    },
+    "Auswahl aufheben" : {
+
+    },
+    "Automatisch erkannt (sicher)." : {
+
+    },
+    "Automatisch erkannt (unsicher)." : {
+
+    },
+    "Bearbeiten" : {
+
+    },
+    "Bedeutung" : {
+
+    },
+    "Begriff" : {
+
+    },
+    "Begriff: %@" : {
+
+    },
+    "Bei der Mehrfacherkennung wird jede Seite zweimal gelesen. Wörter, bei denen sich die Ergebnisse unterscheiden, werden als unsicher markiert. Die Fachbegriffe für die Erkennung pflegst du im jeweiligen Fach." : {
+
+    },
+    "Beide Exporte haben dieselbe Seitenzahl und Seitengröße (bearbeitbar: %lld, reduziert: %lld Seiten). Vor dem Import bestätigst du, dass sie zur selben Notiz gehören." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Beide Exporte haben dieselbe Seitenzahl und Seitengröße (bearbeitbar: %1$lld, reduziert: %2$lld Seiten). Vor dem Import bestätigst du, dass sie zur selben Notiz gehören."
+          }
+        }
+      }
+    },
+    "beschädigt" : {
+
+    },
+    "Bestätigt" : {
+
+    },
+    "Das Bild dieser Seite ist nicht gespeichert." : {
+
+    },
+    "Das hat nicht geklappt" : {
+
+    },
+    "Das neue Thema bekommt die Seiten, auf die die gewählten Einträge verweisen." : {
+
+    },
+    "Datei konnte nicht übernommen werden" : {
+
+    },
+    "Datei verwerfen?" : {
+
+    },
+    "Datei wird gelesen…" : {
+
+    },
+    "Dateien" : {
+
+    },
+    "Daten konnten nicht geladen werden" : {
+
+    },
+    "Definition" : {
+
+    },
+    "Dein Text: %@" : {
+
+    },
+    "Deine Korrektur hat Vorrang vor jeder automatischen Erkennung und bleibt auch bei „Neu erkennen“ erhalten." : {
+
+    },
+    "Deine manuellen Korrekturen bleiben erhalten und werden auf das neue Ergebnis angewendet. Der bisherige Stand bleibt als Version gespeichert; du kannst ihn unter „Versionen“ wiederherstellen." : {
+
+    },
+    "Der gespeicherte Text dieser Seite ist beschädigt." : {
+
+    },
+    "Die erste Zeile enthält die Spaltenüberschriften." : {
+
+    },
+    "Diese Hervorhebungen gehören zu keiner erkannten Zeile." : {
+
+    },
+    "Diese Seite neu erkennen" : {
+
+    },
+    "Diese Seite neu erkennen?" : {
+
+    },
+    "Diese Seite wird erkannt…" : {
+
+    },
+    "Diese Seite wurde noch nicht erkannt." : {
+
+    },
+    "Diese Seite wurde noch nicht erkannt. Starte die Erkennung im Import." : {
+
+    },
+    "Diese Wörter helfen der Texterkennung bei Fachwörtern. Beim Korrigieren einer Zeile kannst du Wörter hier aufnehmen." : {
+
+    },
+    "Diesem Thema sind noch keine Seiten zugeordnet." : {
+
+    },
+    "Dieses Thema gibt es nicht mehr." : {
+
+    },
+    "Dokumentenscanner" : {
+
+    },
+    "eingeblendet" : {
+
+    },
+    "Einstellungen" : {
+
+    },
+    "Einträge verschieben" : {
+
+    },
+    "Einzelne Wörter wählen" : {
+
+    },
+    "Engine: %@" : {
+
+    },
+    "Entfernen" : {
+
+    },
+    "Entwurf" : {
+
+    },
+    "Erkannt wurde: „%@“" : {
+
+    },
+    "Erkannt: %@" : {
+
+    },
+    "Erneut bestätigen" : {
+
+    },
+    "Erneut versuchen" : {
+
+    },
+    "Erst nach der Bestätigung kann dieses Thema gelernt werden." : {
+
+    },
+    "Erst nach erneuter Bestätigung kann dieses Thema gelernt werden." : {
+
+    },
+    "Es gibt kein anderes Thema in diesem Fach." : {
+
+    },
+    "Fach" : {
+
+    },
+    "Fach anlegen" : {
+
+    },
+    "Fach hinzufügen" : {
+
+    },
+    "Fach löschen?" : {
+
+    },
+    "Fachbegriff hinzufügen" : {
+
+    },
+    "Fachbegriffe für die Erkennung" : {
+
+    },
+    "Fachbegriffe merken" : {
+
+    },
+    "Farbe" : {
+
+    },
+    "Felder" : {
+
+    },
+    "Fertig" : {
+
+    },
+    "Formel oder Regel: %@" : {
+
+    },
+    "Fotomediathek" : {
+
+    },
+    "Für diese Zeile ist keine Hervorhebung gespeichert." : {
+
+    },
+    "Für diese Zeile sind keine einzelnen Wörter gespeichert." : {
+
+    },
+    "Ganze Seite" : {
+
+    },
+    "Ganzen Import neu erkennen" : {
+
+    },
+    "Ganzen Import neu erkennen?" : {
+
+    },
+    "Gehören diese beiden Exporte zur selben Notiz?" : {
+
+    },
+    "Gemerkte Wörter helfen der Texterkennung bei späteren Importen und beim Neu-Erkennen dieses Fachs." : {
+
+    },
+    "Gerät: %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Gerät: %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Gib dem neuen Thema einen Titel." : {
+
+    },
+    "Gib dem Thema einen Titel. Alle anderen Felder sind freiwillig." : {
+
+    },
+    "Herkunft" : {
+
+    },
+    "Herkunft des Themas" : {
+
+    },
+    "Hervorgehoben: %@" : {
+
+    },
+    "Hervorhebung hinzufügen" : {
+
+    },
+    "Hervorhebung löschen" : {
+
+    },
+    "Hervorhebung löschen?" : {
+
+    },
+    "Hervorhebung ohne Zeile: %@" : {
+
+    },
+    "Hervorhebungen" : {
+
+    },
+    "Hervorhebungen (%lld)" : {
+
+    },
+    "Hinzufügen" : {
+
+    },
+    "Ignorieren" : {
+
+    },
+    "Im Original" : {
+
+    },
+    "Import löschen?" : {
+
+    },
+    "Importe" : {
+
+    },
+    "Importieren" : {
+
+    },
+    "In anderes Thema verschieben …" : {
+
+    },
+    "In diesem Fach gibt es noch keinen Lernstoff. Importiere zuerst Fotos, ein PDF oder einen Goodnotes-Export." : {
+
+    },
+    "Ja, zusammen importieren" : {
+
+    },
+    "Jetzt erkennen" : {
+
+    },
+    "Kamera" : {
+
+    },
+    "Kein Bild" : {
+
+    },
+    "Kein Text erkannt" : {
+
+    },
+    "Keine" : {
+
+    },
+    "Keine Daten" : {
+
+    },
+    "Keine offenen Korrekturen." : {
+
+    },
+    "Keine offenen Stellen" : {
+
+    },
+    "Keine Quelle" : {
+
+    },
+    "Keine Seiten" : {
+
+    },
+    "Keine Seiten zugeordnet" : {
+
+    },
+    "Korrigieren" : {
+
+    },
+    "Lege dein erstes Fach an, zum Beispiel Mathe oder Deutsch, und importiere dann deinen Lernstoff." : {
+
+    },
+    "Lege zuerst ein Fach an, dann kannst du die Datei importieren." : {
+
+    },
+    "Lernstoff importieren" : {
+
+    },
+    "Löschen" : {
+
+    },
+    "Markierte Stelle im Original" : {
+
+    },
+    "Mehrfacherkennung (genauer, dauert länger)" : {
+
+    },
+    "Methode: %@%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Methode: %1$@%2$@"
+          }
+        }
+      }
+    },
+    "Mit dem reduzierten PDF derselben Notiz kann die App die erkannte Handschrift abgleichen und unsichere Stellen besser finden." : {
+
+    },
+    "Nach Bestätigung geändert" : {
+
+    },
+    "Nach Bestätigung geändert – erneut bestätigen" : {
+
+    },
+    "Nach oben" : {
+
+    },
+    "Nach unten" : {
+
+    },
+    "Nächste Seite" : {
+
+    },
+    "Name, z. B. Biologie" : {
+
+    },
+    "Nein, nur das bearbeitbare PDF importieren" : {
+
+    },
+    "Neu erkennen" : {
+
+    },
+    "Neues Fach anlegen" : {
+
+    },
+    "Neues Thema" : {
+
+    },
+    "Nicht lesbare Korrektur" : {
+
+    },
+    "nicht zugeordnet" : {
+
+    },
+    "Nicht zugeordnet" : {
+
+    },
+    "Noch %lld Stellen offen" : {
+
+    },
+    "Noch 1 Stelle offen" : {
+
+    },
+    "Noch kein Lernstoff importiert. Importiere Fotos, einen Scan, ein PDF oder einen Goodnotes-Export." : {
+
+    },
+    "Noch kein Text" : {
 
     },
     "Noch keine Fächer" : {
 
     },
+    "Noch keine Inhalte" : {
+
+    },
+    "Noch keine Seiten zugeordnet. Ordne Seiten zu, um ihren Text neben dem Editor zu sehen und Inhalte zu übernehmen." : {
+
+    },
+    "Noch keine Themen. Lege ein Thema an und übernimm Inhalte aus deinem Lernstoff." : {
+
+    },
+    "Noch nicht angenommen" : {
+
+    },
+    "Nur offene Stellen" : {
+
+    },
+    "Offene Stellen" : {
+
+    },
+    "Öffnet das Thema" : {
+
+    },
+    "OK" : {
+
+    },
+    "Ordne diesem Thema Seiten zu. Ihr gespeicherter Text erscheint dann hier, und du kannst Inhalte daraus übernehmen." : {
+
+    },
+    "Originalbild der Seite" : {
+
+    },
+    "PDF importieren" : {
+
+    },
+    "PDF oder Goodnotes-Export" : {
+
+    },
+    "Prüfen" : {
+
+    },
+    "Quelle" : {
+
+    },
+    "Quelle geändert" : {
+
+    },
+    "Quelle schließen" : {
+
+    },
+    "Reduziertes Goodnotes-PDF hinzufügen (optional)" : {
+
+    },
+    "Seite %lld" : {
+
+    },
+    "Seite %lld · %lld offen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Seite %1$lld · %2$lld offen"
+          }
+        }
+      }
+    },
+    "Seite %lld · beschädigt" : {
+
+    },
+    "Seite %lld von %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Seite %1$lld von %2$lld"
+          }
+        }
+      }
+    },
+    "Seite nicht lesbar" : {
+
+    },
+    "Seiten zuordnen" : {
+
+    },
+    "Sichern" : {
+
+    },
+    "Sortieren" : {
+
+    },
+    "Spalte %lld" : {
+
+    },
+    "Spalte %lld entfernen" : {
+
+    },
+    "Spalte hinzufügen" : {
+
+    },
+    "Speichern ohne Änderung bestätigt den erkannten Text." : {
+
+    },
     "StudyHelper" : {
+
+    },
+    "Tabelle" : {
+
+    },
+    "Text" : {
+
+    },
+    "Text aus Quelle übernehmen" : {
+
+    },
+    "Text der Zeile" : {
+
+    },
+    "Texte" : {
+
+    },
+    "Texterkennung" : {
+
+    },
+    "Thema" : {
+
+    },
+    "Thema anlegen" : {
+
+    },
+    "Thema aufteilen" : {
+
+    },
+    "Thema aufteilen …" : {
+
+    },
+    "Thema bestätigen" : {
+
+    },
+    "Thema löschen?" : {
+
+    },
+    "Thema nicht gefunden" : {
+
+    },
+    "Thema umbenennen" : {
+
+    },
+    "Themen" : {
+
+    },
+    "Tippe auf die Wörter, die du übernehmen willst." : {
+
+    },
+    "Tippe auf eine oder mehrere Zeilen, um sie in dieses Thema zu übernehmen." : {
+
+    },
+    "Tippe auf eine Zeile, um sie zu korrigieren oder ihre Hervorhebungen zu ändern." : {
+
+    },
+    "Titel" : {
+
+    },
+    "Titel des neuen Themas" : {
+
+    },
+    "Titel, z. B. Fotosynthese" : {
+
+    },
+    "Übernehmen als" : {
+
+    },
+    "Übernehmen als %@" : {
+
+    },
+    "Überschrift: %@" : {
+
+    },
+    "Umbenennen" : {
+
+    },
+    "Vergrößern" : {
+
+    },
+    "Verkleinern" : {
+
+    },
+    "Verschieben" : {
+
+    },
+    "Version %lld" : {
+
+    },
+    "Versionen" : {
+
+    },
+    "Verweis auf die Quelle entfernen" : {
+
+    },
+    "Verwerfen" : {
+
+    },
+    "Von dir angelegt oder geändert." : {
+
+    },
+    "Vorherige Seite" : {
+
+    },
+    "Vorschläge aus Hervorhebungen (%lld)" : {
+
+    },
+    "Vorschläge der Erkennung" : {
+
+    },
+    "Wähle mindestens einen Eintrag aus." : {
+
+    },
+    "Wählt die Zeile aus, um sie zu korrigieren" : {
+
+    },
+    "Wählt die Zeile zum Übernehmen aus" : {
+
+    },
+    "Wechsle zu „%@“, um Inhalte einzutragen oder aus der Quelle zu übernehmen." : {
+
+    },
+    "Weitere Hervorhebungen" : {
+
+    },
+    "Wiederherstellen" : {
+
+    },
+    "wird erkannt…" : {
+
+    },
+    "Wische eine Quelle nach links, um sie zu entfernen oder in ein anderes Thema zu verschieben." : {
+
+    },
+    "Wörter auswählen" : {
+
+    },
+    "Wörter wählen" : {
+
+    },
+    "Zeigt die Stelle im Originalbild" : {
+
+    },
+    "Zeile" : {
+
+    },
+    "Zeile %lld" : {
+
+    },
+    "Zeile %lld entfernen" : {
+
+    },
+    "Zeile %lld, Spalte %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Zeile %1$lld, Spalte %2$lld"
+          }
+        }
+      }
+    },
+    "Zeile hinzufügen" : {
+
+    },
+    "Zeile korrigieren" : {
+
+    },
+    "Zu diesen Korrekturen wurde im neuen Ergebnis keine passende Stelle gefunden, zum Beispiel weil die Zeile anders erkannt oder geteilt wurde. Sie bleiben gespeichert, bis du sie verwirfst." : {
+
+    },
+    "zugeordnet" : {
+
+    },
+    "Zugeordnete Quellen" : {
+
+    },
+    "Zum Bearbeiten tippen" : {
+
+    },
+    "Zurück zum Import" : {
+
+    },
+    "Zusammenfassung" : {
+
+    },
+    "Zusammenlegen" : {
+
+    },
+    "Zusammenlegen mit …" : {
 
     }
   },

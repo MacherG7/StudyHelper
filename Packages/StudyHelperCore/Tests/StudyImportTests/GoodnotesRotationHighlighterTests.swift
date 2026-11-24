@@ -95,7 +95,9 @@ struct GoodnotesRotationTests {
         let imageData = try #require(page.imageData)
         let jpeg = try #require(PageRenderer.decodeImage(data: imageData))
         #expect(jpeg.image.width == 1200 && jpeg.image.height == 800, "Seitenbild ist gedreht")
-        #expect(recognizer.calls.allSatisfy { $0.imageWidth == 1800 && $0.imageHeight == 1200 })
+        // The layer is recognized as a whole page; the second chance only reads smaller crops of unread ink.
+        #expect(recognizer.calls.contains { $0.imageWidth == 1800 && $0.imageHeight == 1200 })
+        #expect(recognizer.calls.allSatisfy { $0.imageWidth <= 1800 && $0.imageHeight <= 1200 })
         // The scribble (unrotated x 50...100, y 300...330) is unread ink: one illegible line at its rotated place.
         let scribble = try #require(page.result.lines.first { $0.status == .illegible })
         let center = displayed(75, 315, rotation: 90)
@@ -295,10 +297,15 @@ struct IllegibleInkTests {
             return TextRecognitionOutput(lines: lines, engineVersion: "mock", method: .vision)
         }
 
-        let recognizer = CountingRecognizer { number, image, _ in output(number, image) }
+        // The second chance reads small crops too; this recognizer reads nothing there and numbers only the layer calls.
+        let layerCalls = CallNumbering()
+        let recognizer = CountingRecognizer { _, image, _ in
+            image.width < 1000 ? mockOutput() : output(layerCalls.next(), image)
+        }
         let pipeline = DigitizationPipeline(recognizer: recognizer, environment: testEnvironment)
         let pages = try await pipeline.digitizePDF(data: try Data(contentsOf: GoodnotesFixture.fotosyntheseEditable.url)).pages
         #expect(pages.count == 3)
+        #expect(recognizer.calls.contains { $0.imageWidth < 1000 }, "das Wort wurde noch einmal ausschnittsweise versucht")
 
         let droppedRect = GoodnotesTestSupport.normalized(dropped.bbox, truth: truth)
         let first = pages[0].result
@@ -315,5 +322,17 @@ struct IllegibleInkTests {
         for page in pages.dropFirst() {
             #expect(page.result.lines.filter { $0.status == .illegible }.isEmpty, "Seite \(page.pageIndex + 1)")
         }
+    }
+}
+
+/// Thread-safe counter for the calls of a mock recognizer that a handler wants to number itself.
+final class CallNumbering: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func next() -> Int {
+        lock.lock(); defer { lock.unlock() }
+        count += 1
+        return count - 1
     }
 }

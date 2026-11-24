@@ -34,3 +34,4 @@ LocalSamples/
 *.pdf
 *.PDF
 !Packages/StudyHelperCore/Sources/TestFixtures/Resources/Goodnotes/*.pdf
+!Packages/StudyHelperCore/Sources/TestFixtures/Resources/DigitalWorksheet/*.pdf
