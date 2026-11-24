@@ -234,6 +234,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Die Version hat vier Stellen: A.B.C ist `MARKETING_VERSION` (`CFBundleShortVersionString`, iOS erlaubt dort höchstens drei Zahlen), D ist `CURRENT_PROJECT_VERSION` (Build, `CFBundleVersion`). `Info.plist` übernimmt beide aus `project.yml`. Vor jedem Commit erhöht `scripts/bump-version.sh` den Build (0.0.1.0 → 0.0.1.1) und nimmt `project.yml` in den Commit auf. Eine größere Version setzt `scripts/bump-version.sh --set A.B.C` (Build wieder 0) – nur nach Rückfrage beim Entwickler. `scripts/publish.sh` warnt, wenn ein Push die Version nicht erhöht. Die Einstellungen zeigen unter „Über StudyHelper“ die Version „A.B.C.D“.
 - **Konsequenzen:** Jede Version/Build-Kombination ist eindeutig, wie es AltStore für die Source verlangt (D-024). Das Beta-Release v0.1.0-beta.1 trug intern „1.0 (1)“; die neue Zählung beginnt bewusst niedriger bei 0.0.1.0. Die Source enthält noch keine Version, es gibt also keinen Konflikt.
 
+## D-028 Jeder Commit wird als Beta auf GitHub veröffentlicht
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Version 0.0.1.0 erschien nicht unter den Releases: `scripts/publish.sh` hat nur gepusht, eine `.ipa` als Release gab es bisher nur von Hand (v0.1.0-beta.1). Gewünscht ist, dass nach jedem Commit die auf dem Mac gebaute `.ipa` automatisch als Beta unter der vereinbarten Versionsnummer erscheint.
+- **Entscheidung:** `scripts/publish.sh` ruft am Ende `scripts/beta-release.sh` auf. Es baut die signierte Development-`.ipa` (`scripts/build-ipa.sh`, Team RL9PPXX5GV) und legt das Pre-Release `v<A.B.C.D>` (Version aus `project.yml`, D-027) mit `StudyHelper-<A.B.C.D>.ipa` auf dem Commit an. Die Notizen enthalten die Commit-Nachricht und Installationshinweise. Gibt es das Release zu einer Version schon (Version nicht erhöht), wird übersprungen. Uncommittete App-Änderungen brechen ab, damit die `.ipa` immer dem Commit entspricht. Phasen-Tags (`scripts/release.sh`) bleiben zusätzlich.
+- **Konsequenzen:** Jeder Commit dauert durch den Release-Build einige Minuten länger und braucht den angemeldeten Xcode-Account und `gh`. Schlägt der Build fehl, ist der Push schon erfolgt; das Release lässt sich mit `scripts/beta-release.sh` nachholen. 0.0.1.0 wurde nachträglich veröffentlicht. Die Source für SideStore/AltStore/StikStore (D-024) bleibt ein eigener, bewusster Schritt.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

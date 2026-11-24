@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Publishes the current commit: secret check, push to GitHub (origin/main), and brings the main
-# checkout that Xcode opens up to date (fast-forward; its post-merge hook regenerates the project).
+# Publishes the current commit: secret check, push to GitHub (origin/main), brings the main checkout
+# that Xcode opens up to date (fast-forward; its post-merge hook regenerates the project) and releases the
+# commit as a beta with the .ipa built on this Mac (scripts/beta-release.sh, D-028).
 # Usage: scripts/publish.sh            after every commit
 source "$(dirname "$0")/common.sh"
 
@@ -32,3 +33,6 @@ elif git -C "$MAIN_CHECKOUT" merge --ff-only -q "$(git -C "$ROOT" rev-parse HEAD
 else
     echo "Nicht aktualisiert: lokale Änderungen im Checkout stehen im Weg (git status dort prüfen)."
 fi
+
+# Every commit becomes a beta release on GitHub: v<A.B.C.D> with the signed .ipa.
+"$ROOT/scripts/beta-release.sh"
