@@ -3,9 +3,9 @@
   "identifier": "MiloG.StudyHelper1.source",
   "subtitle": "Beta-Versionen von StudyHelper",
   "description": "Source für SideStore, AltStore und StikStore. Enthält die aktuellen Beta-Versionen von StudyHelper. Die App wird beim Installieren mit deiner eigenen Apple-ID signiert.",
-  "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/icon.png",
-  "website": "https://github.com/MacherG7/StudyHelper-Source",
-  "sourceURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/source.json",
+  "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/icon.png",
+  "website": "https://github.com/MacherG7/StudyHelper",
+  "sourceURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.json",
   "tintColor": "#2F64E0",
   "featuredApps": [
     "MiloG.StudyHelper1"
@@ -17,7 +17,7 @@
       "developerName": "MacherG7",
       "subtitle": "Lernstoff digitalisieren und lernen",
       "localizedDescription": "StudyHelper digitalisiert deinen Lernstoff einmalig – Fotos von Buchseiten, PDFs und Goodnotes-Exporte – und speichert ihn dauerhaft als Text mit Hervorhebungen. Du ordnest ihn in Fächer und Themen; jeder Eintrag verweist auf die Seite, aus der er stammt.\n\nGoodnotes: „Teilen → Exportieren → PDF“ und dann „In StudyHelper öffnen“.\n\nIn Arbeit: KI-Abfragen, Chat und Karteikarten – ausschließlich mit Inhalten aus deinem Lernstoff.\n\nBeta-Version, benötigt iOS 18 oder neuer.",
-      "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/icon.png",
+      "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/icon.png",
       "tintColor": "#2F64E0",
       "category": "utilities",
       "appPermissions": {
@@ -26,23 +26,7 @@
           "NSCameraUsageDescription": "StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen."
         }
       },
-      "versions": [
-        {
-          "version": "0.0.1",
-          "buildVersion": "7",
-          "date": "2026-11-24T19:49:04Z",
-          "localizedDescription": "Erste Beta in der Source: digitalisieren, prüfen und in Themen strukturieren.",
-          "downloadURL": "https://github.com/MacherG7/StudyHelper-Source/releases/download/v0.0.1-7/StudyHelper-0.0.1-7.ipa",
-          "size": 1307323,
-          "sha256": "d2292ac163441c0c785d0df4300128963d2eafb736671174afb79d9b147a10bc",
-          "minOSVersion": "18.0"
-        }
-      ],
-      "version": "0.0.1",
-      "versionDate": "2026-11-24T19:49:04Z",
-      "versionDescription": "Erste Beta in der Source: digitalisieren, prüfen und in Themen strukturieren.",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper-Source/releases/download/v0.0.1-7/StudyHelper-0.0.1-7.ipa",
-      "size": 1307323
+      "versions": []
     }
   ],
   "news": []

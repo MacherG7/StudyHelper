@@ -279,6 +279,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** `scripts/beta-release.sh` (aus `scripts/publish.sh`) veröffentlicht eine Beta nur, wenn sich seit dem letzten Release (neuester Tag `vA.B.C.D` vor dem Commit) etwas geändert hat, das in die .ipa gehört: `StudyHelper/`, die verlinkten Bibliotheken `Packages/StudyHelperCore/Sources/StudyCore`, `StudyImport`, `StudyData` und `Package.swift`, `project.yml` ohne die Versionszeilen sowie `scripts/build-ipa.sh` und `scripts/embed-commit.sh`. Sonst meldet es „kein neues Release“. `--force` erzwingt eine Beta; eine Vollversion (`--final`, D-032) wird immer gebaut.
 - **Konsequenzen:** Die Version steigt weiter mit jedem Commit (D-027); zwischen zwei Releases können deshalb Build-Nummern fehlen (z. B. 0.0.1.7 → 0.0.1.9). AltStore/SideStore stört das nicht, sie vergleichen nur auf größer.
 
+## D-034 Öffentliches Repository mit der Source darin
+
+- **Datum:** 2026-11-24
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Die Source-Datei soll im StudyHelper-Repository liegen. Das Repository war privat; ohne Anmeldung (so rufen StikStore, SideStore und AltStore ab) lieferte GitHub für Source und .ipa nur 404. Zudem zeigten die geschlossenen PRs #1 und #2 des alten Repositorys noch Commits mit der E-Mail des Entwicklers (D-030), die nur der GitHub-Support entfernen kann.
+- **Entscheidung:** Das alte Repository wurde in `StudyHelper-alt` umbenannt; ein neues, **öffentliches** `MacherG7/StudyHelper` enthält die bereinigte Historie (Branch `main`, Tags, Branch von PR #3), die Releases v0.0.1.3–v0.0.1.7 wurden mit ihren unsignierten .ipa neu angelegt; danach wird das alte Repository gelöscht. Die Source ist `distribution/source.json` (URL `https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.json`), die Downloads zeigen auf die Releases `v<A.B.C.D>`. Nach jedem Release trägt `scripts/beta-release.sh` die Version ein und committet/pusht das als „Source: …“ (einziger Commit ohne Versionserhöhung); `--source-only --tag=…` trägt ein vorhandenes Release nach. `scripts/publish-source.sh` und das separate Repository `MacherG7/StudyHelper-Source` werden nicht mehr gebraucht.
+- **Konsequenzen:** Quellcode, Historie und Doku sind öffentlich; Prüfung vor dem Umzug: keine Schlüssel, keine echten Notizen, nur noreply-Adressen. PR #3 (D-031, Workflow für das separate Source-Repository) ist damit überholt. Wer die Source-URL kennt, kann die App installieren.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

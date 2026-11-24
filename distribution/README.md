@@ -1,52 +1,38 @@
 # App-Source für SideStore, AltStore und StikStore
 
 SideStore, AltStore (Classic) und StikStore lesen dasselbe Source-Format („AltSource“, JSON). Eine Source
-reicht für alle drei. Die App wird beim Installieren mit der Apple-ID des jeweiligen Geräts neu signiert
-und von der Store-App alle 7 Tage aufgefrischt. Hintergrund: `docs/DECISIONS.md` D-024.
+reicht für alle drei. Die App wird beim Installieren mit der Apple-ID des jeweiligen Geräts signiert
+und von der Store-App alle 7 Tage aufgefrischt. Hintergrund: `docs/DECISIONS.md` D-024 und D-034.
 
 | Datei | Zweck |
 |---|---|
-| `source.json` | Die Source (Hauptkopie). Versionen trägt `scripts/publish-source.sh` ein. |
+| `source.json` | Die Source. Jedes Release trägt sich hier selbst ein (`scripts/beta-release.sh`). |
 | `icon.svg`, `icon.png` | Icon der Source und der App in der Source (1024 × 1024, Platzhalter) |
 
-## Einmalig: öffentliches Repository anlegen
+Das Repository `MacherG7/StudyHelper` ist öffentlich: Source, Icon und die `.ipa` der Releases sind ohne
+Anmeldung abrufbar, wie es die Store-Apps brauchen. Die `.ipa` ist immer unsigniert (D-030).
 
-Source und `.ipa` müssen ohne Anmeldung abrufbar sein. Das Haupt-Repository ist privat, deshalb liegt die
-Source in einem eigenen **öffentlichen** Repository (Standard `MacherG7/StudyHelper-Source`, anderer Name
-über `SOURCE_REPO=Besitzer/Name`):
+## Neue Version in die Source
+
+Passiert automatisch: `scripts/publish.sh` baut nach einem Commit mit Änderungen an der App die `.ipa`,
+legt das Release `v<A.B.C.D>` an (Beta, oder Vollversion mit `--final`) und trägt es danach mit Größe,
+SHA-256, Mindest-iOS, Datenschutz-Texten und Entitlements in `source.json` ein – als eigener Commit
+„Source: …“, der gleich mit hochgeladen wird.
+
+Nachtragen für ein schon vorhandenes Release:
 
 ```bash
-gh repo create MacherG7/StudyHelper-Source --public --add-readme --description "StudyHelper-Source für SideStore, AltStore und StikStore"
+scripts/beta-release.sh --source-only --tag=v0.0.1.7
 ```
 
-Darin liegen nur `source.json`, `icon.png` und je Version ein Release mit der `.ipa` – kein Quellcode.
-Wer die Source-URL kennt, kann die App herunterladen.
-
-## Neue Beta veröffentlichen
-
-1. Version erhöhen (`scripts/bump-version.sh`, vor jedem Commit ohnehin, D-027), also `MARKETING_VERSION` oder `CURRENT_PROJECT_VERSION` in `project.yml` (jede Version/Build-Kombination
-   darf nur einmal in der Source stehen).
-2. Auf dem Mac:
-
-   ```bash
-   scripts/publish-source.sh "Was ist neu in dieser Version"
-   ```
-
-   Das Skript baut eine unsignierte `.ipa` (`scripts/build-ipa.sh`, immer unsigniert), liest Bundle-ID, Version,
-   Build, Mindest-iOS, Datenschutz-Texte und Entitlements aus der `.ipa`, trägt Größe und SHA-256 ein, lädt die
-   `.ipa` als Release `v<Version>-<Build>` hoch und veröffentlicht danach `icon.png` und `source.json`.
-3. `distribution/source.json` committen und `scripts/publish.sh` ausführen.
-
-Optionen: `--ipa PFAD` (vorhandene `.ipa`), `--no-upload` (nur `source.json` lokal aktualisieren),
-`--replace` (dieselbe Version/Build ersetzen, nur für Korrekturen). Prüfen ohne Änderung:
-`scripts/update-source.py --check distribution/source.json` (läuft auch in `scripts/test.sh`).
+Prüfen ohne Änderung: `scripts/update-source.py --check distribution/source.json` (läuft auch in `scripts/test.sh`).
 
 ## Source auf dem Gerät hinzufügen
 
 Source-URL:
 
 ```
-https://raw.githubusercontent.com/MacherG7/StudyHelper-Source/main/source.json
+https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.json
 ```
 
 - **SideStore:** Tab „Sources“ → „+“ → URL einfügen → StudyHelper installieren.

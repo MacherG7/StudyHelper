@@ -109,7 +109,7 @@ Voraussetzung: eigene echte Exporte derselben Notiz als „bearbeitbares PDF“ 
 
 ## Verteilung über SideStore, AltStore und StikStore (D-024)
 
-Voraussetzung: öffentliches Repository angelegt, `scripts/publish-source.sh` einmal erfolgreich ausgeführt (siehe `distribution/README.md`).
+Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Source-URL siehe `distribution/README.md`, D-034).
 
 | ID | Prüfung | Erwartung | Ergebnis |
 |---|---|---|---|

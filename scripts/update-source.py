@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Maintains the app source for SideStore, AltStore and StikStore (distribution/source.json).
 
-    scripts/update-source.py --ipa build/ipa/StudyHelper.ipa --source distribution/source.json \
-        --repo MacherG7/StudyHelper-Source [--output OUT.json] [--notes TEXT] [--replace]
+    scripts/update-source.py --ipa build/ipa/StudyHelper-0.0.1.7.ipa --source distribution/source.json \
+        --repo MacherG7/StudyHelper [--output OUT.json] [--notes TEXT] [--replace]
     scripts/update-source.py --check distribution/source.json
 
 Update mode reads bundle ID, version, build, minimum iOS, privacy keys and entitlements straight from
 the .ipa, adds a new version entry (newest first) with size and SHA-256, and points all URLs at the
-public distribution repository. On success it prints shell assignments (TAG, ASSET, TITLE, VERSION,
-BUILD) for scripts/publish-source.sh; messages go to stderr. Format: faq.altstore.io "Make a Source"
+public repository: source and icon in its distribution/ folder, the .ipa from the release v<A.B.C.D> that
+scripts/beta-release.sh creates (D-034). On success it prints shell assignments (TAG, ASSET, TITLE, VERSION,
+BUILD) for scripts/beta-release.sh; messages go to stderr. Format: faq.altstore.io "Make a Source"
 (see docs/DECISIONS.md D-024). AltStore refuses to install an app whose bundle ID, version, build or
 hash differ from the source, or whose entitlements/privacy keys are not all listed in the source.
 """
@@ -130,7 +131,7 @@ def read_ipa(path):
 def urls(repo):
     if not re.match(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", repo):
         raise SourceError("Repository muss die Form Besitzer/Name haben: %r" % repo)
-    raw = "https://raw.githubusercontent.com/%s/main" % repo
+    raw = "https://raw.githubusercontent.com/%s/main/distribution" % repo
     return {
         "source": raw + "/source.json",
         "icon": raw + "/icon.png",
@@ -140,8 +141,9 @@ def urls(repo):
 
 
 def release_names(meta):
-    tag = "v%s-%s" % (meta["version"], meta["buildVersion"])
-    asset = "StudyHelper-%s-%s.ipa" % (meta["version"], meta["buildVersion"])
+    # Same names as the beta/full releases of scripts/beta-release.sh: v<A.B.C>.<D>, StudyHelper-<A.B.C>.<D>.ipa.
+    tag = "v%s.%s" % (meta["version"], meta["buildVersion"])
+    asset = "StudyHelper-%s.%s.ipa" % (meta["version"], meta["buildVersion"])
     return tag, asset
 
 

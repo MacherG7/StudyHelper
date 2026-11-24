@@ -7,7 +7,7 @@ _spec = importlib.util.spec_from_file_location("update_source", os.path.join(ROO
 us = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(us)
 
-REPO = "MacherG7/StudyHelper-Source"
+REPO = "MacherG7/StudyHelper"
 BUNDLE_ID = "MiloG.StudyHelper1"
 
 
@@ -64,8 +64,12 @@ def make_ipa(directory, version="0.1.0", build="1", entitlements=None, bundle_id
 
 
 def template():
+    """The real source without its published versions (it is the live source, D-034)."""
     with open(os.path.join(ROOT, "distribution", "source.json"), encoding="utf-8") as f:
-        return json.load(f)
+        source = json.load(f)
+    for app in source.get("apps", []):
+        app["versions"] = []
+    return source
 
 
 class EntitlementTests(unittest.TestCase):
@@ -105,7 +109,7 @@ class UpdateTests(unittest.TestCase):
         meta = us.read_ipa(ipa)
         source = template()
         tag, asset = us.add_version(source, meta, REPO, "Neu: Absätze", "2026-11-24T12:00:00Z")
-        self.assertEqual((tag, asset), ("v0.1.0-1", "StudyHelper-0.1.0-1.ipa"))
+        self.assertEqual((tag, asset), ("v0.1.0.1", "StudyHelper-0.1.0.1.ipa"))
         app = source["apps"][0]
         newest = app["versions"][0]
         with open(ipa, "rb") as f:
@@ -116,13 +120,13 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(newest["sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(newest["minOSVersion"], "18.0")
         self.assertEqual(newest["downloadURL"],
-                         "https://github.com/%s/releases/download/v0.1.0-1/StudyHelper-0.1.0-1.ipa" % REPO)
+                         "https://github.com/%s/releases/download/v0.1.0.1/StudyHelper-0.1.0.1.ipa" % REPO)
         # AltStore ignores only application-identifier and the team identifier.
         self.assertEqual(app["appPermissions"]["entitlements"], ["get-task-allow", "keychain-access-groups"])
         self.assertEqual(app["appPermissions"]["privacy"], {"NSCameraUsageDescription": "Kamera für Lernstoff"})
         self.assertEqual(app["downloadURL"], newest["downloadURL"])
         self.assertEqual(app["versionDate"], "2026-11-24T12:00:00Z")
-        self.assertEqual(source["sourceURL"], "https://raw.githubusercontent.com/%s/main/source.json" % REPO)
+        self.assertEqual(source["sourceURL"], "https://raw.githubusercontent.com/%s/main/distribution/source.json" % REPO)
         self.assertEqual(us.check(source), [])
 
     def test_newest_version_first(self):
@@ -174,7 +178,7 @@ class UpdateTests(unittest.TestCase):
         with redirect_stdout(stdout), redirect_stderr(stderr):
             code = us.main(["--ipa", ipa, "--source", src, "--output", out, "--repo", REPO, "--notes", "Text mit 'Quote'"])
         self.assertEqual(code, 0, stderr.getvalue())
-        self.assertIn("TAG=v0.2.0-7", stdout.getvalue())
+        self.assertIn("TAG=v0.2.0.7", stdout.getvalue())
         self.assertIn("TITLE='StudyHelper 0.2.0 (7)'", stdout.getvalue())
         self.assertEqual(us.load(src)["apps"][0]["versions"], [])   # input untouched
         self.assertEqual(us.load(out)["apps"][0]["versions"][0]["localizedDescription"], "Text mit 'Quote'")

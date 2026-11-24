@@ -34,7 +34,7 @@ scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit
 scripts/publish.sh --final  # Vollversion statt Beta (nur nach Zusage des Entwicklers, D-032; vorher --dry-run)
 scripts/release.sh phase-N "Phase N: …"   # bei Phasenabschluss: publish + Release-Tag
 scripts/build-ipa.sh        # unsignierte .ipa nach build/ipa/ (eine signierte gibt es nicht, D-030)
-scripts/publish-source.sh "Was ist neu"   # Beta in die Source stellen (öffentliches Repo, D-024)
+scripts/beta-release.sh --source-only --tag=vA.B.C.D   # Release in distribution/source.json nachtragen (D-034)
 ```
 
 Simulator: `SIM_DEVICE` (Standard „iPhone 17“), iPad: `IPAD_DEVICE`.
@@ -88,11 +88,11 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
   `scripts/publish.sh --final` als normales Release „StudyHelper 1.0“ plus Tag `v1.0.0` – nur wenn der
   Entwickler es sagt. Danach `--set 1.0.1` (Fehlerkorrekturen) bzw. `--set 1.1.0` (neue Funktionen), nach Rückfrage.
 - Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
-  `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, privat; Branch `main`; danach automatisch Beta-Release
+  `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, öffentlich; Branch `main`; danach automatisch Beta-Release
   `v<Version>` mit der auf dem Mac gebauten, unsignierten .ipa, sofern sich die App geändert hat), nach jeder
   fertigen Phase
   `scripts/release.sh`. Das Repository `StudyHelper-Test` nie anfassen. Der Haupt-Checkout
-  `/Users/milogotz/Documents/StudyHelper` (für Xcode) wird per Fast-Forward nachgezogen; der Hook
+  (für Xcode; erster Eintrag von `git worktree list`) wird per Fast-Forward nachgezogen; der Hook
   `scripts/git-hooks/post-merge` erzeugt dort das Xcode-Projekt neu (`git config core.hooksPath scripts/git-hooks`).
 
 ## Stand
@@ -108,7 +108,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   einzelne Ziffern neben Strichen bleiben unleserlich; Fotos nur mit Schriftprüfung.
   Zusammenhängende Zeilen werden als Absätze gespeichert (`paragraphID` je Zeile, D-023).
   Verteilung über eine Source für SideStore, AltStore und StikStore vorbereitet (D-024,
-  `distribution/README.md`); das öffentliche Repository `MacherG7/StudyHelper-Source` legt der Entwickler an.
+  `distribution/README.md`). Das Repository ist öffentlich; die Source liegt in `distribution/source.json`, jedes
+  Release trägt sich dort selbst ein (D-034).
   Formpfeile in Zeilen werden als „→“ eingesetzt, Nachlesen zeilentreu (D-025, F1 0,9625 mit S. 9 als
   Referenz). Unterstreichungen ohne vermutete Bedeutung, Nutzer oder KI entscheidet (D-026).
   App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit mit

@@ -23,19 +23,25 @@ git -C "$ROOT" push origin HEAD:main
 
 # The main checkout is the first entry of `git worktree list`.
 MAIN_CHECKOUT="$(git -C "$ROOT" worktree list --porcelain | awk '/^worktree /{print substr($0, 10); exit}')"
-step "Lokalen Checkout für Xcode aktualisieren: $MAIN_CHECKOUT"
-if [[ "$(git -C "$MAIN_CHECKOUT" rev-parse --abbrev-ref HEAD)" != "main" ]]; then
-    echo "Übersprungen: dort ist nicht der Branch main ausgecheckt."
-elif [[ "$MAIN_CHECKOUT" == "$ROOT" ]]; then
-    "$ROOT/scripts/bootstrap.sh"
-elif git -C "$MAIN_CHECKOUT" merge --ff-only -q "$(git -C "$ROOT" rev-parse HEAD)"; then
-    git -C "$MAIN_CHECKOUT" fetch -q origin || true
-    echo "Aktualisiert auf $(git -C "$MAIN_CHECKOUT" log --oneline -1)"
-else
-    echo "Nicht aktualisiert: lokale Änderungen im Checkout stehen im Weg (git status dort prüfen)."
-fi
+update_main_checkout() {
+    step "Lokalen Checkout für Xcode aktualisieren: $MAIN_CHECKOUT"
+    if [[ "$(git -C "$MAIN_CHECKOUT" rev-parse --abbrev-ref HEAD)" != "main" ]]; then
+        echo "Übersprungen: dort ist nicht der Branch main ausgecheckt."
+    elif [[ "$MAIN_CHECKOUT" == "$ROOT" ]]; then
+        "$ROOT/scripts/bootstrap.sh"
+    elif git -C "$MAIN_CHECKOUT" merge --ff-only -q "$(git -C "$ROOT" rev-parse HEAD)"; then
+        git -C "$MAIN_CHECKOUT" fetch -q origin || true
+        echo "Aktualisiert auf $(git -C "$MAIN_CHECKOUT" log --oneline -1)"
+    else
+        echo "Nicht aktualisiert: lokale Änderungen im Checkout stehen im Weg (git status dort prüfen)."
+    fi
+}
+update_main_checkout
 
 # A commit that changes what goes into the .ipa becomes a beta release on GitHub: v<A.B.C.D> with the unsigned
 # .ipa; other commits (docs, tests, scripts) get none (D-033). "--final" publishes it as a
 # full version instead (only after the developer said so, D-032).
+BEFORE="$(git -C "$ROOT" rev-parse HEAD)"
 "$ROOT/scripts/beta-release.sh" "$@"
+# A release adds its version to distribution/source.json in a commit of its own (D-034): bring Xcode's checkout along.
+[[ "$(git -C "$ROOT" rev-parse HEAD)" == "$BEFORE" ]] || update_main_checkout
