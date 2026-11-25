@@ -8,12 +8,13 @@ source "$(dirname "$0")/common.sh"
 
 "$ROOT/scripts/check-secrets.sh"
 
-# Every commit raises the version (scripts/bump-version.sh, D-027): warn if this push would not.
+# Every commit that changes the app raises the version (scripts/bump-version.sh, D-027, D-039): warn if it did not.
 if git -C "$ROOT" fetch -q origin main 2>/dev/null; then
     remote_version="$(git -C "$ROOT" show origin/main:project.yml 2>/dev/null | awk -F'"' '/^    (MARKETING_VERSION|CURRENT_PROJECT_VERSION):/{printf "%s ", $2}')"
     local_version="$(awk -F'"' '/^    (MARKETING_VERSION|CURRENT_PROJECT_VERSION):/{printf "%s ", $2}' "$ROOT/project.yml")"
     if [[ -n "$remote_version" && "$remote_version" == "$local_version" ]] \
-        && [[ "$(git -C "$ROOT" rev-parse HEAD)" != "$(git -C "$ROOT" rev-parse origin/main)" ]]; then
+        && [[ "$(git -C "$ROOT" rev-parse HEAD)" != "$(git -C "$ROOT" rev-parse origin/main)" ]] \
+        && ! git -C "$ROOT" diff --quiet origin/main HEAD -- "${IPA_PATHS[@]}"; then
         echo "Warnung: Version unverändert ($("$ROOT/scripts/bump-version.sh" --show)). Vor dem Commit scripts/bump-version.sh ausführen."
     fi
 fi

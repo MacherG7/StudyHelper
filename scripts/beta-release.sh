@@ -12,7 +12,8 @@
 #   --source-only [--tag=vA.B.C.D]      only add an existing release (default v<current version>) to the source
 #   --notes=TEXT                        "what's new" in the source (default: subject of the release commit)
 # After the release the version is added to distribution/source.json (the source for SideStore, AltStore and
-# StikStore, D-034) and committed and pushed as "Source: …" – the only commit without a version bump.
+# StikStore, D-034) and committed and pushed as "Source: …" – like every commit without app changes, without a
+# version bump (D-039).
 # A beta is only published if something that goes into the .ipa changed since the last release (IPA_PATHS below;
 # version lines of project.yml do not count, D-033), and never twice for one version (scripts/bump-version.sh).
 source "$(dirname "$0")/common.sh"
@@ -34,19 +35,6 @@ for arg in "$@"; do
         *) fail "Unbekannte Option: $arg (erlaubt: --final, --dry-run, --force, --source-only)" ;;
     esac
 done
-# Everything that ends up in the .ipa: the app, the package libraries it links, the build settings and the scripts
-# that build it. Tests, docs, other scripts and the remaining package targets are not part of the app.
-IPA_PATHS=(
-    StudyHelper
-    Packages/StudyHelperCore/Package.swift
-    Packages/StudyHelperCore/Sources/StudyCore
-    Packages/StudyHelperCore/Sources/StudyImport
-    Packages/StudyHelperCore/Sources/StudyData
-    Packages/StudyHelperCore/Sources/StudyAI
-    scripts/build-ipa.sh
-    scripts/embed-commit.sh
-)
-
 # True if the .ipa of HEAD would differ from the one built at commit $1 (project.yml without its version lines).
 ipa_changed() {
     git -C "$ROOT" diff --quiet "$1" HEAD -- "${IPA_PATHS[@]}" || return 0

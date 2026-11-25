@@ -28,7 +28,7 @@ SKIP_VISION_TESTS=1 scripts/test.sh   # ohne Tests mit echter Vision-Texterkennu
 scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
-scripts/bump-version.sh     # vor jedem Commit: letzte Stelle der Version +1 (--set A.B.C nur nach Rückfrage, D-027)
+scripts/bump-version.sh     # vor jedem Commit: letzte Stelle +1, nur wenn sich die App ändert (D-039; --set A.B.C nur nach Rückfrage, D-027)
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Checkout nachziehen, Beta-Release mit .ipa – nur wenn sich die App geändert hat (D-028, D-033)
 scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen; --force)
 scripts/publish.sh --final  # Vollversion statt Beta (nur nach Zusage des Entwicklers, D-032; vorher --dry-run)
@@ -78,7 +78,8 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - Keine E-Mail-Adressen in Dateien, Commits, Tags oder Releases (auch nicht die des Entwicklers, D-030).
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
 - App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
-  `scripts/bump-version.sh` (D +1). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
+  `scripts/bump-version.sh`. Es erhöht D nur, wenn der Commit die App ändert (Dateien der .ipa); reine Doku-,
+  Test- oder Skript-Commits bekommen keine neue Versionsnummer (D-039). Wäre ein Commit ein größeres Release oder eine Test-Beta, dem Entwickler
   vorschlagen, ihn als größere Version (`--set A.B.C`) zu veröffentlichen, und erst nach Zustimmung setzen.
 - Beta oder Vollversion (D-032): Jedes automatische Release ist eine Beta („StudyHelper 1.0 Beta N“, App zeigt „(Beta)“).
   Eine Vollversion ist dieselbe Version mit dem nächsten Build (nie Build 0), veröffentlicht mit

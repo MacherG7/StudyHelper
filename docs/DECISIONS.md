@@ -336,6 +336,14 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   - **Diktieren und Vorlesen** in Phase 5 (Chat-Diktat in 6), **Prüfungstermin, Erinnerungen, Probeklausur, Fehlerheft** in Phase 7, weil sie auf Leitner und Auswertung aufbauen.
 - **Konsequenzen:** Phase 3 wird größer (sechs Teilschritte, je ein Commit und eine Beta). Lokale Mitteilungen und Spracherkennung brauchen Berechtigungen (Info.plist-Texte); beide funktionieren mit dem kostenlosen Account. Widgets und iCloud bleiben ausgeschlossen (D-013).
 
+## D-039 Neue Version nur bei Änderungen an der App
+
+- **Datum:** 2026-11-25
+- **Status:** angenommen (Wunsch des Entwicklers, ändert D-027)
+- **Kontext:** Reine Plan-/Doku-Commits (z. B. 0.0.2.1–0.0.2.3) erhöhten die Version, obwohl sich die App nicht änderte und kein Release entstand.
+- **Entscheidung:** `scripts/bump-version.sh` erhöht D nur, wenn Index oder Arbeitskopie etwas ändern, das in die .ipa gehört (`IPA_PATHS` in `scripts/common.sh`, dieselbe Liste wie für Releases, D-033; `project.yml` ohne die Versionszeilen). Sonst meldet es „Version bleibt“. `--force` erhöht trotzdem. `publish.sh` warnt nur noch, wenn die App sich geändert hat und die Version nicht.
+- **Konsequenzen:** Doku-, Test- und Skript-Commits tragen die Version des letzten App-Commits. Die bereits vergebenen 0.0.2.1–0.0.2.3 bleiben in der Historie; der nächste App-Commit wird 0.0.2.4.
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).
