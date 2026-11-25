@@ -1,4 +1,5 @@
 import Foundation
+import StudyCore
 
 // Shared building blocks of the HTTP providers: JSON helpers, one-shot requests with retry and error mapping, and the
 // streaming runner (SSE -> ModelEvent + ResponseMetadata). Providers only add request bodies and event parsing.
@@ -50,6 +51,24 @@ enum ProviderJSON {
     }
 
     static func placeholder(forImageBytes count: Int) -> String { "<Bild, \(count) Bytes>" }
+
+    /// A parsed JSON dictionary (from `JSONSerialization`) as `JSONValue`; nil if it cannot be converted.
+    static func jsonValue(_ object: Any) -> JSONValue? {
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object) else { return nil }
+        return try? JSONDecoder().decode(JSONValue.self, from: data)
+    }
+}
+
+// MARK: - Request checks
+
+enum RequestGuard {
+    static let imagesUnsupported = "Dieses Modell kann keine Bilder verarbeiten."
+
+    /// Rejects a request with images before anything is sent when the model cannot process images.
+    static func checkImages(_ request: ModelRequest, allowed: Bool) throws {
+        if !allowed, request.sentContent.contains(.image) { throw ProviderError.badRequest(imagesUnsupported) }
+    }
 }
 
 // MARK: - Endpoints
@@ -64,7 +83,7 @@ enum ProviderEndpoint {
         guard let components = URLComponents(string: trimmed + path), let scheme = components.scheme?.lowercased(),
               scheme == "http" || scheme == "https", let host = components.host, !host.isEmpty,
               let url = components.url
-        else { throw ProviderError.badRequest("Ungültige Serveradresse: \(base)") }
+        else { throw ProviderError.badRequest("Ungültige Serveradresse: \(URLRedaction.redact(url: base))") }
         return url
     }
 }
@@ -143,6 +162,12 @@ protocol StreamAccumulator: Sendable {
     mutating func end() throws -> [ModelEvent]
     var usage: TokenUsage { get }
     var stopReason: StopReason? { get }
+    /// Opaque reasoning blocks collected so far (to be passed back in tool loops).
+    var reasoningBlocks: [ReasoningBlock] { get }
+}
+
+extension StreamAccumulator {
+    var reasoningBlocks: [ReasoningBlock] { [] }
 }
 
 struct StreamRunner: Sendable {
@@ -192,6 +217,22 @@ struct StreamRunner: Sendable {
         }
     }
 
+    private func metadata<A: StreamAccumulator>(
+        for modelRequest: ModelRequest, reasoningSent: ReasoningLevel?, prepared: PreparedRequest, start: Date, end: Date,
+        accumulator: A, collector: Collector, rawEvents: [String]
+    ) -> ResponseMetadata {
+        ResponseMetadata(
+            task: modelRequest.task, providerKind: kind, providerName: providerName, model: model,
+            reasoning: reasoningSent, usage: accumulator.usage, date: start, duration: end.timeIntervalSince(start),
+            timeToFirstToken: collector.firstToken.map { $0.timeIntervalSince(start) },
+            sentContent: modelRequest.sentContent, toolCalls: collector.toolCalls,
+            learningUnitIDsInContext: modelRequest.learningUnitIDsInContext, rawRequest: prepared.log,
+            rawResponse: rawEvents.joined(separator: "\n"),
+            reasoningText: collector.reasoning.isEmpty ? nil : collector.reasoning, stopReason: accumulator.stopReason)
+    }
+
+    /// Runs the request. A failure after the request was prepared is thrown as `ProviderFailure` carrying the partial
+    /// metadata (usage so far, raw request and events, reasoning level actually sent).
     func run<A: StreamAccumulator>(
         for modelRequest: ModelRequest, reasoningSent: ReasoningLevel?, accumulator: A,
         prepare: @escaping @Sendable () throws -> PreparedRequest
@@ -199,13 +240,16 @@ struct StreamRunner: Sendable {
         let runner = self
         return AsyncThrowingStream { continuation in
             let task = Task {
+                var prepared: PreparedRequest?
+                var start = runner.now()
+                var accumulator = accumulator
+                var collector = Collector()
+                var rawEvents: [String] = []
                 do {
-                    let prepared = try prepare()
-                    let start = runner.now()
-                    let lines = try await runner.retry.run { try await runner.open(prepared.urlRequest) }
-                    var accumulator = accumulator
-                    var collector = Collector()
-                    var rawEvents: [String] = []
+                    let request = try prepare()
+                    prepared = request
+                    start = runner.now()
+                    let lines = try await runner.retry.run { try await runner.open(request.urlRequest) }
                     for try await sse in SSEParser.events(from: lines) {
                         rawEvents.append(sse.data)
                         for event in try accumulator.consume(sse) {
@@ -218,22 +262,24 @@ struct StreamRunner: Sendable {
                         collector.record(event, at: runner.now())
                         continuation.yield(event)
                     }
-                    let end = runner.now()
-                    let metadata = ResponseMetadata(
-                        task: modelRequest.task, providerKind: runner.kind, providerName: runner.providerName,
-                        model: runner.model, reasoning: reasoningSent, usage: accumulator.usage, date: start,
-                        duration: end.timeIntervalSince(start),
-                        timeToFirstToken: collector.firstToken.map { $0.timeIntervalSince(start) },
-                        sentContent: modelRequest.sentContent, toolCalls: collector.toolCalls,
-                        learningUnitIDsInContext: modelRequest.learningUnitIDsInContext, rawRequest: prepared.log,
-                        rawResponse: rawEvents.joined(separator: "\n"),
-                        reasoningText: collector.reasoning.isEmpty ? nil : collector.reasoning,
-                        stopReason: accumulator.stopReason)
+                    let metadata = runner.metadata(
+                        for: modelRequest, reasoningSent: reasoningSent, prepared: request, start: start,
+                        end: runner.now(), accumulator: accumulator, collector: collector, rawEvents: rawEvents)
                     continuation.yield(.finished(
-                        ModelResponse(text: collector.text, toolCalls: collector.toolCalls, metadata: metadata)))
+                        ModelResponse(
+                            text: collector.text, toolCalls: collector.toolCalls,
+                            reasoningBlocks: accumulator.reasoningBlocks, metadata: metadata)))
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: providerError(from: error))
+                    let underlying = providerError(from: error)
+                    guard let prepared else {
+                        continuation.finish(throwing: underlying)
+                        return
+                    }
+                    let partial = runner.metadata(
+                        for: modelRequest, reasoningSent: reasoningSent, prepared: prepared, start: start,
+                        end: runner.now(), accumulator: accumulator, collector: collector, rawEvents: rawEvents)
+                    continuation.finish(throwing: ProviderFailure(underlying: underlying, metadata: partial))
                 }
             }
             continuation.onTermination = { _ in task.cancel() }

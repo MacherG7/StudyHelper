@@ -88,13 +88,45 @@ struct OpenAIRequestTests {
         #expect(try TestSupport.body(of: stub.requests[0]) == expected)
     }
 
-    @Test("Strukturierte Ausgabe: text.format json_schema strict mit bereinigtem Namen")
+    @Test("Strukturierte Ausgabe: strict nur für Schemas, die die strict-Regeln erfüllen")
+    func structuredStrict() async throws {
+        let strict = ResponseSchema(name: "s", schema: [
+            "type": "object", "additionalProperties": false, "required": ["a", "b"],
+            "properties": [
+                "a": ["type": "string"],
+                "b": ["type": "array", "items": [
+                    "type": "object", "additionalProperties": false, "required": ["c"],
+                    "properties": ["c": ["type": "number"]]]],
+            ],
+        ])
+        #expect(OpenAIProvider.satisfiesStrictRules(strict.schema))
+        // Nested object without additionalProperties:false, property missing from required, top level not closed.
+        let nested: JSONValue = [
+            "type": "object", "additionalProperties": false, "required": ["a"],
+            "properties": ["a": ["type": "object", "required": ["c"], "properties": ["c": ["type": "string"]]]]]
+        let missingRequired: JSONValue = [
+            "type": "object", "additionalProperties": false, "required": ["a"],
+            "properties": ["a": ["type": "string"], "b": ["type": "string"]]]
+        for schema in [nested, missingRequired, TestSupport.answerSchema.schema] {
+            #expect(!OpenAIProvider.satisfiesStrictRules(schema))
+        }
+        for (schema, expected) in [(strict, true), (ResponseSchema(name: "n", schema: nested), false)] {
+            let stub = StubTransport([.init(lines: textStream)])
+            _ = try await TestSupport.collect(makeOpenAI(stub: stub), TestSupport.request(schema: schema))
+            guard case .object(let object) = try TestSupport.body(of: stub.requests[0]),
+                  case .object(let text)? = object["text"], case .object(let format)? = text["format"]
+            else { Issue.record("kein text.format"); return }
+            #expect(format["strict"] == .bool(expected))
+        }
+    }
+
+    @Test("Strukturierte Ausgabe: text.format json_schema mit bereinigtem Namen")
     func structured() async throws {
         let stub = StubTransport([.init(lines: textStream)])
         _ = try await TestSupport.collect(makeOpenAI(stub: stub), TestSupport.request(schema: TestSupport.answerSchema))
         guard case .object(let object) = try TestSupport.body(of: stub.requests[0]) else { Issue.record("kein Objekt"); return }
         let expected = try TestSupport.json(#"""
-        {"format":{"type":"json_schema","name":"answer_v1","strict":true,"description":"Antwort",
+        {"format":{"type":"json_schema","name":"answer_v1","strict":false,"description":"Antwort",
                    "schema":{"type":"object","properties":{"text":{"type":"string"}}}}}
         """#)
         #expect(object["text"] == expected)
@@ -122,11 +154,16 @@ struct OpenAIReasoningTests {
         #expect(result.sent == .high)
     }
 
-    @Test("Aus: none, wenn unterstützt, sonst weggelassen")
+    @Test("Aus: none, wenn unterstützt, sonst die niedrigste unterstützte Stufe (wie bei Claude)")
     func off() {
         #expect(plan(.off, gptCaps).value == ["effort": "none"])
         var caps = gptCaps
         caps.reasoningLevels = [.low, .medium, .high]
+        #expect(plan(.off, caps) == OpenAIProvider.ReasoningPlan(
+            value: ["effort": "low", "summary": "auto"], sent: .low))
+        caps.reasoningLevels = [.medium, .high, .xhigh]
+        #expect(plan(.off, caps).sent == .medium)
+        caps.reasoningLevels = []
         #expect(plan(.off, caps) == OpenAIProvider.ReasoningPlan())
     }
 

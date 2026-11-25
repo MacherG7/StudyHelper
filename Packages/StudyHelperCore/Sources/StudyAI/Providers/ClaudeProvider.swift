@@ -103,7 +103,8 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
             let blocks: [JSONValue] = message.content.compactMap { part in
                 switch part {
                 case .text(let text):
-                    return text.isEmpty ? nil : ["type": "text", "text": .string(text)]
+                    guard !text.isEmpty else { return nil }
+                    return ["type": "text", "text": .string(text)]
                 case .image(let image):
                     let data = redactImages
                         ? ProviderJSON.placeholder(forImageBytes: image.data.count)
@@ -123,6 +124,10 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
                     ]
                     if result.isError { block["is_error"] = true }
                     return .object(block)
+                case .reasoning(let block):
+                    // Thinking blocks (with signature) go back unchanged; other providers' blocks are dropped.
+                    guard block.provider == .claude else { return nil }
+                    return block.payload
                 }
             }
             guard !blocks.isEmpty else { return nil }
@@ -153,7 +158,9 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
             model: model, errorStyle: .anthropic)
         let keyProvider: @Sendable () throws -> String = { try self.readKey() }
         let headerBuilder: @Sendable (String) -> [String: String] = { self.headers(key: $0) }
+        let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ClaudeStreamState()) {
+            try RequestGuard.checkImages(request, allowed: imagesAllowed)
             let key = try keyProvider()
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/messages"))
             urlRequest.httpMethod = "POST"
@@ -225,8 +232,11 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
 /// State of one Claude event stream (`message_start` ... `message_stop`).
 struct ClaudeStreamState: StreamAccumulator {
     private struct ToolBlock { var id: String; var name: String; var json = "" }
+    private struct ThinkingBlock { var thinking = ""; var signature = "" }
 
     private var toolBlocks: [Int: ToolBlock] = [:]
+    private var thinkingBlocks: [Int: ThinkingBlock] = [:]
+    private(set) var reasoningBlocks: [ReasoningBlock] = []
     private var inputUsage = TokenUsage()
     private var outputTokens: Int?
     private var thinkingTokens: Int?
@@ -255,6 +265,14 @@ struct ClaudeStreamState: StreamAccumulator {
                 toolBlocks[index] = ToolBlock(id: block["id"] as? String ?? "", name: block["name"] as? String ?? "")
             case "text":
                 if let text = block["text"] as? String, !text.isEmpty { return [.textDelta(text)] }
+            case "thinking":
+                thinkingBlocks[index] = ThinkingBlock(
+                    thinking: block["thinking"] as? String ?? "", signature: block["signature"] as? String ?? "")
+            case "redacted_thinking":
+                if let data = block["data"] as? String {
+                    reasoningBlocks.append(ReasoningBlock(
+                        provider: .claude, payload: ["type": "redacted_thinking", "data": .string(data)]))
+                }
             default: break
             }
         case "content_block_delta":
@@ -263,14 +281,31 @@ struct ClaudeStreamState: StreamAccumulator {
             case "text_delta":
                 if let text = delta["text"] as? String, !text.isEmpty { return [.textDelta(text)] }
             case "thinking_delta":
-                if let text = delta["thinking"] as? String, !text.isEmpty { return [.reasoningDelta(text)] }
+                if let text = delta["thinking"] as? String, !text.isEmpty {
+                    thinkingBlocks[index, default: ThinkingBlock()].thinking += text
+                    return [.reasoningDelta(text)]
+                }
+            case "signature_delta":
+                if let signature = delta["signature"] as? String {
+                    thinkingBlocks[index, default: ThinkingBlock()].signature += signature
+                }
             case "input_json_delta":
                 toolBlocks[index]?.json += delta["partial_json"] as? String ?? ""
-            default: break  // signature_delta and unknown deltas
+            default: break  // unknown deltas
             }
         case "content_block_stop":
-            guard let index = ProviderJSON.int(root["index"]), let block = toolBlocks.removeValue(forKey: index)
-            else { return [] }
+            guard let index = ProviderJSON.int(root["index"]) else { return [] }
+            if let thinking = thinkingBlocks.removeValue(forKey: index) {
+                // A thinking block without signature cannot be passed back (the API would reject it).
+                if !thinking.signature.isEmpty {
+                    reasoningBlocks.append(ReasoningBlock(
+                        provider: .claude,
+                        payload: ["type": "thinking", "thinking": .string(thinking.thinking),
+                                  "signature": .string(thinking.signature)]))
+                }
+                return []
+            }
+            guard let block = toolBlocks.removeValue(forKey: index) else { return [] }
             let arguments = block.json.trimmingCharacters(in: .whitespacesAndNewlines)
             return [.toolCall(ToolCall(id: block.id, name: block.name, arguments: arguments.isEmpty ? "{}" : block.json))]
         case "message_delta":

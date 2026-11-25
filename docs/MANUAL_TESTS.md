@@ -133,6 +133,12 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-2.4 | Echte API-Keys (Claude, OpenAI) nur auf dem Gerät in den Einstellungen eingeben | Key liegt in der Keychain; nach App-Neustart verfügbar; nirgends im Klartext sichtbar (Logs, Export) | |
 | MT-2.5 | Modellliste per API abrufen | Verfügbare Modelle erscheinen; Reasoning-Stufen nur wenn vom Modell unterstützt | |
 | MT-2.6 | Selbst gehostetes Modell (z. B. Ollama im lokalen Netz) | Verbindung, Bildfähigkeit automatisch erkannt, Streaming sichtbar | |
+| MT-2.7 | OpenAI: für jedes genutzte Modell jede angebotene Denktiefe einmal per „Verbindung testen“ | Keine Stufe führt zu einem 400-Fehler; sonst Modell und Stufe notieren (die Stufen-Tabelle enthält Annahmen, D-036) | |
+| MT-2.8 | Claude: Opus 5.5 mit „Aus“ nicht angeboten, Sonnet 5.5 mit „Aus“ testen | Opus 5.5 zeigt kein „Aus“; Sonnet 5.5 antwortet mit „Aus“ ohne Fehler | |
+| MT-2.9 | Developer-Modus einschalten, einige Verbindungstests mit verschiedenen Anbietern | Anfrage-Log zeigt Tokens, Dauer, Kosten (€ und $, „geschätzt“; Apple/Ollama 0 €); Summen pro Tag stimmen | |
+| MT-2.10 | Anfrage-Log als JSON exportieren und in einem Texteditor öffnen | Kein API-Key enthalten; Prompts und Antworten lesbar | |
+| MT-2.11 | Anbieter löschen, App neu installieren | Gelöschter Anbieter hat keinen Key mehr in der Keychain; vorhandene Anbieter behalten ihren Key nach Neuinstallation (Keychain bleibt bei Sideloading erhalten) | |
+| MT-2.12 | Update von einer Version vor Phase 2 | Fächer, Seiten, Themen bleiben erhalten (Datenbank-Migration V1→V2) | |
 
 ---
 

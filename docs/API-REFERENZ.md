@@ -31,6 +31,7 @@ nachtragen (Datum ändern).
 - Preise USD pro 1 Mio. Tokens (Input / Output; Cache-Lesen): Opus 5.5 4 / 20; 0,20 · Sonnet 5.5 2 / 10; 0,10 ·
   Haiku 5.5 0,10 / 0,50 (bis 100K Prompt) · Fable 5.2 8 / 40; 0,20 · Opus 5 5 / 25 · Sonnet 5 2 / 10 ·
   Opus 4.8/4.7/4.6 5 / 25 · Sonnet 4.6 3 / 15 · Haiku 4.5 1 / 5. Cache-Schreiben (5 Min.) = 1,25 × Input.
+  Haiku 5.5: 0,10 / 0,50 bis 100K Prompt-Tokens, darüber 0,50 / 2,50 (Quelle: Anthropic Modellübersicht).
 
 ## OpenAI – `https://api.openai.com`
 

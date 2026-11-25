@@ -1,4 +1,5 @@
 import Foundation
+import StudyCore
 
 /// Keeps keys out of logs: values of secret headers become "***".
 public enum HeaderMasking {
@@ -14,9 +15,9 @@ public enum HeaderMasking {
         }
     }
 
-    /// A request as text for logs: method, URL, masked headers (sorted), body. Binary bodies are summarized.
+    /// A request as text for logs: method, URL (without credentials and query), masked headers (sorted), body. Binary bodies are summarized.
     public static func render(_ request: URLRequest) -> String {
-        var lines = ["\(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "")"]
+        var lines = ["\(request.httpMethod ?? "GET") \(URLRedaction.redact(url: request.url?.absoluteString ?? ""))"]
         for (name, value) in masked(request.allHTTPHeaderFields ?? [:]).sorted(by: { $0.key.lowercased() < $1.key.lowercased() }) {
             lines.append("\(name): \(value)")
         }

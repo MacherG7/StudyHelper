@@ -194,11 +194,26 @@ public struct ToolResult: Codable, Sendable, Hashable {
     }
 }
 
+/// Opaque reasoning data of one provider (Claude `thinking` / `redacted_thinking` block with its signature,
+/// OpenAI Responses `reasoning` item). It must be passed back unchanged in the assistant message of a tool loop;
+/// all other providers ignore it when sending.
+public struct ReasoningBlock: Codable, Sendable, Hashable {
+    public var provider: ProviderKind
+    public var payload: JSONValue
+
+    public init(provider: ProviderKind, payload: JSONValue) {
+        self.provider = provider
+        self.payload = payload
+    }
+}
+
 public enum MessageContent: Codable, Sendable, Hashable {
     case text(String)
     case image(ImagePayload)
     case toolCall(ToolCall)
     case toolResult(ToolResult)
+    /// Provider reasoning data to send back (see `ReasoningBlock`); never shown as text.
+    case reasoning(ReasoningBlock)
 }
 
 public struct ChatMessage: Codable, Sendable, Hashable {
@@ -269,7 +284,7 @@ public struct ModelRequest: Codable, Sendable, Hashable {
                 switch part {
                 case .image: result.insert(.image)
                 case .text, .toolResult: result.insert(.text)
-                case .toolCall: break
+                case .toolCall, .reasoning: break
                 }
             }
         }
@@ -380,12 +395,25 @@ public struct ModelResponse: Codable, Sendable, Hashable {
     /// Answer text (reasoning never included).
     public var text: String
     public var toolCalls: [ToolCall]
+    /// Opaque reasoning blocks of the answer (Claude thinking with signature, OpenAI reasoning items).
+    public var reasoningBlocks: [ReasoningBlock]
     public var metadata: ResponseMetadata
 
-    public init(text: String, toolCalls: [ToolCall] = [], metadata: ResponseMetadata) {
+    public init(
+        text: String, toolCalls: [ToolCall] = [], reasoningBlocks: [ReasoningBlock] = [], metadata: ResponseMetadata
+    ) {
         self.text = text
         self.toolCalls = toolCalls
+        self.reasoningBlocks = reasoningBlocks
         self.metadata = metadata
+    }
+
+    /// The answer as content of the assistant message to append to the conversation (e.g. before the tool results
+    /// of a tool loop): reasoning blocks, text, tool calls, in this order.
+    public var assistantContent: [MessageContent] {
+        reasoningBlocks.map { MessageContent.reasoning($0) }
+            + (text.isEmpty ? [] : [MessageContent.text(text)])
+            + toolCalls.map { MessageContent.toolCall($0) }
     }
 }
 
@@ -426,6 +454,35 @@ public enum ProviderError: Error, Sendable, Hashable {
         default: return false
         }
     }
+}
+
+/// A failed request that was already built and sent (or at least prepared): the error plus what is known about the
+/// request so far (usage up to the failure, raw request, raw events, reasoning level actually sent). Errors before the
+/// request existed (missing key, invalid address) stay plain `ProviderError`s. Callers match on
+/// `error.providerError`.
+public struct ProviderFailure: Error, Sendable, Hashable {
+    public var underlying: ProviderError
+    public var metadata: ResponseMetadata?
+
+    public init(underlying: ProviderError, metadata: ResponseMetadata? = nil) {
+        self.underlying = underlying
+        self.metadata = metadata
+    }
+}
+
+extension ProviderFailure: LocalizedError {
+    public var errorDescription: String? { underlying.errorDescription }
+}
+
+extension Error {
+    /// The `ProviderError` of this error, also when wrapped in a `ProviderFailure`.
+    public var providerError: ProviderError? {
+        if let failure = self as? ProviderFailure { return failure.underlying }
+        return self as? ProviderError
+    }
+
+    /// Partial metadata of a failed request, if the provider attached any.
+    public var failureMetadata: ResponseMetadata? { (self as? ProviderFailure)?.metadata }
 }
 
 extension ProviderError: LocalizedError {

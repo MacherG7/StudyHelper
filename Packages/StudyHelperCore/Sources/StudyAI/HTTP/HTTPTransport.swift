@@ -11,6 +11,7 @@ public protocol HTTPTransport: Sendable {
 /// Maps transport failures to `ProviderError`.
 func providerError(from error: Error) -> ProviderError {
     if let error = error as? ProviderError { return error }
+    if let failure = error as? ProviderFailure { return failure.underlying }
     if error is CancellationError { return .cancelled }
     if let error = error as? URLError {
         if error.code == .cancelled { return .cancelled }

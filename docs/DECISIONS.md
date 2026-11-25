@@ -295,6 +295,21 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** `scripts/update-source.py` schreibt kein `sha256` mehr in die Versionen (das Feld ist im AltSource-Format optional). Größe, Version, Build, Mindest-iOS, Entitlements und Datenschutz-Texte bleiben.
 - **Konsequenzen:** Die Store-Apps prüfen die .ipa nicht mehr gegen eine Prüfsumme; die Datei kommt über HTTPS direkt aus dem Release. Funktioniert StikStore damit, bleibt es so (MT-S.3); sonst liegt der Fehler woanders und das Feld kann zurückkommen.
 
+## D-036 KI-Anbieter (Phase 2)
+
+- **Datum:** 2026-11-25
+- **Status:** angenommen
+- **Kontext:** Phase 2 legt alle KI-Anbieter hinter ein gemeinsames Protokoll (SPEC „Technische Vorgaben“, §3, §10). API-Parameter stammen aus der am 2026-11-24 gelesenen offiziellen Doku (`docs/API-REFERENZ.md`).
+- **Entscheidung:**
+  - Eigenes Package-Target `StudyAI` (abhängig nur von `StudyCore`): `ModelProvider` mit einheitlichem `ResponseMetadata`, Streaming (`AsyncThrowingStream`), Tool-Aufrufen; Anbieter Claude (Messages API), OpenAI (Responses API), OpenAI-kompatibel (Chat Completions, Ollama-Erkennung über `/api/tags` + `/api/show`), Apple Foundation Models (`#available(iOS 26)`, Verfügbarkeitsprüfung), Mock.
+  - Konfigurationen ohne Geheimnisse als JSON in UserDefaults; API-Keys nur in der Keychain (`WhenUnlockedThisDeviceOnly`, Dienst `MiloG.StudyHelper1.apikeys`); Löschen eines Anbieters löscht seinen Key. UI-Tests nutzen nur einen Speicher im Arbeitsspeicher.
+  - Denktiefe: Claude-Stufen kommen je Modell aus `/v1/models` (adaptives Denken + `effort`; „Aus“ nur bei `disabled` oder `between_tools`). OpenAI liefert keine Fähigkeiten → Tabelle nach Modellfamilie (`OpenAIModelTable`), Fakten aus der Doku markiert, Stufenlisten pro Modell sind **Annahmen** (MT-2.7). Ollama: Fähigkeit `thinking`.
+  - Wiederholung nur vor dem ersten Byte eines Streams (429 mit `Retry-After`, 5xx, 529); Spend-/Guthabenlimits werden nicht wiederholt.
+  - Preise: Tabelle in `StudyCore/Pricing.swift` mit Standardpreisen aus der Doku, in den Einstellungen überschreibbar; Claude zählt Cache-Tokens getrennt von `input_tokens`, OpenAI enthält sie; Reasoning steckt bei beiden in den Output-Tokens. Wechselkurs USD→EUR einstellbar (Standard 0,86, kein Live-Kurs). Kosten immer „geschätzt“.
+  - Anfrage-Log in SwiftData (`SchemaV2.RequestLog`, leichte Migration V1→V2, an einem echten V1-Store geprüft); jede Anfrage wird geloggt, auch Fehler; Header und Keys nie im Log oder Export, Bilder nur als Platzhalter.
+  - Nach dem Review: Denkblöcke (Claude, mit Signatur) und Reasoning-Items (OpenAI) werden als `MessageContent.reasoning` unverändert zurückgegeben, damit Tool-Schleifen mit Denken funktionieren; fehlgeschlagene Anfragen werden mit Teil-Metadaten (Tokens, Kosten, gesendete Anfrage) geloggt; unlesbare Einstellungen einer neueren Version werden nur übersprungen und gesichert, nie überschrieben; die Denktiefe bietet „Modell-Standard“; ein beim Bearbeiten getesteter Key wird erst beim Sichern gespeichert; Bilder an Modelle ohne Bildfähigkeit werden abgelehnt; Zugangsdaten in URLs werden in Logs entfernt.
+- **Konsequenzen:** Der Rest der App spricht nur `ModelProvider`/`AIService` an (`AIService.respond(_:decoding:)` setzt Parsing-Fehler in Metadaten und Log). Guided Generation/Tools beim Apple-Modell und Bilder ab iOS 27 folgen mit den ersten KI-Aufgaben (Phase 4). Ollama `reasoning_effort: "none"` für „Aus“ ist eine Annahme (MT-2.6).
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

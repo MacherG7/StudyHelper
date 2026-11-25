@@ -85,7 +85,7 @@ struct MockProviderTests {
             _ = try await collect(provider, request())
             Issue.record("Fehler erwartet")
         } catch {
-            #expect(error as? ProviderError == .invalidAPIKey)
+            #expect(error.providerError == .invalidAPIKey)
         }
     }
 
@@ -98,7 +98,7 @@ struct MockProviderTests {
             for try await event in provider.stream(request()) { events.append(event) }
             Issue.record("Fehler erwartet")
         } catch {
-            #expect(error as? ProviderError == .overloaded)
+            #expect(error.providerError == .overloaded)
         }
         #expect(events == [.textDelta("a"), .textDelta("b")])
     }
@@ -106,7 +106,12 @@ struct MockProviderTests {
     @Test("Fehler nach allen Teilen")
     func errorAfterAll() async {
         let provider = MockProvider(script: MockScript(chunks: ["a"], error: .overloaded, errorTiming: .afterChunks(5)))
-        await #expect(throws: ProviderError.overloaded) { try await provider.respond(to: request()) }
+        do {
+            _ = try await provider.respond(to: request())
+            Issue.record("Fehler erwartet")
+        } catch {
+            #expect(error.providerError == .overloaded)
+        }
     }
 
     @Test("Anfragen werden für Prüfungen aufgezeichnet")

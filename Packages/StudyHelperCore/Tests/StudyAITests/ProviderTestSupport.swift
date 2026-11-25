@@ -8,7 +8,7 @@ enum TestSupport {
     static let secretKey = "sk-test-SECRET-1234567890"
 
     /// Retries without waiting.
-    static let fastRetry = RetryPolicy(maxRetries: 2, baseDelay: 0, maxDelay: 0, sleep: { _ in }, jitter: { 0 })
+    static let fastRetry = RetryPolicy(maxRetries: 2, baseDelay: 0, maxDelay: 30, sleep: { _ in }, jitter: { 0 })
 
     /// A clock that advances one second per call.
     final class TickClock: @unchecked Sendable {
@@ -80,7 +80,7 @@ enum TestSupport {
             _ = try await collect(provider, request)
             return nil
         } catch {
-            return error as? ProviderError
+            return error.providerError
         }
     }
 

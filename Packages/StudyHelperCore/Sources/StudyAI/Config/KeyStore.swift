@@ -6,6 +6,9 @@ public protocol KeyStore: Sendable {
     func saveKey(_ key: String, for configurationID: UUID) throws
     func readKey(for configurationID: UUID) throws -> String?
     func deleteKey(for configurationID: UUID) throws
+    /// Configuration ids that have a stored key (accounts that are not a UUID are ignored). For cleaning up keys of
+    /// configurations that no longer exist.
+    func storedConfigurationIDs() throws -> [UUID]
 }
 
 public struct KeyStoreError: Error, Equatable, Sendable {
@@ -30,6 +33,10 @@ public final class InMemoryKeyStore: KeyStore, @unchecked Sendable {
 
     public func deleteKey(for configurationID: UUID) throws {
         lock.withLock { _ = keys.removeValue(forKey: configurationID) }
+    }
+
+    public func storedConfigurationIDs() throws -> [UUID] {
+        lock.withLock { Array(keys.keys) }
     }
 }
 
@@ -69,6 +76,16 @@ public struct KeychainKeyStore: KeyStore {
         return query
     }
 
+    /// All items of the service with their attributes (account names), no secrets.
+    static func listQuery(service: String) -> [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+        ]
+    }
+
     // MARK: KeyStore
 
     public func saveKey(_ key: String, for configurationID: UUID) throws {
@@ -98,5 +115,14 @@ public struct KeychainKeyStore: KeyStore {
     public func deleteKey(for configurationID: UUID) throws {
         let status = SecItemDelete(Self.baseQuery(service: service, account: configurationID.uuidString) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw KeyStoreError(status: status) }
+    }
+
+    public func storedConfigurationIDs() throws -> [UUID] {
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(Self.listQuery(service: service) as CFDictionary, &result)
+        if status == errSecItemNotFound { return [] }
+        guard status == errSecSuccess else { throw KeyStoreError(status: status) }
+        let items = result as? [[String: Any]] ?? []
+        return items.compactMap { ($0[kSecAttrAccount as String] as? String).flatMap { UUID(uuidString: $0) } }
     }
 }

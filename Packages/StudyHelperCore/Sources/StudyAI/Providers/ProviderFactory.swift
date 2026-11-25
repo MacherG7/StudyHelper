@@ -33,6 +33,24 @@ public struct ProviderFactory: Sendable {
         return capabilities
     }
 
+    /// Whether requests with images may be sent: not when the configured capabilities say the model cannot process
+    /// them. Capabilities nobody has configured yet (no model list fetched, no user setting; OpenAI has its own table)
+    /// do not block images.
+    public static func imagesAllowed(by configuration: ProviderConfiguration) -> Bool {
+        if capabilities(of: configuration).supportsImages { return true }
+        let configured = configuration.cachedCapabilities != nil || configuration.imageSupportOverride != nil
+            || configuration.kind == .openAI
+        return !configured
+    }
+
+    /// A factory whose providers read `key` for `configurationID` instead of the stored key (test a connection or
+    /// fetch models with a key that is not saved yet). Nothing is written to the key store.
+    public func withKeyOverride(_ key: String, for configurationID: UUID) -> ProviderFactory {
+        ProviderFactory(
+            keyStore: InMemoryKeyStore(keys: [configurationID: key]), transport: transport, retry: retry,
+            mockScript: mockScript)
+    }
+
     public func makeProvider(for configuration: ProviderConfiguration) throws -> any ModelProvider {
         switch configuration.kind {
         case .mock:

@@ -9,12 +9,28 @@ import StudyData
 struct AIBackend: Sendable {
     var makeProvider: @Sendable (ProviderConfiguration) throws -> any ModelProvider
     var makeCatalog: @Sendable (ProviderConfiguration) throws -> any ModelCatalog
+    /// Same as above, but with an API key that is not saved yet (settings: test connection, fetch models). nil = the
+    /// backend ignores the key (mocks).
+    var makeProviderWithKey: (@Sendable (ProviderConfiguration, String) throws -> any ModelProvider)? = nil
+    var makeCatalogWithKey: (@Sendable (ProviderConfiguration, String) throws -> any ModelCatalog)? = nil
 
     static func live(keyStore: KeyStore, transport: HTTPTransport = URLSessionTransport()) -> AIBackend {
         let factory = ProviderFactory(keyStore: keyStore, transport: transport)
         return AIBackend(
             makeProvider: { try factory.makeProvider(for: $0) },
-            makeCatalog: { try factory.makeCatalog(for: $0) })
+            makeCatalog: { try factory.makeCatalog(for: $0) },
+            makeProviderWithKey: { try factory.withKeyOverride($1, for: $0.id).makeProvider(for: $0) },
+            makeCatalogWithKey: { try factory.withKeyOverride($1, for: $0.id).makeCatalog(for: $0) })
+    }
+
+    func provider(for configuration: ProviderConfiguration, keyOverride: String?) throws -> any ModelProvider {
+        if let keyOverride, let makeProviderWithKey { return try makeProviderWithKey(configuration, keyOverride) }
+        return try makeProvider(configuration)
+    }
+
+    func catalog(for configuration: ProviderConfiguration, keyOverride: String?) throws -> any ModelCatalog {
+        if let keyOverride, let makeCatalogWithKey { return try makeCatalogWithKey(configuration, keyOverride) }
+        return try makeCatalog(configuration)
     }
 
     /// The two models of the UI-test mock catalog (`-uiTestMockAI`).
@@ -51,6 +67,18 @@ struct ConnectionTestResult: Equatable {
     var message: String
 }
 
+/// A decoded structured answer with the raw response (metadata incl. `parsingError` = nil).
+struct DecodedResponse<T> {
+    var value: T
+    var response: ModelResponse
+}
+
+/// The answer could not be turned into the expected type; the request log entry carries the same message.
+struct AIResponseError: Error, LocalizedError, Equatable {
+    var message: String
+    var errorDescription: String? { message }
+}
+
 /// Everything the app does with AI providers: configurations, keys, model lists, and running requests. Every request
 /// is written to the request log (also failed ones); API keys never leave the `KeyStore` (SPEC §3, §10).
 @MainActor
@@ -64,6 +92,8 @@ final class AIService {
     @ObservationIgnored private let backend: AIBackend
     @ObservationIgnored private let repository: StudyRepository
     @ObservationIgnored private let now: @Sendable () -> Date
+    /// Settings data had unreadable entries (or a backup of such data exists): show a hint, keep the Keychain as is.
+    private(set) var hasUnreadableSettings: Bool
 
     init(
         repository: StudyRepository, settingsStore: AISettingsStore, keyStore: KeyStore, backend: AIBackend,
@@ -75,6 +105,8 @@ final class AIService {
         self.backend = backend
         self.now = now
         self.settings = settingsStore.load()
+        self.hasUnreadableSettings = settingsStore.hasUnreadableEntries
+        cleanUpOrphanedKeys()
     }
 
     // MARK: Configurations
@@ -84,6 +116,29 @@ final class AIService {
 
     private func change(_ change: (inout AISettings) -> Void) {
         settings = settingsStore.update(change)
+        hasUnreadableSettings = settingsStore.hasUnreadableEntries
+    }
+
+    /// The user acknowledged that unreadable settings entries are gone: drops the backup, and lets the orphaned-key
+    /// cleanup run again.
+    func discardUnreadableSettingsBackup() {
+        settingsStore.discardBackup()
+        hasUnreadableSettings = settingsStore.hasUnreadableEntries
+        cleanUpOrphanedKeys()
+    }
+
+    /// Deletes Keychain keys whose configuration no longer exists. Does nothing while settings entries are
+    /// unreadable (their configurations may still exist in the backup). Returns the number of deleted keys.
+    @discardableResult
+    func cleanUpOrphanedKeys() -> Int {
+        guard !settingsStore.hasUnreadableEntries else { return 0 }
+        guard let stored = try? keyStore.storedConfigurationIDs() else { return 0 }
+        let known = Set(settings.configurations.map(\.id))
+        var deleted = 0
+        for id in stored where !known.contains(id) {
+            if (try? keyStore.deleteKey(for: id)) != nil { deleted += 1 }
+        }
+        return deleted
     }
 
     /// Adds a configuration; the first one becomes the default. `makeDefault` makes it the default anyway.
@@ -157,8 +212,9 @@ final class AIService {
 
     /// Model list of the provider (needs the saved key for Claude/OpenAI). If the configuration is stored and its
     /// model is in the list, the model's capabilities are cached in the configuration (settings work offline).
-    func fetchModels(for configuration: ProviderConfiguration) async throws -> [ModelInfo] {
-        let models = try await backend.makeCatalog(configuration).availableModels()
+    /// `keyOverride`: a key typed in the form that is not saved yet; it is used for this call only.
+    func fetchModels(for configuration: ProviderConfiguration, keyOverride: String? = nil) async throws -> [ModelInfo] {
+        let models = try await backend.catalog(for: configuration, keyOverride: keyOverride).availableModels()
         if var stored = settings.configuration(id: configuration.id),
            let info = models.first(where: { $0.id == stored.model }) {
             stored.cachedCapabilities = info.capabilities
@@ -186,16 +242,48 @@ final class AIService {
         return configuration.reasoning
     }
 
-    func run(_ request: ModelRequest, configuration: ProviderConfiguration? = nil) async throws -> ModelResponse {
-        let (config, provider, prepared) = try prepare(request, configuration: configuration)
+    func run(
+        _ request: ModelRequest, configuration: ProviderConfiguration? = nil, keyOverride: String? = nil
+    ) async throws -> ModelResponse {
+        try await execute(request, configuration: configuration, keyOverride: keyOverride, validate: nil)
+    }
+
+    /// Runs the request and decodes the answer text as `T` (code fences and prose around the JSON are tolerated).
+    /// If the answer does not fit, the log entry gets a German `parsingError` and `AIResponseError` is thrown.
+    func respond<T: Decodable>(
+        _ request: ModelRequest, decoding type: T.Type, configuration: ProviderConfiguration? = nil
+    ) async throws -> DecodedResponse<T> {
+        var decoded: T?
+        let response = try await execute(request, configuration: configuration, keyOverride: nil) { response in
+            switch StructuredOutput.decode(T.self, from: response.text) {
+            case .success(let value):
+                decoded = value
+                return nil
+            case .failure(let error):
+                return error.message
+            }
+        }
+        guard let value = decoded else {
+            throw AIResponseError(message: response.metadata.parsingError ?? "Die Antwort konnte nicht gelesen werden.")
+        }
+        return DecodedResponse(value: value, response: response)
+    }
+
+    private func execute(
+        _ request: ModelRequest, configuration: ProviderConfiguration?, keyOverride: String?,
+        validate: ((ModelResponse) -> String?)?
+    ) async throws -> ModelResponse {
+        let (config, provider, prepared) = try prepare(request, configuration: configuration, keyOverride: keyOverride)
         let start = now()
         do {
-            let response = try await provider.respond(to: prepared)
+            var response = try await provider.respond(to: prepared)
+            if let message = validate?(response) { response.metadata.parsingError = message }
             log(request: prepared, configuration: config, response: response, error: nil, start: start)
             return response
         } catch {
-            log(request: prepared, configuration: config, response: nil, error: error, start: start)
-            throw error
+            let failure = Self.normalized(error)
+            log(request: prepared, configuration: config, response: nil, error: failure, start: start)
+            throw failure.providerError ?? failure
         }
     }
 
@@ -206,7 +294,7 @@ final class AIService {
         let provider: any ModelProvider
         let prepared: ModelRequest
         do {
-            (config, provider, prepared) = try prepare(request, configuration: configuration)
+            (config, provider, prepared) = try prepare(request, configuration: configuration, keyOverride: nil)
         } catch {
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
@@ -223,29 +311,38 @@ final class AIService {
                         continuation.yield(event)
                     }
                     if !logged {
-                        log(
-                            request: prepared, configuration: config, response: nil,
-                            error: ProviderError.invalidResponse("Die Antwort endete ohne Abschluss."), start: start)
+                        // The stream ended without a result: the user cancelled, or the provider stopped early.
+                        let error: Error = Task.isCancelled
+                            ? ProviderError.cancelled : ProviderError.invalidResponse("Die Antwort endete ohne Abschluss.")
+                        log(request: prepared, configuration: config, response: nil, error: error, start: start)
                     }
                     continuation.finish()
                 } catch {
-                    if !logged { log(request: prepared, configuration: config, response: nil, error: error, start: start) }
-                    continuation.finish(throwing: error)
+                    let failure = Self.normalized(error)
+                    if !logged { log(request: prepared, configuration: config, response: nil, error: failure, start: start) }
+                    continuation.finish(throwing: failure.providerError ?? failure)
                 }
             }
             continuation.onTermination = { _ in task.cancel() }
         }
     }
 
+    /// An error of a cancelled task is a cancellation, whatever the transport reported (partial metadata is kept).
+    private static func normalized(_ error: Error) -> Error {
+        guard Task.isCancelled, error.providerError != .cancelled else { return error }
+        return ProviderFailure(underlying: .cancelled, metadata: error.failureMetadata)
+    }
+
     /// Sends a tiny request ("Antworte nur mit OK.") and reports success or the German error.
-    func testConnection(configuration: ProviderConfiguration) async -> ConnectionTestResult {
+    /// `keyOverride`: a key typed in the form that is not saved yet; it is used for this call only.
+    func testConnection(configuration: ProviderConfiguration, keyOverride: String? = nil) async -> ConnectionTestResult {
         let capabilities = ProviderFactory.capabilities(of: configuration)
         let request = ModelRequest(
             task: .connectionTest, system: PromptParts(fixed: "Du bist ein Verbindungstest."),
             messages: [.user("Antworte nur mit OK.")],
             reasoning: capabilities.reasoningLevels.contains(.off) ? ReasoningLevel.off : nil, maxOutputTokens: 64)
         do {
-            _ = try await run(request, configuration: configuration)
+            _ = try await run(request, configuration: configuration, keyOverride: keyOverride)
             return ConnectionTestResult(isSuccess: true, message: "Verbindung OK")
         } catch {
             return ConnectionTestResult(isSuccess: false, message: Self.message(for: error))
@@ -255,14 +352,14 @@ final class AIService {
     // MARK: Internals
 
     private func prepare(
-        _ request: ModelRequest, configuration: ProviderConfiguration?
+        _ request: ModelRequest, configuration: ProviderConfiguration?, keyOverride: String?
     ) throws -> (ProviderConfiguration, any ModelProvider, ModelRequest) {
         guard let config = configuration ?? self.configuration(for: request.task) else {
             throw ProviderError.unavailable("Es ist noch kein KI-Anbieter eingerichtet.")
         }
         let provider: any ModelProvider
         do {
-            provider = try backend.makeProvider(config)
+            provider = try backend.provider(for: config, keyOverride: keyOverride)
         } catch {
             log(request: request, configuration: config, response: nil, error: error, start: now())
             throw error
@@ -301,9 +398,11 @@ enum RequestLogBuilder {
         request: ModelRequest, configuration: ProviderConfiguration, response: ModelResponse?, error: Error?,
         start: Date, end: Date, settings: AISettings
     ) -> RequestLogEntry {
-        let metadata = response?.metadata ?? ResponseMetadata(
+        // A failed request keeps what the provider knew (usage so far, raw request, level actually sent). Without
+        // that (failure before sending) nothing was sent, so no reasoning level is logged.
+        let metadata = response?.metadata ?? error?.failureMetadata ?? ResponseMetadata(
             task: request.task, providerKind: configuration.kind, providerName: configuration.name,
-            model: configuration.model, reasoning: request.reasoning, date: start,
+            model: configuration.model, reasoning: nil, date: start,
             duration: max(0, end.timeIntervalSince(start)), sentContent: request.sentContent,
             learningUnitIDsInContext: request.learningUnitIDsInContext)
         let usage = metadata.usage
@@ -325,7 +424,7 @@ enum RequestLogBuilder {
             duration: metadata.duration, timeToFirstToken: metadata.timeToFirstToken, costUSD: cost.usd,
             costEUR: cost.eur, costKnown: known, sentText: metadata.sentContent.contains(.text),
             sentImage: metadata.sentContent.contains(.image), toolCallCount: metadata.toolCalls.count,
-            parsingError: metadata.parsingError, errorMessage: error.map(AIService.message(for:)),
+            parsingError: metadata.parsingError, errorMessage: error.map { URLRedaction.redact(in: AIService.message(for: $0)) },
             detailJSON: detailJSON)
     }
 
@@ -338,6 +437,7 @@ enum RequestLogBuilder {
                 case .image(let image): return "[Bild, \(image.data.count) Bytes]"
                 case .toolCall(let call): return "[Werkzeugaufruf \(call.name)] \(call.arguments)"
                 case .toolResult(let result): return "[Werkzeugergebnis] \(result.content)"
+                case .reasoning: return "[Denkschritte des Modells]"
                 }
             }
             return (message.role == .user ? "Nutzer: " : "Assistent: ") + parts.joined(separator: "\n")

@@ -112,8 +112,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   App-Version 0.0.1.x in den Einstellungen, letzte Stelle pro Commit (D-027); jeder Commit mit
   Änderungen an der App wird als Beta-Release v<Version> mit .ipa auf GitHub veröffentlicht (D-028, D-033); die Einstellungen zeigen auch den
   Commit (D-029). Beta/Vollversion als Markierung, `publish.sh --final` (D-032).
-- **Offen aus Phase 1:** Geräteprüfungen MT-1.1–1.48 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
-- **Nächster Schritt:** Phase 2 planen (Anbieter-Protokoll mit Metadaten, Reasoning, Streaming,
-  Mock-Modell, Apple Foundation Model, OpenAI-kompatibel, Claude- und OpenAI-API, Anfrage-Logs).
-  API-Parameter aus der aktuellen offiziellen Doku. Agenten nacheinander starten und danach auf
-  zurückgelassene Prozesse/Simulatoren prüfen.
+- **Phase 2 fertig:** Paket `StudyAI` mit Anbieter-Protokoll, Claude (Messages API), OpenAI (Responses API),
+  OpenAI-kompatibel/Ollama, Apple Foundation Models, Mock; Keys in der Keychain; Anfrage-Log (SchemaV2) mit
+  geschätzten Kosten; Einstellungen und Developer-Modus in der App (D-036, `docs/API-REFERENZ.md`).
+- **Offen aus Phase 1 und 2:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
+- **Nächster Schritt:** Phase 3 planen (Hervorhebungen: Farblegende, KI-Ergebnisse) – nach Rückfrage beim Entwickler.

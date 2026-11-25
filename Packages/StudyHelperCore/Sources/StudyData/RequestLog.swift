@@ -1,4 +1,5 @@
 import Foundation
+import StudyCore
 import SwiftData
 
 // Request log (SPEC §10). StudyData does not know StudyAI: the app converts its response metadata into a plain
@@ -175,7 +176,20 @@ extension StudyRepository {
                 ("errorMessage", log.errorMessage),
             ]
             for (key, value) in optionals { if let value { item[key] = value } }
-            if let detail = try? JSONSerialization.jsonObject(with: log.detailData, options: [.fragmentsAllowed]) {
+            // URLs never leave the app with credentials or query (they could carry secrets).
+            for key in ["errorMessage", "parsingError"] {
+                if let text = item[key] as? String { item[key] = URLRedaction.redact(in: text) }
+            }
+            if var detail = (try? JSONSerialization.jsonObject(with: log.detailData)) as? [String: Any] {
+                if var metadata = detail["metadata"] as? [String: Any], let raw = metadata["rawRequest"] as? String {
+                    // The first line of the raw request is "METHOD URL".
+                    var lines = raw.components(separatedBy: "\n")
+                    if let first = lines.first { lines[0] = URLRedaction.redact(in: first) }
+                    metadata["rawRequest"] = lines.joined(separator: "\n")
+                    detail["metadata"] = metadata
+                }
+                item["detail"] = detail
+            } else if let detail = try? JSONSerialization.jsonObject(with: log.detailData, options: [.fragmentsAllowed]) {
                 item["detail"] = detail
             } else if let text = String(data: log.detailData, encoding: .utf8) {
                 item["detailText"] = text

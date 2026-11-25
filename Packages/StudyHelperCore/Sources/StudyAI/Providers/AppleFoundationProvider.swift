@@ -45,6 +45,7 @@ public struct AppleFoundationProvider: ModelProvider {
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
+                    try RequestGuard.checkImages(request, allowed: capabilities.supportsImages)
                     let status = Self.availabilityStatus
                     guard status.isAvailable else { throw ProviderError.unavailable(status.germanDescription) }
                     let start = now()

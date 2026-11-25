@@ -84,18 +84,18 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 
 **Ziel:** Alle KI-Anbieter hinter einem gemeinsamen Protokoll mit Metadaten, Reasoning, Streaming und Tool-Aufrufen; Anfrage-Logs werden gespeichert.
 
-- [ ] Anbieter-Protokoll: Fähigkeiten (Bilder, Tools, Streaming, Reasoning-Stufen, Kontextgröße), Anfrage, Antwort, Metadaten-Objekt, Streaming per `AsyncThrowingStream`
-- [ ] Aktuelle offizielle Doku von Anthropic und OpenAI gelesen (Modellliste, Reasoning, Usage, Streaming); Quellen in DECISIONS vermerkt
-- [ ] Mock-Modell mit festen Antworten (inkl. Streaming, Tool-Aufrufen, Fehlerfällen)
-- [ ] Robustes JSON-Parsing in `StudyCore` (fehlerhafte Ausgaben stürzen nie ab, Parsing-Fehler in den Metadaten)
-- [ ] Apple Foundation Models hinter `#available(iOS 26, *)` und `SystemLanguageModel.default.availability`; Guided Generation
-- [ ] OpenAI-kompatibler Anbieter (URL, Modellname, optionaler Key; Bildfähigkeit bei Ollama per API erkannt, sonst Einstellung; Reasoning ein/aus)
-- [ ] Claude-API: Key, Modellliste per API, Modellauswahl, Reasoning-Stufen nur falls vom Modell unterstützt
-- [ ] OpenAI-API: dasselbe
-- [ ] Keychain-Speicher für Keys; nie UserDefaults, Code oder Logs
-- [ ] Einstellungen: mehrere Anbieter-Konfigurationen, eigener Anbieter für Digitalisierung, Reasoning pro Aufgabe überschreibbar
-- [ ] Anfrage-Logs in SwiftData (Header maskiert), Reasoning-Inhalte nur im Developer-Modus verfügbar
-- [ ] Preisberechnung in `StudyCore` (Preistabelle, Reasoning wie Output, „unbekannt“ ohne Preis, 0 € bei kostenlosen Anbietern)
+- [x] Anbieter-Protokoll: Fähigkeiten (Bilder, Tools, Streaming, Reasoning-Stufen, Kontextgröße), Anfrage, Antwort, Metadaten-Objekt, Streaming per `AsyncThrowingStream`
+- [x] Aktuelle offizielle Doku von Anthropic und OpenAI gelesen (Modellliste, Reasoning, Usage, Streaming); Quellen in DECISIONS vermerkt
+- [x] Mock-Modell mit festen Antworten (inkl. Streaming, Tool-Aufrufen, Fehlerfällen)
+- [x] Robustes JSON-Parsing in `StudyCore` (fehlerhafte Ausgaben stürzen nie ab, Parsing-Fehler in den Metadaten)
+- [x] Apple Foundation Models hinter `#available(iOS 26, *)` und `SystemLanguageModel.default.availability`; Guided Generation und Tools folgen mit den ersten strukturierten Aufgaben in Phase 4 (D-036)
+- [x] OpenAI-kompatibler Anbieter (URL, Modellname, optionaler Key; Bildfähigkeit bei Ollama per API erkannt, sonst Einstellung; Reasoning ein/aus)
+- [x] Claude-API: Key, Modellliste per API, Modellauswahl, Reasoning-Stufen nur falls vom Modell unterstützt
+- [x] OpenAI-API: dasselbe
+- [x] Keychain-Speicher für Keys; nie UserDefaults, Code oder Logs
+- [x] Einstellungen: mehrere Anbieter-Konfigurationen, eigener Anbieter für Digitalisierung, Reasoning pro Aufgabe überschreibbar
+- [x] Anfrage-Logs in SwiftData (Header maskiert), Reasoning-Inhalte nur im Developer-Modus verfügbar
+- [x] Preisberechnung in `StudyCore` (Preistabelle, Reasoning wie Output, „unbekannt“ ohne Preis, 0 € bei kostenlosen Anbietern)
 
 **Abnahmekriterien**
 - Rest der App spricht nur das Protokoll an; ein Anbieterwechsel braucht keine Änderung außerhalb der Konfiguration (Test mit Mock).

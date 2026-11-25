@@ -293,7 +293,7 @@ struct ClaudeStreamTests {
         var thrown: ProviderError?
         do {
             for try await event in makeClaude(stub: stub).stream(TestSupport.request()) { received.append(event) }
-        } catch { thrown = error as? ProviderError }
+        } catch { thrown = error.providerError }
         #expect(thrown == .overloaded)
         #expect(received == [.textDelta("Hal")])
         #expect(stub.requests.count == 1)

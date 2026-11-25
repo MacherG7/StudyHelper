@@ -1,8 +1,9 @@
 import StudyAI
 import SwiftUI
 
-/// Add or edit one AI provider configuration. The API key is saved to the Keychain right away when the user fetches
-/// models or tests the connection (those calls need it); a new provider that is not saved loses its key again.
+/// Add or edit one AI provider configuration. The API key typed here is only written to the Keychain by "Sichern";
+/// fetching models and testing the connection use it as a temporary key, so an existing saved key stays untouched
+/// until the user saves.
 struct ProviderFormView: View {
     @Environment(AIService.self) private var ai
     @Environment(\.dismiss) private var dismiss
@@ -52,10 +53,15 @@ struct ProviderFormView: View {
         }
     }
 
-    private var reasoningBinding: Binding<ReasoningLevel> {
-        Binding(
-            get: { draft.reasoning ?? capabilities.defaultReasoning ?? capabilities.reasoningLevels.first ?? .off },
-            set: { draft.reasoning = $0 })
+    /// Exactly what is stored and sent: nil = "Modell-Standard" (no level is sent).
+    private var reasoningBinding: Binding<ReasoningLevel?> {
+        Binding(get: { draft.reasoning }, set: { draft.reasoning = $0 })
+    }
+
+    /// The key typed in the form (not saved yet), if any.
+    private var keyOverride: String? {
+        let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        return draft.kind.allowsKey && !trimmed.isEmpty ? trimmed : nil
     }
 
     var body: some View {
@@ -114,9 +120,6 @@ struct ProviderFormView: View {
             Text("„\(draft.name)“ und der gespeicherte API-Key werden gelöscht.")
         }
         .errorAlert($keyError)
-        .onDisappear {
-            if isNew && !saved { ai.deleteKey(for: draft.id) }
-        }
     }
 
     // MARK: Sections
@@ -208,7 +211,8 @@ struct ProviderFormView: View {
         Section {
             if !capabilities.reasoningLevels.isEmpty {
                 Picker("Denktiefe", selection: reasoningBinding) {
-                    ForEach(capabilities.reasoningLevels, id: \.self) { Text($0.germanName).tag($0) }
+                    Text("Modell-Standard").tag(ReasoningLevel?.none)
+                    ForEach(capabilities.reasoningLevels, id: \.self) { Text($0.germanName).tag(ReasoningLevel?.some($0)) }
                 }
                 .accessibilityIdentifier("reasoningPicker")
             }
@@ -285,12 +289,11 @@ struct ProviderFormView: View {
     }
 
     private func fetchModels() async {
-        guard commitKey() else { return }
         isFetching = true
         fetchError = nil
         defer { isFetching = false }
         do {
-            let list = try await ai.fetchModels(for: draft)
+            let list = try await ai.fetchModels(for: draft, keyOverride: keyOverride)
             models = list
             if let info = list.first(where: { $0.id == draft.model }) {
                 draft.cachedCapabilities = info.capabilities
@@ -304,10 +307,9 @@ struct ProviderFormView: View {
     }
 
     private func testConnection() async {
-        guard commitKey() else { return }
         isTesting = true
         testResult = nil
-        testResult = await ai.testConnection(configuration: draft)
+        testResult = await ai.testConnection(configuration: draft, keyOverride: keyOverride)
         isTesting = false
     }
 

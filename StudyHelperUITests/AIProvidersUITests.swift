@@ -64,7 +64,7 @@ final class AIProvidersUITests: XCTestCase {
         let reasoning = app.buttons["reasoningPicker"]
         XCTAssertTrue(reasoning.waitForExistence(timeout: 5))
         reasoning.tap()
-        for level in ["Aus", "Niedrig", "Mittel", "Hoch"] {
+        for level in ["Modell-Standard", "Aus", "Niedrig", "Mittel", "Hoch"] {
             XCTAssertTrue(app.buttons[level].waitForExistence(timeout: 5), "Stufe \(level) fehlt")
         }
         for level in ["Minimal", "Sehr hoch", "Maximal"] {

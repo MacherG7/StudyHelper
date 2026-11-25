@@ -95,6 +95,8 @@ public struct OpenAICompatibleProvider: ModelProvider, ModelCatalog {
                         "id": .string(call.id), "type": "function",
                         "function": ["name": .string(call.name), "arguments": .string(call.arguments)],
                     ])
+                case .reasoning:
+                    continue  // provider-specific reasoning data is not sent to this API
                 case .toolResult(let toolResult):
                     results.append(["role": "tool", "tool_call_id": .string(toolResult.callID),
                                     "content": .string(toolResult.content)])
@@ -140,7 +142,9 @@ public struct OpenAICompatibleProvider: ModelProvider, ModelCatalog {
             model: model, errorStyle: .openAI)
         let keyProvider: @Sendable () throws -> String? = { try self.optionalKey() }
         let headerApplier: @Sendable (inout URLRequest, String?) -> Void = { self.applyHeaders(&$0, key: $1) }
+        let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ChatCompletionsStreamState()) {
+            try RequestGuard.checkImages(request, allowed: imagesAllowed)
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/chat/completions"))
             urlRequest.httpMethod = "POST"
             headerApplier(&urlRequest, try keyProvider())

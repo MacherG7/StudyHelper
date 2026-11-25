@@ -24,11 +24,18 @@ public struct RetryPolicy: Sendable {
         self.jitter = jitter
     }
 
-    /// Wait before retry number `attempt` (0 = first retry). Honors `retryAfter`, capped at `maxDelay`.
+    /// Wait before retry number `attempt` (0 = first retry). Honors `retryAfter` (never above `maxDelay`: longer waits are not retried, see `exceedsCap`).
     public func delay(forRetry attempt: Int, error: ProviderError) -> TimeInterval {
         if case .rateLimited(let retryAfter?) = error { return min(retryAfter, maxDelay) }
         let exponential = baseDelay * pow(2, Double(attempt))
         return min(exponential * (1 + 0.25 * jitter()), maxDelay)
+    }
+
+    /// The server asked for a longer pause than `maxDelay`: retrying earlier would only be refused again, so the
+    /// error is passed on (`rateLimited`) and the caller decides.
+    func exceedsCap(_ error: ProviderError) -> Bool {
+        if case .rateLimited(let retryAfter?) = error { return retryAfter > maxDelay }
+        return false
     }
 
     /// Runs `operation`, retrying retryable `ProviderError`s. Cancellation and other errors pass through at once.
@@ -38,7 +45,7 @@ public struct RetryPolicy: Sendable {
             try Task.checkCancellation()
             do {
                 return try await operation()
-            } catch let error as ProviderError where error.isRetryable && attempt < maxRetries {
+            } catch let error as ProviderError where error.isRetryable && attempt < maxRetries && !exceedsCap(error) {
                 try await sleep(delay(forRetry: attempt, error: error))
                 attempt += 1
             }

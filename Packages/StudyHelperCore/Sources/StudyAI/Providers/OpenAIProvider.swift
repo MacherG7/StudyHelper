@@ -35,14 +35,16 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
 
     /// `reasoning` parameter for a level, limited to what the model supports:
     /// - nil or a model without levels: omitted (model default).
-    /// - off: `{effort: "none"}` if the model accepts it, otherwise omitted.
+    /// - off: `{effort: "none"}` if the model accepts it; otherwise (like Claude) the lowest supported level, so
+    ///   "off" never means more thinking than the model's minimum.
     /// - other levels: `{effort, summary: "auto"}`; an unsupported level falls back to the next lower supported
     ///   one (or the lowest); `minimal` is sent as is if supported.
     static func reasoningPlan(for level: ReasoningLevel?, capabilities: ProviderCapabilities) -> ReasoningPlan {
         guard let level, !capabilities.reasoningLevels.isEmpty else { return ReasoningPlan() }
         if level == .off {
-            return capabilities.reasoningLevels.contains(.off)
-                ? ReasoningPlan(value: ["effort": "none"], sent: .off) : ReasoningPlan()
+            if capabilities.reasoningLevels.contains(.off) { return ReasoningPlan(value: ["effort": "none"], sent: .off) }
+            guard let lowest = capabilities.reasoningLevels.filter({ $0 != .off }).min() else { return ReasoningPlan() }
+            return ReasoningPlan(value: ["effort": .string(lowest.rawValue), "summary": "auto"], sent: lowest)
         }
         guard let chosen = ReasoningResolution.clamp(level, to: capabilities.reasoningLevels) else { return ReasoningPlan() }
         return ReasoningPlan(value: ["effort": .string(chosen.rawValue), "summary": "auto"], sent: chosen)
@@ -63,8 +65,8 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
         if let reasoning = plan.value { body["reasoning"] = reasoning }
         if let schema = request.responseSchema {
             var format: [String: JSONValue] = [
-                "type": "json_schema", "name": .string(sanitizedSchemaName(schema.name)), "strict": true,
-                "schema": schema.schema,
+                "type": "json_schema", "name": .string(sanitizedSchemaName(schema.name)),
+                "strict": .bool(satisfiesStrictRules(schema.schema)), "schema": schema.schema,
             ]
             if let description = schema.description { format["description"] = .string(description) }
             body["text"] = ["format": .object(format)]
@@ -81,6 +83,44 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
         return .object(body)
     }
 
+    /// Whether a schema meets the rules of `strict: true` (Structured Outputs): every object has
+    /// `additionalProperties: false` and lists all its properties in `required`, recursively. Otherwise the request
+    /// would be rejected, so `strict` is sent as false for such schemas.
+    static func satisfiesStrictRules(_ schema: JSONValue) -> Bool {
+        switch schema {
+        case .array(let items): return items.allSatisfy(satisfiesStrictRules)
+        case .object(let object):
+            let types: [String]
+            switch object["type"] {
+            case .string(let type)?: types = [type]
+            case .array(let list)?: types = list.compactMap { if case .string(let t) = $0 { return t } else { return nil } }
+            default: types = []
+            }
+            if types.contains("object") || object["properties"] != nil {
+                guard object["additionalProperties"] == .bool(false) else { return false }
+                var properties: [String: JSONValue] = [:]
+                if case .object(let declared)? = object["properties"] { properties = declared }
+                var required: Set<String> = []
+                if case .array(let list)? = object["required"] {
+                    required = Set(list.compactMap { if case .string(let name) = $0 { return name } else { return nil } })
+                }
+                guard Set(properties.keys).isSubset(of: required) else { return false }
+            }
+            // Recurse into every nested schema (properties, items, anyOf, $defs, ...).
+            return object.allSatisfy { key, value in
+                switch key {
+                case "properties", "$defs", "definitions", "patternProperties":
+                    if case .object(let nested) = value { return nested.values.allSatisfy(satisfiesStrictRules) }
+                    return true
+                case "items", "anyOf", "oneOf", "allOf", "prefixItems", "not", "additionalProperties", "if", "then", "else":
+                    return satisfiesStrictRules(value)
+                default: return true
+                }
+            }
+        default: return true
+        }
+    }
+
     /// Schema names allow letters, digits, "_" and "-" only.
     static func sanitizedSchemaName(_ name: String) -> String {
         let cleaned = String(name.map { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "_" || $0 == "-") ? $0 : "_" })
@@ -89,7 +129,7 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
 
     /// Messages as Responses input items. User turns carry `input_text`/`input_image` parts; assistant text is a
     /// plain-string message; tool calls and results become `function_call` / `function_call_output` items.
-    /// (Reasoning items are not returned: `ToolCall` carries none.)
+    /// Reasoning items of this provider (`.reasoning`) go back before the function calls of the same turn.
     static func inputItems(_ messages: [ChatMessage], redactImages: Bool) -> [JSONValue] {
         var items: [JSONValue] = []
         for message in messages {
@@ -121,6 +161,10 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
                         "type": "function_call", "call_id": .string(call.id), "name": .string(call.name),
                         "arguments": .string(call.arguments),
                     ])
+                case .reasoning(let block):
+                    guard block.provider == .openAI else { continue }
+                    flush()
+                    items.append(block.payload)
                 case .toolResult(let result):
                     flush()
                     items.append([
@@ -152,7 +196,9 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
             transport: transport, retry: retry, now: now, kind: .openAI, providerName: configuration.name,
             model: model, errorStyle: .openAI)
         let keyProvider: @Sendable () throws -> String = { try self.readKey() }
+        let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ResponsesStreamState()) {
+            try RequestGuard.checkImages(request, allowed: imagesAllowed)
             let key = try keyProvider()
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/responses"))
             urlRequest.httpMethod = "POST"
@@ -194,11 +240,23 @@ struct ResponsesStreamState: StreamAccumulator {
     private struct PendingCall { var itemID: String; var callID: String; var name: String; var arguments = ""; var emitted = false }
 
     private var calls: [PendingCall] = []
+    private var reasoningItems: [(id: String?, value: JSONValue)] = []
     private var finished = false
     private var usageValue = TokenUsage()
     private(set) var stopReason: StopReason?
 
     var usage: TokenUsage { usageValue }
+    var reasoningBlocks: [ReasoningBlock] { reasoningItems.map { ReasoningBlock(provider: .openAI, payload: $0.value) } }
+
+    private mutating func collectReasoning(_ item: [String: Any]) {
+        guard item["type"] as? String == "reasoning", let value = ProviderJSON.jsonValue(item) else { return }
+        let id = item["id"] as? String
+        if let id, let existing = reasoningItems.firstIndex(where: { $0.id == id }) {
+            reasoningItems[existing].value = value
+        } else {
+            reasoningItems.append((id, value))
+        }
+    }
 
     mutating func consume(_ event: SSEEvent) throws -> [ModelEvent] {
         guard let root = ProviderJSON.object(event.data), let type = root["type"] as? String ?? event.event else { return [] }
@@ -228,6 +286,7 @@ struct ResponsesStreamState: StreamAccumulator {
                 return emit(index)
             }
         case "response.output_item.done":
+            if let item = root["item"] as? [String: Any] { collectReasoning(item) }
             if let item = root["item"] as? [String: Any], item["type"] as? String == "function_call",
                let index = callIndex(item["id"] as? String) {
                 if let arguments = item["arguments"] as? String, !arguments.isEmpty { calls[index].arguments = arguments }
@@ -237,6 +296,7 @@ struct ResponsesStreamState: StreamAccumulator {
             finished = true
             let response = root["response"] as? [String: Any] ?? [:]
             readUsage(response["usage"] as? [String: Any])
+            for item in response["output"] as? [[String: Any]] ?? [] { collectReasoning(item) }
             if stopReason != .refusal {
                 let reason = (response["incomplete_details"] as? [String: Any])?["reason"] as? String
                 if let reason {

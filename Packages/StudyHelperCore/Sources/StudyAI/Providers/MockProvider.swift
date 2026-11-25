@@ -87,12 +87,14 @@ public final class MockProvider: ModelProvider, @unchecked Sendable {
         let start = now()
         let rawRequest = Self.rawRequest(of: request)
         let (name, model, now) = (name, model, now)
+        let imagesAllowed = capabilities.supportsImages
         return AsyncThrowingStream { continuation in
             let task = Task {
+                var events: [String] = []
+                var firstToken: Date?
                 do {
+                    try RequestGuard.checkImages(request, allowed: imagesAllowed)
                     if script.error != nil, script.errorTiming == .beforeStream { throw script.error! }
-                    var firstToken: Date?
-                    var events: [String] = []
                     if let reasoning = script.reasoningText, !reasoning.isEmpty {
                         continuation.yield(.reasoningDelta(reasoning))
                         events.append("reasoning: \(reasoning)")
@@ -125,6 +127,20 @@ public final class MockProvider: ModelProvider, @unchecked Sendable {
                     continuation.finish()
                 } catch is CancellationError {
                     continuation.finish(throwing: ProviderError.cancelled)
+                } catch let error as ProviderError {
+                    // Errors of the script happen "after sending": attach what is known so far.
+                    if case .badRequest(RequestGuard.imagesUnsupported) = error {
+                        continuation.finish(throwing: error)
+                        return
+                    }
+                    let end = now()
+                    let metadata = ResponseMetadata(
+                        task: request.task, providerKind: .mock, providerName: name, model: model,
+                        reasoning: request.reasoning, date: start, duration: end.timeIntervalSince(start),
+                        timeToFirstToken: firstToken.map { $0.timeIntervalSince(start) },
+                        sentContent: request.sentContent, learningUnitIDsInContext: request.learningUnitIDsInContext,
+                        rawRequest: rawRequest, rawResponse: events.joined(separator: "\n"))
+                    continuation.finish(throwing: ProviderFailure(underlying: error, metadata: metadata))
                 } catch {
                     continuation.finish(throwing: error)
                 }

@@ -285,6 +285,212 @@ struct AIServiceTests {
     }
 }
 
+/// Provider that fails like a real one after the request was sent: error plus partial metadata.
+private struct FailingProvider: ModelProvider {
+    var kind: ProviderKind = .claude
+    var capabilities = ProviderCapabilities(supportsStreaming: true, reasoningLevels: [.off, .low, .high])
+    var failure: Error
+
+    func stream(_ request: ModelRequest) -> AsyncThrowingStream<ModelEvent, Error> {
+        AsyncThrowingStream { $0.finish(throwing: failure) }
+    }
+}
+
+private final class Recorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String] = []
+    func add(_ value: String) { lock.withLock { values.append(value) } }
+    var all: [String] { lock.withLock { values } }
+}
+
+private struct Planet: Decodable, Equatable { var name: String; var moons: Int }
+
+@MainActor
+@Suite("AIService: Prüfungsbefunde")
+struct AIServiceReviewTests {
+    private func service(
+        defaults: UserDefaults? = nil, keyStore: InMemoryKeyStore = InMemoryKeyStore(), backend: AIBackend
+    ) throws -> (AIService, StudyRepository) {
+        let container = try ModelContainerFactory.makeContainer(inMemory: true)
+        let repository = StudyRepository(container: container)
+        let defaults = defaults ?? UserDefaults(suiteName: "StudyHelperTests-AI-\(UUID().uuidString)") ?? .standard
+        return (AIService(
+            repository: repository, settingsStore: AISettingsStore(defaults: defaults), keyStore: keyStore,
+            backend: backend), repository)
+    }
+
+    @Test("Fehlgeschlagene Anfrage: Nutzung, rohe Anfrage und gesendete Stufe kommen ins Log")
+    func failureMetadataIsLogged() async throws {
+        let metadata = ResponseMetadata(
+            task: .query, providerKind: .claude, providerName: "Claude", model: "claude-sonnet-5-5", reasoning: .low,
+            usage: TokenUsage(inputTokens: 1000, outputTokens: 10), rawRequest: "POST https://api.example/v1/messages",
+            rawResponse: "event")
+        let failing = FailingProvider(failure: ProviderFailure(underlying: .overloaded, metadata: metadata))
+        let (ai, repository) = try service(backend: AIBackend(
+            makeProvider: { _ in failing }, makeCatalog: { _ in StaticModelCatalog(models: []) }))
+        ai.add(ProviderConfiguration(name: "Claude", kind: .claude, model: "claude-sonnet-5-5", reasoning: .high))
+        var request = AIFixture.request()
+        request.reasoning = .high  // asked for high; the provider reports that it really sent low
+        do {
+            _ = try await ai.run(request)
+            Issue.record("Fehler erwartet")
+        } catch {
+            #expect(error as? ProviderError == .overloaded, "Aufrufer sehen den ProviderError")
+        }
+        let log = try #require(try repository.requestLogs().first)
+        #expect(log.errorMessage == "Der Anbieter ist gerade überlastet.")
+        #expect(log.inputTokens == 1000)
+        #expect(log.costKnown)
+        #expect(log.reasoning == "low")
+        let detail = try JSONDecoder().decode(RequestLogDetail.self, from: log.detailData)
+        #expect(detail.metadata.rawRequest.contains("POST https://api.example"))
+    }
+
+    @Test("Fehler vor dem Senden: keine Denktiefe im Log")
+    func failureBeforeSending() async throws {
+        let failing = FailingProvider(failure: ProviderError.missingAPIKey)
+        let (ai, repository) = try service(backend: AIBackend(
+            makeProvider: { _ in failing }, makeCatalog: { _ in StaticModelCatalog(models: []) }))
+        ai.add(ProviderConfiguration(name: "Claude", kind: .claude, model: "claude-sonnet-5-5", reasoning: .high))
+        await #expect(throws: ProviderError.self) { try await ai.run(AIFixture.request()) }
+        #expect(try repository.requestLogs().first?.reasoning == nil)
+    }
+
+    @Test("Zugangsdaten in URLs der Fehlermeldung kommen nicht ins Log und nicht in den Export")
+    func urlCredentialsAreRedacted() async throws {
+        let fixture = try AIFixture(script: MockScript(error: .network("Fehler bei http://nutzer:passwort123@host:11434/x?token=abc")))
+        _ = fixture.addConfiguration()
+        await #expect(throws: ProviderError.self) { try await fixture.ai.run(AIFixture.request()) }
+        let log = try #require(try fixture.logs().first)
+        #expect(log.errorMessage?.contains("passwort123") == false)
+        #expect(log.errorMessage?.contains("token=abc") == false)
+        #expect(log.errorMessage?.contains("http://host:11434/x") == true)
+        let export = String(decoding: try fixture.repository.exportRequestLogsJSON(), as: UTF8.self)
+        #expect(!export.contains("passwort123") && !export.contains("token=abc"))
+    }
+
+    @Test("Strukturierte Antwort wird decodiert und geloggt")
+    func respondDecodes() async throws {
+        let fixture = try AIFixture(script: MockScript(chunks: ["Hier: ```json\n{\"name\":\"Mars\",\"moons\":2}\n```"]))
+        _ = fixture.addConfiguration()
+        let result = try await fixture.ai.respond(AIFixture.request(), decoding: Planet.self)
+        #expect(result.value == Planet(name: "Mars", moons: 2))
+        #expect(try fixture.logs().first?.parsingError == nil)
+    }
+
+    @Test("Kaputte Antwort: Parsing-Fehler steht in den Metadaten und im Log, der Aufrufer bekommt einen klaren Fehler")
+    func respondParsingError() async throws {
+        for (answer, message) in [
+            ("Das ist kein JSON.", "Die Antwort enthält kein JSON."),
+            (#"{"name":"Mars"}"#, "Die Antwort hat nicht das erwartete Format: Feld „moons“ fehlt"),
+            (#"{"name":"Mars","moons":"#, "Die Antwort wurde abgeschnitten (JSON nicht abgeschlossen)."),
+        ] {
+            let fixture = try AIFixture(script: MockScript(chunks: [answer]))
+            _ = fixture.addConfiguration()
+            do {
+                _ = try await fixture.ai.respond(AIFixture.request(), decoding: Planet.self)
+                Issue.record("Fehler erwartet")
+            } catch let error as AIResponseError {
+                #expect(error.message.hasPrefix(message))
+                #expect(error.localizedDescription == error.message)
+            }
+            let log = try #require(try fixture.logs().first)
+            #expect(try fixture.logs().count == 1)
+            #expect(log.parsingError?.hasPrefix(message) == true)
+            #expect(log.errorMessage == nil)
+            let detail = try JSONDecoder().decode(RequestLogDetail.self, from: log.detailData)
+            #expect(detail.metadata.parsingError == log.parsingError)
+        }
+    }
+
+    @Test("Abbruch durch den Nutzer wird als „Abgebrochen.“ geloggt")
+    func cancelIsLogged() async throws {
+        let fixture = try AIFixture(script: MockScript(
+            chunks: Array(repeating: "x", count: 50), chunkDelay: 0.05))
+        _ = fixture.addConfiguration()
+        for try await _ in fixture.ai.stream(AIFixture.request(.chat)) { break }  // consumer stops after the first event
+        var logs: [RequestLog] = []
+        for _ in 0..<100 where logs.isEmpty {
+            try await Task.sleep(nanoseconds: 20_000_000)
+            logs = try fixture.logs()
+        }
+        #expect(logs.count == 1)
+        #expect(logs.first?.errorMessage == "Abgebrochen.")
+    }
+
+    @Test("Modelle abrufen und Verbindung testen nutzen den eingegebenen Key, ohne den gespeicherten zu überschreiben")
+    func keyOverride() async throws {
+        let recorder = Recorder()
+        let keyStore = InMemoryKeyStore()
+        let provider = MockProvider()
+        let (ai, _) = try service(keyStore: keyStore, backend: AIBackend(
+            makeProvider: { _ in recorder.add("provider ohne Override"); return provider },
+            makeCatalog: { _ in recorder.add("Katalog ohne Override"); return StaticModelCatalog(models: []) },
+            makeProviderWithKey: { _, key in recorder.add("provider \(key)"); return provider },
+            makeCatalogWithKey: { _, key in recorder.add("Katalog \(key)"); return StaticModelCatalog(models: []) }))
+        let configuration = ProviderConfiguration(name: "Claude", kind: .claude, model: "m")
+        ai.add(configuration)
+        try ai.saveKey("gespeicherter-key", for: configuration.id)
+
+        _ = try await ai.fetchModels(for: configuration, keyOverride: "temp-key")
+        _ = await ai.testConnection(configuration: configuration, keyOverride: "temp-key")
+        #expect(recorder.all == ["Katalog temp-key", "provider temp-key"])
+        #expect(try keyStore.readKey(for: configuration.id) == "gespeicherter-key")
+
+        _ = try await ai.fetchModels(for: configuration)
+        #expect(recorder.all.last == "Katalog ohne Override")
+        #expect(try keyStore.readKey(for: configuration.id) == "gespeicherter-key")
+    }
+
+    @Test("Verwaiste Keychain-Einträge werden gelöscht, Keys vorhandener Konfigurationen bleiben")
+    func orphanCleanup() throws {
+        let defaults = UserDefaults(suiteName: "StudyHelperTests-AI-\(UUID().uuidString)") ?? .standard
+        let keyStore = InMemoryKeyStore()
+        let (first, _) = try service(defaults: defaults, keyStore: keyStore, backend: .mock())
+        let kept = ProviderConfiguration(name: "A", kind: .claude, model: "m")
+        first.add(kept)
+        try first.saveKey("a", for: kept.id)
+        let orphan = UUID()
+        try keyStore.saveKey("verwaist", for: orphan)
+
+        let (second, _) = try service(defaults: defaults, keyStore: keyStore, backend: .mock())
+        #expect(try keyStore.readKey(for: orphan) == nil)
+        #expect(try keyStore.readKey(for: kept.id) == "a")
+        #expect(second.configurations.count == 1)
+        #expect(!second.hasUnreadableSettings)
+    }
+
+    @Test("Bei unlesbaren Einstellungen wird nichts aufgeräumt; Hinweis, bis die Sicherung verworfen wird")
+    func noCleanupWhenUnreadable() throws {
+        let defaults = UserDefaults(suiteName: "StudyHelperTests-AI-\(UUID().uuidString)") ?? .standard
+        let keyStore = InMemoryKeyStore()
+        let known = ProviderConfiguration(name: "Alt", kind: .claude, model: "m")
+        let future = ProviderConfiguration(name: "Neu", kind: .openAI, model: "x")
+        try keyStore.saveKey("alt", for: known.id)
+        try keyStore.saveKey("neu", for: future.id)
+        var object = try #require(JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(AISettings(configurations: [known, future]))) as? [String: Any])
+        var configurations = try #require(object["configurations"] as? [[String: Any]])
+        configurations[1]["kind"] = "zukunft"
+        object["configurations"] = configurations
+        defaults.set(try JSONSerialization.data(withJSONObject: object), forKey: AISettingsStore.defaultsKey)
+
+        let (ai, _) = try service(defaults: defaults, keyStore: keyStore, backend: .mock())
+        #expect(ai.configurations.map(\.name) == ["Alt"])
+        #expect(ai.hasUnreadableSettings)
+        #expect(try keyStore.readKey(for: future.id) == "neu", "Key des übersprungenen Eintrags bleibt erhalten")
+        ai.setDeveloperMode(true)  // writes; the backup stays, so the hint and the protection stay
+        #expect(ai.hasUnreadableSettings)
+        #expect(ai.cleanUpOrphanedKeys() == 0)
+        #expect(try keyStore.readKey(for: future.id) == "neu")
+
+        ai.discardUnreadableSettingsBackup()
+        #expect(!ai.hasUnreadableSettings)
+        #expect(try keyStore.readKey(for: future.id) == nil)
+        #expect(try keyStore.readKey(for: known.id) == "alt")
+    }
+}
+
 @MainActor
 @Suite("Summen im Anfrage-Log")
 struct RequestLogTotalsTests {

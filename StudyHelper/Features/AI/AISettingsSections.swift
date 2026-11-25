@@ -15,7 +15,18 @@ struct AISettingsSections: View {
 
     // MARK: Providers
 
-    private var providersSection: some View {
+    @ViewBuilder private var providersSection: some View {
+        if ai.hasUnreadableSettings {
+            Section {
+                Text("Einige gespeicherte KI-Einstellungen konnten nicht gelesen werden (z. B. von einer neueren App-Version). Sie wurden übersprungen; eine Kopie der Originaldaten bleibt gesichert. Gespeicherte API-Keys werden solange nicht aufgeräumt.")
+                    .font(.footnote)
+                    .accessibilityIdentifier("unreadableSettingsHint")
+                Button("Sicherung verwerfen", role: .destructive) { ai.discardUnreadableSettingsBackup() }
+                    .accessibilityIdentifier("discardSettingsBackupButton")
+            } header: {
+                Text("Hinweis")
+            }
+        }
         Section {
             ForEach(ai.configurations) { configuration in
                 NavigationLink {
