@@ -21,6 +21,7 @@ struct StudyHelperApp: App {
                     RootView()
                         .modelContainer(app.container)
                         .environment(\.studyRepository, app.repository)
+                        .environment(\.digitalPageStore, app.digitalPages)
                         .environment(app.incomingFiles)
                         .environment(app.ai)
                         .onOpenURL { url in Task { await app.incomingFiles.receive(url) } }

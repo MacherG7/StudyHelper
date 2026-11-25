@@ -93,6 +93,7 @@ public final class MockProvider: ModelProvider, @unchecked Sendable {
                 var events: [String] = []
                 var firstToken: Date?
                 do {
+                    try RequestGuard.checkDocuments(request, allowed: imagesAllowed)
                     try RequestGuard.checkImages(request, allowed: imagesAllowed)
                     if script.error != nil, script.errorTiming == .beforeStream { throw script.error! }
                     if let reasoning = script.reasoningText, !reasoning.isEmpty {
@@ -129,7 +130,8 @@ public final class MockProvider: ModelProvider, @unchecked Sendable {
                     continuation.finish(throwing: ProviderError.cancelled)
                 } catch let error as ProviderError {
                     // Errors of the script happen "after sending": attach what is known so far.
-                    if case .badRequest(RequestGuard.imagesUnsupported) = error {
+                    if case .badRequest(let message) = error,
+                       message == RequestGuard.imagesUnsupported || message == RequestGuard.documentsUnsupported {
                         continuation.finish(throwing: error)
                         return
                     }
@@ -149,13 +151,16 @@ public final class MockProvider: ModelProvider, @unchecked Sendable {
         }
     }
 
-    /// The request as JSON text; image bytes are replaced by a placeholder so logs stay small.
+    /// The request as JSON text; image and PDF bytes are replaced by a placeholder so logs stay small.
     static func rawRequest(of request: ModelRequest) -> String {
         var copy = request
         copy.messages = request.messages.map { message in
             var message = message
             message.content = message.content.map { part in
-                if case .image(let image) = part { return .text("<Bild, \(image.data.count) Bytes>") }
+                if case .image(let image) = part { return .text(ProviderJSON.placeholder(forImageBytes: image.data.count)) }
+                if case .document(let document) = part {
+                    return .text(ProviderJSON.placeholder(forPDFBytes: document.data.count))
+                }
                 return part
             }
             return message

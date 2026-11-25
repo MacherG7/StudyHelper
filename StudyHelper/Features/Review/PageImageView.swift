@@ -11,6 +11,8 @@ struct PageImageView: View {
     let onlyOpen: Bool
     /// An area of the page to point at (the source of a topic entry); the view scrolls to it.
     var markedRect: NormalizedRect?
+    /// Which layer the image shows ("Handschrift", "Textebene"); read out as the image's accessibility value.
+    var layerName: String?
 
     @State private var zoom: CGFloat = 1
     @State private var baseZoom: CGFloat = 1
@@ -97,6 +99,8 @@ struct PageImageView: View {
                 .resizable()
                 .frame(width: size.width, height: size.height)
                 .accessibilityLabel("Originalbild der Seite")
+                .accessibilityValue(layerName ?? "")
+                .accessibilityIdentifier("pageImageContent")
             ForEach(highlights) { highlight in
                 HighlightMark(highlight: highlight, size: size)
             }

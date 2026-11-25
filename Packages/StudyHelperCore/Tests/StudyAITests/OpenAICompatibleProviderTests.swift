@@ -76,6 +76,15 @@ struct CompatibleRequestTests {
         #expect(response.metadata.rawRequest.contains("<Bild, 10 Bytes>"))
     }
 
+    @Test("PDF wird vor dem Senden abgelehnt, auch bei Modellen mit Bildunterstützung")
+    func documentRejected() async {
+        let stub = StubTransport()
+        let message = ChatMessage(role: .user, content: [.document(DocumentPayload(data: TestSupport.pdfBytes))])
+        let error = await TestSupport.thrownError(makeCompatible(stub: stub), TestSupport.request([message]))
+        #expect(error == .badRequest("Dieses Modell kann keine PDFs verarbeiten."))
+        #expect(stub.requests.isEmpty)
+    }
+
     @Test("Werkzeuge im Chat-Format ohne tool_choice; Aufrufe und Ergebnisse als assistant/tool-Nachrichten")
     func tools() async throws {
         let stub = StubTransport([.init(lines: textStream)])

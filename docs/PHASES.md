@@ -7,7 +7,7 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 | 0 Gerüst, Test-PDFs, Skripte, Doku | fertig | 27235ba |
 | 1 Datenmodell, Import, Digitalisierung, manuelle Strukturierung | fertig (Geräteprüfungen offen) | 08d8c3b, 0ee474e, 6208cff |
 | 2 Anbieter-Protokoll und Anbieter | fertig (Geräteprüfungen offen) | 25be96b, d8d353c, dfaf09d, 2f864dc |
-| 3 Digitale Seite, Datensicherung, Hervorhebungen, KI-Transkription | offen | – |
+| 3 Digitale Seite, Datensicherung, Hervorhebungen, KI-Transkription | 3a fertig (Geräteprüfungen offen) | 3a |
 | 4 System-Prompts, sortierte Fassung, KI-Strukturierung, Lerneinheiten | offen | – |
 | 5 Multiple Choice, Freitext, Karteikarten, Vorrat, Caching | offen | – |
 | 6 Tipps und Chat-Modus | offen | – |
@@ -116,15 +116,15 @@ Schon vorhanden aus Phase 1: Hervorhebungsarten und -bedeutungen im Datenmodell,
 Teilschritte (je ein Commit und eine Beta):
 
 **3a – Digitale Seite (PDF mit Textebene)**
-- [ ] Erzeugung in `StudyImport` aus den gespeicherten Daten, Seite für Seite in Originalgröße:
+- [x] Erzeugung in `StudyImport` aus den gespeicherten Daten, Seite für Seite in Originalgröße:
   PDF-/Goodnotes-Import → Originalseite unverändert (Seiteninhalt, Ink, Textmarker, Stamps, FreeText, Bilder);
   Foto/Scan → Bild als Seite. Eine vorhandene fremde Textebene (z. B. reduziertes Goodnotes-PDF) wird nicht übernommen.
-- [ ] Unsichtbare Textebene (Text-Render-Modus „unsichtbar“) aus dem gespeicherten Originaltext inkl. Nutzerkorrekturen: je Wort an seiner Box (sonst je Zeile), Breite/Größe an die Box angepasst, Reihenfolge der Vorlage, Absätze zusammenhängend, Umlaute/„→“ korrekt kopierbar; unleserliche Stellen ohne Text
-- [ ] Nie Quelle der Wahrheit: zwischengespeichert, nach jeder Korrektur, Neuerkennung oder Wiederherstellung automatisch neu erzeugt; ältere Versionen lassen sich als digitale Seite ansehen
-- [ ] Ansichtsmodus „Digitale Seite“ (PDFKit) in Prüfansicht und Fach: blättern, zoomen, suchen, Text markieren und kopieren; Tippen auf ein Wort springt zur Zeile im Text und umgekehrt
-- [ ] Umschalter „Handschrift | Text“ in der Ansicht: „Handschrift“ zeigt das Original (Textebene unsichtbar); „Text“ blendet die Handschrift aus und zeigt die Textebene sichtbar an derselben Stelle (Größe an die Zeile angepasst, in der Stiftfarbe, Hervorhebungen erhalten). Skizzen, Bilder, Formen, Pfeile und Textmarker bleiben in beiden Modi sichtbar. Ausblenden: bei Goodnotes die Ink-Striche, die zu erkannten Zeilen gehören (Skizzen-Striche bleiben); bei Fotos/Scans die Zeilenbereiche mit der umgebenden Papierfarbe überdecken. Unsichere Wörter im Modus „Text“ erkennbar; gewählter Modus bleibt pro Fach gespeichert
-- [ ] PDF-Metadaten ohne persönliche Daten (Titel aus Fach/Import, Ersteller StudyHelper)
-- [ ] Vorbereitung für KI: `ModelRequest` kann ein PDF-Dokument senden; Anbieter/Modelle melden die Fähigkeit (Claude, OpenAI laut aktueller offizieller Doku prüfen, `docs/API-REFERENZ.md`); ohne PDF-Fähigkeit Bild + gespeicherter Text wie bisher; im Log als Platzhalter „PDF (n Seiten)“
+- [x] Unsichtbare Textebene (Text-Render-Modus „unsichtbar“) aus dem gespeicherten Originaltext inkl. Nutzerkorrekturen: je Wort an seiner Box (sonst je Zeile), Breite/Größe an die Box angepasst, Reihenfolge der Vorlage, Absätze zusammenhängend, Umlaute/„→“ korrekt kopierbar; unleserliche Stellen ohne Text
+- [x] Nie Quelle der Wahrheit: zwischengespeichert, nach jeder Korrektur, Neuerkennung oder Wiederherstellung automatisch neu erzeugt; ältere Versionen lassen sich als digitale Seite ansehen
+- [x] Ansicht in der vorhandenen Prüfansicht (D-040): Umschalter im Seitenbild (auch im Quellen-Panel der Themen); Tippen auf eine Zeile im Bild ↔ Zeile im Text wie bisher; „Als PDF ansehen“ (Prüfansicht, pro Version) öffnet das PDF in der Systemvorschau: blättern, zoomen, suchen, markieren, kopieren; „Text kopieren“ für die gewählte Zeile
+- [x] Umschalter „Handschrift | Textebene“ in der Ansicht: „Handschrift“ zeigt das Original (Textebene unsichtbar); „Textebene“ blendet die Handschrift aus und zeigt die Textebene sichtbar an derselben Stelle (Größe an die Zeile angepasst, in der Stiftfarbe, Hervorhebungen erhalten). Skizzen, Bilder, Formen, Pfeile und Textmarker bleiben in beiden Modi sichtbar. Ausblenden: bei Goodnotes die Ink-Striche, die zu erkannten Zeilen gehören (Skizzen-Striche bleiben); bei Fotos/Scans die Zeilenbereiche mit der umgebenden Papierfarbe überdecken. Unsichere Wörter im Modus „Textebene“ erkennbar (orange gepunktet); eine Schriftgröße pro Zeile; gewählter Modus bleibt pro Fach gespeichert
+- [x] PDF-Metadaten ohne persönliche Daten (Titel aus Fach/Import, Ersteller StudyHelper)
+- [x] Vorbereitung für KI: `ModelRequest` kann ein PDF-Dokument senden; Anbieter/Modelle melden die Fähigkeit (Claude, OpenAI laut aktueller offizieller Doku prüfen, `docs/API-REFERENZ.md`); ohne PDF-Fähigkeit Bild + gespeicherter Text wie bisher; im Log als Platzhalter „<PDF, N Bytes>“
 
 **3b – Datensicherung**
 - [ ] „Alles sichern“: eine Datei (Seiten mit Originalen, Digitalisierungen samt Versionen und Korrekturen, Themen, später Lernstand und Prompts, Einstellungen) in die Dateien-App oder zum Teilen; API-Keys nie enthalten

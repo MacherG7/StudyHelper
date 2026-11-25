@@ -121,7 +121,10 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
 - **Phase 2 fertig:** Paket `StudyAI` mit Anbieter-Protokoll, Claude (Messages API), OpenAI (Responses API),
   OpenAI-kompatibel/Ollama, Apple Foundation Models, Mock; Keys in der Keychain; Anfrage-Log (SchemaV2) mit
   geschätzten Kosten; Einstellungen und Developer-Modus in der App (D-036, `docs/API-REFERENZ.md`).
-- **Offen aus Phase 1 und 2:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
-- **Nächster Schritt:** Phase 3 umsetzen – Plan in `docs/PHASES.md` (D-037, D-038): 3a digitale Seite (PDF mit unsichtbarer
-  Textebene), 3b Datensicherung, 3c Farblegende/Darstellung/Formeln, 3d Bildanalyse, 3e KI-Warteschlange/Kostenschutz/
-  Datenschutz, 3f KI-Transkription. Start nach Zusage des Entwicklers.
+- **Phase 3a fertig:** digitale Seite (D-037, D-040): `StudyImport/DigitalPage` erzeugt Seitenbild ohne Handschrift
+  („Textebene“) und PDF mit unsichtbarer Textebene; Umschalter „Handschrift | Textebene“ im Seitenbild der Prüfansicht
+  und der Themen, „Als PDF ansehen“ (QuickLook), „Text kopieren“; Cache in `Caches/DigitalPages/`. StudyAI kann PDFs
+  senden (Claude, OpenAI; sonst Bild + Text, `PageContent`). Tests aufgeräumt (UI-Tests 25 → 21).
+- **Offen:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12, MT-3.4–3.8, MT-3.14/3.15 und MT-S.1–S.7 (macht der Entwickler).
+  Vorschläge zu `scripts/test.sh` (Simulator-Package-Lauf optional, UI-Tests parallel/filterbar) warten auf Entscheidung.
+- **Nächster Schritt:** Phase 3b Datensicherung – nach Zusage des Entwicklers.

@@ -155,6 +155,11 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
                         ? ProviderJSON.placeholder(forImageBytes: image.data.count)
                         : "data:\(image.mediaType);base64,\(image.data.base64EncodedString())"
                     parts.append(["type": "input_image", "image_url": .string(data)])
+                case .document(let document):
+                    let data = redactImages
+                        ? ProviderJSON.placeholder(forPDFBytes: document.data.count)
+                        : "data:\(document.mediaType);base64,\(document.data.base64EncodedString())"
+                    parts.append(["type": "input_file", "filename": .string(document.filename), "file_data": .string(data)])
                 case .toolCall(let call):
                     flush()
                     items.append([
@@ -198,6 +203,7 @@ public struct OpenAIProvider: ModelProvider, ModelCatalog {
         let keyProvider: @Sendable () throws -> String = { try self.readKey() }
         let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ResponsesStreamState()) {
+            try RequestGuard.checkDocuments(request, allowed: imagesAllowed)
             try RequestGuard.checkImages(request, allowed: imagesAllowed)
             let key = try keyProvider()
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/responses"))

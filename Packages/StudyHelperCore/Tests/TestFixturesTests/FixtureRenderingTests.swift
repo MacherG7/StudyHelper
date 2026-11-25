@@ -99,7 +99,7 @@ private func rgb(_ hex: String) -> (Int, Int, Int) {
 
 /// Renders shared by the tests of this file (computed once, lazily, thread-safe).
 private enum Renders {
-    static let scale = 2.0
+    static let scale = 1.5
 
     static func pages(_ fixture: GoodnotesFixture, annotations: Bool = true) -> [PageBitmap] {
         guard let data = try? Data(contentsOf: fixture.url), let doc = PDFDocument(data: data) else {

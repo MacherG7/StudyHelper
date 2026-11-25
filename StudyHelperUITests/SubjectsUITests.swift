@@ -1,5 +1,7 @@
 import XCTest
 
+/// Start (German placeholder) and creating a subject in one launch; the former separate launch test is covered by the
+/// first two assertions.
 final class SubjectsUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -11,7 +13,8 @@ final class SubjectsUITests: XCTestCase {
         app.launchArguments = ["-uiTestInMemory"]
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["Noch keine Fächer"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["StudyHelper"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Noch keine Fächer"].waitForExistence(timeout: 5))
         app.buttons["addSubjectButton"].tap()
 
         let field = app.textFields["subjectNameField"]

@@ -113,6 +113,14 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
                         "type": "image",
                         "source": ["type": "base64", "media_type": .string(image.mediaType), "data": .string(data)],
                     ]
+                case .document(let document):
+                    let data = redactImages
+                        ? ProviderJSON.placeholder(forPDFBytes: document.data.count)
+                        : document.data.base64EncodedString()
+                    return [
+                        "type": "document",
+                        "source": ["type": "base64", "media_type": .string(document.mediaType), "data": .string(data)],
+                    ]
                 case .toolCall(let call):
                     return [
                         "type": "tool_use", "id": .string(call.id), "name": .string(call.name),
@@ -160,6 +168,7 @@ public struct ClaudeProvider: ModelProvider, ModelCatalog {
         let headerBuilder: @Sendable (String) -> [String: String] = { self.headers(key: $0) }
         let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ClaudeStreamState()) {
+            try RequestGuard.checkDocuments(request, allowed: imagesAllowed)
             try RequestGuard.checkImages(request, allowed: imagesAllowed)
             let key = try keyProvider()
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/messages"))

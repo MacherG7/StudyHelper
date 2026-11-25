@@ -423,9 +423,16 @@ enum RequestLogBuilder {
             cacheWriteTokens: usage.cacheWriteTokens, reasoningTokens: usage.reasoningTokens,
             duration: metadata.duration, timeToFirstToken: metadata.timeToFirstToken, costUSD: cost.usd,
             costEUR: cost.eur, costKnown: known, sentText: metadata.sentContent.contains(.text),
-            sentImage: metadata.sentContent.contains(.image), toolCallCount: metadata.toolCalls.count,
+            sentImage: sentImageOrDocument(metadata.sentContent), toolCallCount: metadata.toolCalls.count,
             parsingError: metadata.parsingError, errorMessage: error.map { URLRedaction.redact(in: AIService.message(for: $0)) },
             detailJSON: detailJSON)
+    }
+
+    /// A PDF page is image content for the privacy question "was a picture of my page sent?", so a `.document` counts
+    /// as `sentImage` for now (the log keeps text and image flags only; the PDF is not lost in the log).
+    /// TODO(Phase 3e): add a separate `sentDocument` field (schema change) and show it in the privacy view.
+    static func sentImageOrDocument(_ content: Set<SentContent>) -> Bool {
+        content.contains(.image) || content.contains(.document)
     }
 
     /// The conversation as readable text (images as a marker).
@@ -435,6 +442,7 @@ enum RequestLogBuilder {
                 switch part {
                 case .text(let text): return text
                 case .image(let image): return "[Bild, \(image.data.count) Bytes]"
+                case .document(let document): return "[PDF, \(document.data.count) Bytes]"
                 case .toolCall(let call): return "[Werkzeugaufruf \(call.name)] \(call.arguments)"
                 case .toolResult(let result): return "[Werkzeugergebnis] \(result.content)"
                 case .reasoning: return "[Denkschritte des Modells]"

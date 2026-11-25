@@ -1,3 +1,4 @@
+import QuickLook
 import StudyData
 import SwiftUI
 
@@ -5,6 +6,8 @@ import SwiftUI
 struct ReviewScreen: View {
     let batch: ImportBatch
     @Environment(ImportCoordinator.self) private var coordinator
+    @Environment(\.digitalPageStore) private var digitalPages
+    @State private var pdfPreview = DigitalPDFPreview()
     @State private var pageIndex = 0
     @State private var showVersions = false
     @State private var rerunScope: RerunScope?
@@ -33,6 +36,16 @@ struct ReviewScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                if pdfPreview.isBuilding {
+                    ProgressView().accessibilityLabel("PDF wird erstellt").accessibilityIdentifier("digitalPDFProgress")
+                }
+                Button("Als PDF ansehen", systemImage: "doc.text.magnifyingglass") {
+                    pdfPreview.open(with: digitalPages, base: DigitalPageStore.baseName(of: batch)) {
+                        try DigitalPageRequest.all(of: batch)
+                    }
+                }
+                .disabled(current == nil || pdfPreview.isBuilding)
+                .accessibilityIdentifier("digitalPDFButton")
                 Button("Versionen", systemImage: "clock.arrow.circlepath") { showVersions = true }
                     .disabled(current == nil)
                     .accessibilityIdentifier("versionsButton")
@@ -48,6 +61,9 @@ struct ReviewScreen: View {
                 .accessibilityIdentifier("reRecognizeButton")
             }
         }
+        .quickLookPreview(Bindable(pdfPreview).url)
+        .errorAlert(Bindable(pdfPreview).errorMessage)
+        .onDisappear { pdfPreview.cancel() }
         .sheet(isPresented: $showVersions) {
             if let current { VersionsView(source: current) }
         }

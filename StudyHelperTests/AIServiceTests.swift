@@ -69,6 +69,23 @@ struct AIServiceTests {
         #expect(log.inputTokens == 1000)
     }
 
+    @Test("Eine Anfrage nur mit PDF gilt im Log als Bild gesendet; reiner Text nicht")
+    func pdfCountsAsSentImage() async throws {
+        let fixture = try AIFixture()
+        _ = fixture.addConfiguration()
+        let pdf = DocumentPayload(data: Data(repeating: 7, count: 100))
+        let pdfOnly = ModelRequest(
+            task: .query, system: PromptParts(fixed: "Nur Lernstoff."),
+            messages: [ChatMessage(role: .user, content: [.document(pdf)])])
+        _ = try await fixture.ai.run(pdfOnly)
+        _ = try await fixture.ai.run(AIFixture.request())
+        let logs = try fixture.logs()
+        #expect(logs.count == 2)
+        #expect(logs.contains { $0.sentImage && !$0.sentText }, "PDF: als Bild gezählt, kein Text")
+        #expect(logs.contains { !$0.sentImage && $0.sentText }, "Text: kein Bild")
+        #expect(RequestLogBuilder.promptText(pdfOnly).contains("[PDF, 100 Bytes]"))
+    }
+
     @Test("Kostenlose Anbieter kosten 0, unbekannte Modelle sind unbekannt")
     func freeAndUnknown() async throws {
         let fixture = try AIFixture()

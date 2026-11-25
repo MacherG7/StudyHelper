@@ -91,6 +91,26 @@ struct ClaudeRequestTests {
         #expect(response.metadata.sentContent == [.text, .image])
     }
 
+    @Test("PDF: document-Block mit base64 im Body, im Log nur ein Platzhalter")
+    func document() async throws {
+        let stub = StubTransport([.init(lines: textStream)])
+        let message = ChatMessage(role: .user, content: [
+            .document(DocumentPayload(data: TestSupport.pdfBytes)), .text("Fasse zusammen."),
+        ])
+        let (_, response) = try await TestSupport.collect(makeClaude(stub: stub), TestSupport.request([message]))
+        let expectedBlock = try TestSupport.json(
+            #"{"type":"document","source":{"type":"base64","media_type":"application/pdf","data":"\#(TestSupport.pdfBytes.base64EncodedString())"}}"#)
+        guard case .object(let object) = try TestSupport.body(of: stub.requests[0]), case .array(let messages)? = object["messages"],
+              case .object(let first) = messages[0], case .array(let content)? = first["content"] else {
+            Issue.record("Body ohne Nachrichten"); return
+        }
+        #expect(content[0] == expectedBlock)
+        let raw = response.metadata.rawRequest
+        #expect(!raw.contains(TestSupport.pdfBytes.base64EncodedString()))
+        #expect(raw.contains("<PDF, 10 Bytes>"))
+        #expect(response.metadata.sentContent == [.text, .document])
+    }
+
     @Test("Werkzeuge: tools mit input_schema, tool_choice nur auto; tool_use und tool_result in den Nachrichten")
     func tools() async throws {
         let stub = StubTransport([.init(lines: textStream)])

@@ -1,4 +1,4 @@
-# API-Referenz der KI-Anbieter (Stand 2026-11-24)
+# API-Referenz der KI-Anbieter (Stand 2026-11-25)
 
 Grundlage für Phase 2 (`StudyAI`). Alle Angaben aus der offiziellen Dokumentation (Quellen unten), nicht aus dem
 Gedächtnis. Vor Änderungen an den Anbietern hier nachsehen und die Quellen erneut lesen; Abweichungen hier
@@ -17,6 +17,11 @@ nachtragen (Datum ändern).
   - Seit Version 2026-10-21 führen `temperature`, `top_p`, `top_k` zu 400. Kein Assistant-Prefill bei aktuellen Modellen.
   - Forced `tool_choice` (`any`/`tool`) gibt bei Opus 5.5, Sonnet 5.5, Fable 5.1/5.2 einen 400 → nur `auto`.
   - `stop_reason`: `end_turn`, `max_tokens`, `tool_use`, `pause_turn`, `refusal` (dann `stop_details.category`).
+- PDF als Eingabe: Content-Block `{"type":"document","source":{"type":"base64","media_type":"application/pdf",
+  "data":"<base64>"}}` (weitere Quellen `url`/`file`; optional `cache_control`). Grenzen je Anfrage: 128 MB Nutzlast,
+  600 Seiten (100 bei Kontextfenster unter 1 Mio.). Jede Seite geht als Bild und als extrahierter Text ein (Text
+  ca. 1.500–3.000 Tokens je Seite, Bild bis 1.568 Tokens je Seite); braucht ein Modell mit Bildeingabe. In der App:
+  `MessageContent.document(DocumentPayload)`, nur wo Bilder erlaubt sind (Phase 3f/4).
 - Usage: `input_tokens`, `output_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`,
   `output_tokens_details.thinking_tokens` (nullable).
 - Streaming (SSE): `message_start` (Usage mit `input_tokens`) → je Block `content_block_start`, `content_block_delta`
@@ -42,6 +47,10 @@ nachtragen (Datum ändern).
     Text als `{type: "input_text", text}`), `instructions` (Systemprompt), `max_output_tokens` (inkl. Reasoning;
     bei Erreichen `status: incomplete`), `reasoning: {effort, summary: "auto"}`, `text: {format: {type: "json_schema",
     name, strict: true, schema}}`, `tools: [{type: "function", name, description, parameters, strict}]`, `stream`.
+  - PDF als Eingabe: Content-Part `{type: "input_file", filename: "<name>.pdf", file_data:
+    "data:application/pdf;base64,<base64>"}`, optional `detail: auto|low|high` (von der App nicht gesetzt). Unter 50 MB
+    je Datei und in Summe je Anfrage; braucht ein Modell mit Bildeingabe (extrahierter Text und Seitenbilder werden
+    beide verwendet).
   - `reasoning.effort`: `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` – je Modell nur eine Teilmenge
     (z. B. GPT-6 Astra lehnt `none` ab; GPT-6.1 Sol kein `none`/`minimal`). Keine API-Abfrage dafür.
   - Tool-Aufruf: Output-Item `{type: "function_call", call_id, name, arguments: "<JSON-String>"}`; Antwort als
@@ -61,6 +70,8 @@ nachtragen (Datum ändern).
 
 - `POST {base}/v1/chat/completions`: `messages` (Bilder nur base64-Content-Parts), `tools` (kein `tool_choice` bei
   Ollama), `stream`, `stream_options: {include_usage: true}`, `reasoning_effort` (Ollama auch `reasoning.effort`).
+- Keine PDF-Eingabe: die App lehnt PDFs vor dem Senden ab („Dieses Modell kann keine PDFs verarbeiten.“); ebenso
+  beim Apple-Modell.
 - `GET {base}/v1/models`.
 - Ollama nativ: `GET /api/tags` (`models[] {name, model, size, details}`), `POST /api/show {model}` →
   `capabilities` (z. B. `completion`, `vision`, `thinking`, `tools`) und optional `thinking.values`.
@@ -78,11 +89,11 @@ nachtragen (Datum ändern).
 
 - Anthropic: https://platform.claude.com/docs/en/api/messages/create · …/build-with-claude/streaming ·
   …/api/models/list · …/api/versioning · …/build-with-claude/adaptive-thinking · …/build-with-claude/effort ·
-  …/api/errors · …/about-claude/pricing
+  …/api/errors · …/about-claude/pricing · …/build-with-claude/pdf-support
 - OpenAI: https://developers.openai.com/api/reference/resources/responses/methods/create ·
   …/responses/streaming-events/ · https://developers.openai.com/api/docs/guides/reasoning · …/guides/migrate-to-responses ·
   …/guides/structured-outputs · …/guides/function-calling · …/guides/streaming-responses · …/guides/error-codes ·
-  https://developers.openai.com/api/docs/pricing · https://developers.openai.com/api/reference/resources/models/methods/list
+  …/guides/pdf-files · https://developers.openai.com/api/docs/pricing · https://developers.openai.com/api/reference/resources/models/methods/list
 - Ollama: https://docs.ollama.com/api/openai-compatibility · https://docs.ollama.com/openapi.yaml ·
   https://docs.ollama.com/api/tags · https://docs.ollama.com/capabilities/thinking · https://docs.ollama.com/capabilities/vision
 - Apple: https://developer.apple.com/documentation/foundationmodels (SystemLanguageModel, Availability, contextSize,

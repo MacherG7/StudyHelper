@@ -290,6 +290,82 @@ struct ImageGuardTests {
     #endif
 }
 
+@Suite("PDFs bei Modellen ohne Bildunterstützung")
+struct DocumentGuardTests {
+    private let message = ProviderError.badRequest("Dieses Modell kann keine PDFs verarbeiten.")
+    private let noImages = ProviderCapabilities(supportsImages: false, supportsTools: true, reasoningLevels: [.low])
+    private let withImages = ProviderCapabilities(supportsImages: true, supportsTools: true, reasoningLevels: [.low])
+    private let document = ChatMessage(role: .user, content: [
+        .text("Fasse zusammen."), .document(DocumentPayload(data: TestSupport.pdfBytes)),
+    ])
+
+    @Test("Claude und OpenAI lehnen ohne Bildunterstützung vor dem Senden ab")
+    func rejectedBeforeSending() async {
+        let claudeStub = StubTransport()
+        #expect(await TestSupport.thrownError(makeClaude(capabilities: noImages, stub: claudeStub), TestSupport.request([document])) == message)
+        #expect(claudeStub.requests.isEmpty)
+        let openAIStub = StubTransport()
+        #expect(await TestSupport.thrownError(makeOpenAI(capabilities: noImages, stub: openAIStub), TestSupport.request([document])) == message)
+        #expect(openAIStub.requests.isEmpty)
+    }
+
+    @Test("Mit Bildunterstützung wird gesendet; die Einstellung „kann Bilder“ gilt auch für PDFs")
+    func allowedAndOverride() async {
+        let claudeStub = StubTransport([.init(lines: TestSupport.sse([
+            ("message_start", #"{"type":"message_start","message":{"usage":{"input_tokens":1}}}"#),
+            ("message_delta", #"{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":1}}"#),
+            ("message_stop", #"{"type":"message_stop"}"#),
+        ]))])
+        #expect(await TestSupport.thrownError(makeClaude(capabilities: withImages, stub: claudeStub), TestSupport.request([document])) == nil)
+        #expect(claudeStub.requests.count == 1)
+        // Override "cannot process images" blocks PDFs as well; the check shares `imagesAllowed`.
+        let blocked = StubTransport()
+        let configuration = TestSupport.configuration(.claude, model: "claude-sonnet-5-5", imageOverride: false)
+        let provider = ClaudeProvider(
+            configuration: configuration, keyStore: TestSupport.keyStore(for: configuration), transport: blocked,
+            retry: TestSupport.fastRetry)
+        #expect(await TestSupport.thrownError(provider, TestSupport.request([document])) == message)
+        #expect(blocked.requests.isEmpty)
+    }
+
+    @Test("OpenAI-kompatibel lehnt PDFs immer ab, auch mit Bildunterstützung")
+    func compatible() async {
+        let stub = StubTransport()
+        let configuration = TestSupport.configuration(
+            .openAICompatible, model: "m", baseURL: "http://192.168.1.2:11434", capabilities: withImages)
+        let provider = OpenAICompatibleProvider(
+            configuration: configuration, keyStore: InMemoryKeyStore(), transport: stub, retry: TestSupport.fastRetry)
+        #expect(await TestSupport.thrownError(provider, TestSupport.request([document])) == message)
+        #expect(stub.requests.isEmpty)
+    }
+
+    @Test("Mock lehnt PDFs ohne Bildunterstützung ab und nimmt sie mit Bildunterstützung an")
+    func mock() async {
+        #expect(await TestSupport.thrownError(MockProvider(capabilities: noImages), TestSupport.request([document])) == message)
+        #expect(await TestSupport.thrownError(MockProvider(capabilities: withImages), TestSupport.request([document])) == nil)
+    }
+
+    #if canImport(FoundationModels)
+    @Test("Apple-Anbieter lehnt PDFs ab, noch vor der Verfügbarkeitsprüfung")
+    func apple() async {
+        guard #available(iOS 26.0, macOS 26.0, *) else { return }
+        let provider = AppleFoundationProvider(configuration: TestSupport.configuration(.appleFoundation, model: "apple-foundation"))
+        #expect(await TestSupport.thrownError(provider, TestSupport.request([document])) == message)
+    }
+    #endif
+
+    @Test("DocumentPayload: Standardwerte und tolerantes Dekodieren")
+    func payloadDefaults() throws {
+        let payload = DocumentPayload(data: Data([1]))
+        #expect(payload.mediaType == "application/pdf")
+        #expect(payload.filename == "seite.pdf")
+        let decoded = try JSONDecoder().decode(DocumentPayload.self, from: Data(#"{"data":"AQ=="}"#.utf8))
+        #expect(decoded == payload)
+        let roundTrip = try JSONDecoder().decode(MessageContent.self, from: JSONEncoder().encode(MessageContent.document(payload)))
+        #expect(roundTrip == .document(payload))
+    }
+}
+
 // MARK: - 11. Retry cap
 
 @Suite("Wiederholung mit langem Retry-After")

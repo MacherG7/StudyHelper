@@ -214,8 +214,8 @@ struct TopicReviewView: View {
                 }
                 if let image {
                     let highlights = highlightsCache.value(key: source.id) { source.currentDigitization?.highlights ?? [] }
-                    PageImageView(
-                        image: image, lines: [], highlights: highlights, selectedLineID: .constant(nil), onlyOpen: false,
+                    LayeredPageImageView(
+                        source: source, image: image, lines: [], highlights: highlights, selectedLineID: .constant(nil), onlyOpen: false,
                         markedRect: mark?.sourceID == source.id ? mark?.rect : nil)
                 } else if source.imageData == nil {
                     ContentUnavailableView("Kein Bild", systemImage: "photo", description: Text("Das Bild dieser Seite ist nicht gespeichert."))

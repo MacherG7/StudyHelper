@@ -1,3 +1,4 @@
+import QuickLook
 import StudyCore
 import StudyData
 import SwiftUI
@@ -8,6 +9,8 @@ struct VersionsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.studyRepository) private var repository
     @Environment(ImportCoordinator.self) private var coordinator
+    @Environment(\.digitalPageStore) private var digitalPages
+    @State private var pdfPreview = DigitalPDFPreview()
     @State private var errorMessage: String?
 
     var body: some View {
@@ -18,9 +21,9 @@ struct VersionsView: View {
                     Text("Diese Seite wurde noch nicht erkannt.").foregroundStyle(.secondary)
                 }
                 ForEach(Array(versions), id: \.id) { version in
-                    VersionRow(version: version, canRestore: !coordinator.isRunning) {
-                        restore(version)
-                    }
+                    VersionRow(
+                        version: version, canRestore: !coordinator.isRunning, canShowPDF: !pdfPreview.isBuilding,
+                        onRestore: { restore(version) }, onShowPDF: { showPDF(of: version) })
                 }
             }
             .navigationTitle("Versionen")
@@ -29,6 +32,16 @@ struct VersionsView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } }
             }
             .errorAlert($errorMessage)
+            .errorAlert(Bindable(pdfPreview).errorMessage)
+            .quickLookPreview(Bindable(pdfPreview).url)
+            .onDisappear { pdfPreview.cancel() }
+        }
+    }
+
+    private func showPDF(of version: Digitization) {
+        let base = source.batch.map(DigitalPageStore.baseName(of:)) ?? "Seite"
+        pdfPreview.open(with: digitalPages, base: base, suffix: "Version \(version.versionNumber)") {
+            [try DigitalPageRequest.make(source: source, digitization: version)]
         }
     }
 
@@ -46,7 +59,9 @@ struct VersionsView: View {
 private struct VersionRow: View {
     let version: Digitization
     let canRestore: Bool
+    let canShowPDF: Bool
     let onRestore: () -> Void
+    let onShowPDF: () -> Void
 
     var body: some View {
         let meta = version.metadata
@@ -76,11 +91,17 @@ private struct VersionRow: View {
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
-            if !version.isCurrent {
-                Button("Wiederherstellen", systemImage: "arrow.uturn.backward", action: onRestore)
+            HStack {
+                Button("Als PDF ansehen", systemImage: "doc.text.magnifyingglass", action: onShowPDF)
                     .buttonStyle(.bordered)
-                    .disabled(!canRestore)
-                    .accessibilityIdentifier("restoreVersionButton")
+                    .disabled(!canShowPDF || version.hasUnreadableData)
+                    .accessibilityIdentifier("versionPDFButton")
+                if !version.isCurrent {
+                    Button("Wiederherstellen", systemImage: "arrow.uturn.backward", action: onRestore)
+                        .buttonStyle(.bordered)
+                        .disabled(!canRestore)
+                        .accessibilityIdentifier("restoreVersionButton")
+                }
             }
         }
         .padding(.vertical, 2)

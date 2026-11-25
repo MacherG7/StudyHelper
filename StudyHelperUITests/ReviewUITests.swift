@@ -154,4 +154,95 @@ final class ReviewUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts.matching(identifier: "aktuell").count, 1)
         XCTAssertEqual(app.buttons.matching(identifier: "restoreVersionButton").count, 1)
     }
+
+    // MARK: Digital page (text layer, PDF, copy)
+
+    /// The page image element; its accessibility value is the shown layer.
+    @MainActor
+    private func pageImage(_ app: XCUIApplication) -> XCUIElement {
+        app.images["pageImageContent"].firstMatch
+    }
+
+    @MainActor
+    private func waitForValue(_ expected: String, of element: XCUIElement, timeout: TimeInterval = 20) -> Bool {
+        let predicate = NSPredicate(format: "value == %@", expected)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    /// Waits for the QuickLook preview of a PDF and closes it again (by the identifier of its close button; the label
+    /// is localized and "Fertig" of the versions sheet must not be confused with it).
+    @MainActor
+    private func dismissQuickLook(_ app: XCUIApplication) {
+        let done = app.buttons["QLOverlayDoneButtonAccessibilityIdentifier"]
+        XCTAssertTrue(done.waitForExistence(timeout: 30), "QuickLook wurde nicht angezeigt")
+        done.tap()
+    }
+
+    @MainActor
+    func testLayerPickerSwitchesToTextLayerAndKeepsLineSelection() throws {
+        let app = XCUIApplication()
+        openSeededReview(app)
+        showMode("Bild", in: app)
+
+        let picker = app.segmentedControls["pageLayerPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        XCTAssertTrue(picker.buttons["Handschrift"].exists && picker.buttons["Textebene"].exists)
+        let image = pageImage(app)
+        XCTAssertTrue(image.waitForExistence(timeout: 5))
+        XCTAssertEqual(image.value as? String, "Handschrift")
+
+        picker.buttons["Textebene"].tap()
+        XCTAssertTrue(waitForValue("Textebene", of: image), "Value: \(String(describing: image.value))")
+
+        // Tapping a line still selects it, and the line actions appear.
+        let imageLine = app.buttons["imageLine-2"]
+        XCTAssertTrue(imageLine.waitForExistence(timeout: 5))
+        imageLine.tap()
+        XCTAssertTrue(imageLine.isSelected)
+        XCTAssertTrue(app.buttons["copyLineButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["correctLineButton"].exists)
+
+        // Back to the handwriting; the selection stays.
+        picker.buttons["Handschrift"].tap()
+        XCTAssertTrue(waitForValue("Handschrift", of: image))
+        XCTAssertTrue(app.buttons["imageLine-2"].isSelected)
+    }
+
+    @MainActor
+    func testCopyButtonOnlyShowsForASelectedLine() throws {
+        let app = XCUIApplication()
+        openSeededReview(app)
+        showMode("Text", in: app)
+        XCTAssertFalse(app.buttons["copyLineButton"].exists)
+        let line = app.buttons["reviewLine-1"]
+        XCTAssertTrue(line.waitForExistence(timeout: 5))
+        line.tap()
+        XCTAssertTrue(app.buttons["copyLineButton"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["copyLineButton"].label, "Text kopieren")
+    }
+
+    @MainActor
+    func testDigitalPDFOpensInQuickLook() throws {
+        let app = XCUIApplication()
+        openSeededReview(app)
+        let button = app.buttons["digitalPDFButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        XCTAssertEqual(button.label, "Als PDF ansehen")
+        button.tap()
+        dismissQuickLook(app)
+        XCTAssertTrue(app.buttons["digitalPDFButton"].waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testVersionOffersItsOwnPDF() throws {
+        let app = XCUIApplication()
+        openSeededReview(app, extraArguments: ["-uiTestSeedVersions"])
+        app.buttons["versionsButton"].tap()
+        XCTAssertTrue(app.staticTexts["Version 2"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons.matching(identifier: "versionPDFButton").count, 2)
+        app.buttons.matching(identifier: "versionPDFButton").element(boundBy: 1).tap()
+        dismissQuickLook(app)
+        XCTAssertTrue(app.staticTexts["Version 2"].waitForExistence(timeout: 10))
+    }
 }

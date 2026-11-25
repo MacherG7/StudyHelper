@@ -146,11 +146,11 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 
 | ID | Prüfung | Erwartung | Ergebnis |
 |---|---|---|---|
-| MT-3.4 | Echten Goodnotes-Export importieren, „Digitale Seite“ öffnen | Sieht aus wie in Goodnotes (Handschrift, Skizzen, Bilder, Textmarker, Formen); kein Text der fehlerhaften Goodnotes-Textebene | |
-| MT-3.5 | In der digitalen Seite ein Wort suchen, eine Zeile markieren und in Notizen einfügen | Treffer an der richtigen Stelle; eingefügter Text entspricht dem korrigierten Text inkl. Umlauten | |
-| MT-3.6 | Eine Zeile korrigieren, dann die digitale Seite erneut öffnen | Korrektur ist enthalten, ohne neue Texterkennung | |
-| MT-3.7 | Foto einer Seite: digitale Seite auf iPhone und iPad (Querformat), Wort antippen | Markierung trifft das Wort; Sprung zur Zeile im Text | |
-| MT-3.8 | Import mit vielen Seiten (z. B. 30) | Digitale Seite erscheint ohne lange Wartezeit, kein Speicherproblem | |
+| MT-3.4 | Echten Goodnotes-Export importieren, Prüfansicht → „Als PDF ansehen“ und Umschalter „Textebene“ | Sieht aus wie in Goodnotes (Handschrift, Skizzen, Bilder, Textmarker, Formen); kein Text der fehlerhaften Goodnotes-Textebene | |
+| MT-3.5 | In der PDF-Vorschau ein Wort suchen, eine Zeile markieren und in Notizen einfügen | Treffer an der richtigen Stelle; eingefügter Text entspricht dem korrigierten Text inkl. Umlauten | |
+| MT-3.6 | Eine Zeile korrigieren, dann „Textebene“ und „Als PDF ansehen“ erneut öffnen | Korrektur ist enthalten, ohne neue Texterkennung | |
+| MT-3.7 | Foto einer Seite im Modus „Textebene“ auf iPhone und iPad (Querformat), Zeile antippen | Markierung trifft die Zeile, Sprung zur Zeile im Text; Text gut lesbar (eine Schriftgröße pro Zeile, nicht verzerrt) | |
+| MT-3.8 | Import mit vielen Seiten (z. B. 30): schnell durch die Seiten blättern im Modus „Textebene“, dann „Als PDF ansehen“ | Aktuelle Seite erscheint ohne lange Wartezeit, kein Speicherproblem, App bleibt flüssig | |
 | MT-3.14 | Echte Goodnotes-Seite mit Skizze und Beschriftung: zwischen „Handschrift“ und „Text“ wechseln | Im Modus „Text“ ist die Handschrift weg, Skizze, Pfeile, Bilder und Textmarker bleiben; Text steht lesbar an der richtigen Stelle | |
 | MT-3.15 | Foto einer handschriftlichen Seite im Modus „Text“ | Handschrift sauber überdeckt (keine Reste, keine Flecken auf kariertem/liniertem Papier notieren) | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |

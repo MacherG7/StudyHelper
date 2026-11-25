@@ -52,6 +52,8 @@ enum ProviderJSON {
 
     static func placeholder(forImageBytes count: Int) -> String { "<Bild, \(count) Bytes>" }
 
+    static func placeholder(forPDFBytes count: Int) -> String { "<PDF, \(count) Bytes>" }
+
     /// A parsed JSON dictionary (from `JSONSerialization`) as `JSONValue`; nil if it cannot be converted.
     static func jsonValue(_ object: Any) -> JSONValue? {
         guard JSONSerialization.isValidJSONObject(object),
@@ -64,10 +66,17 @@ enum ProviderJSON {
 
 enum RequestGuard {
     static let imagesUnsupported = "Dieses Modell kann keine Bilder verarbeiten."
+    static let documentsUnsupported = "Dieses Modell kann keine PDFs verarbeiten."
 
     /// Rejects a request with images before anything is sent when the model cannot process images.
     static func checkImages(_ request: ModelRequest, allowed: Bool) throws {
         if !allowed, request.sentContent.contains(.image) { throw ProviderError.badRequest(imagesUnsupported) }
+    }
+
+    /// Rejects a request with PDF documents before anything is sent when the provider or model cannot process them
+    /// (documents are processed as text plus page images, so they need the same capability as images).
+    static func checkDocuments(_ request: ModelRequest, allowed: Bool) throws {
+        if !allowed, request.sentContent.contains(.document) { throw ProviderError.badRequest(documentsUnsupported) }
     }
 }
 

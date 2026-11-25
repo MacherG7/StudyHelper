@@ -92,6 +92,8 @@ final class AIProvidersUITests: XCTestCase {
         // Developer-Modus einschalten, Log öffnen.
         let developer = app.switches["developerModeToggle"]
         reveal(developer, in: app)
+        // The log stays hidden until the developer mode is on (formerly a separate test with its own launch).
+        XCTAssertFalse(app.buttons["requestLogLink"].exists, "Log darf ohne Developer-Modus nicht erscheinen")
         developer.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         reveal(app.buttons["requestLogLink"], in: app)
         app.buttons["requestLogLink"].tap()
@@ -111,18 +113,6 @@ final class AIProvidersUITests: XCTestCase {
         app.buttons["deleteLogsButton"].tap()
         app.buttons["confirmDeleteLogsButton"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Noch keine Anfragen"].waitForExistence(timeout: 5))
-    }
-
-    @MainActor
-    func testDeveloperModeHidesLogUntilEnabled() throws {
-        let app = launch()
-        app.buttons["settingsButton"].tap()
-        let developer = app.switches["developerModeToggle"]
-        reveal(developer, in: app)
-        XCTAssertFalse(app.buttons["requestLogLink"].exists)
-        developer.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        XCTAssertTrue(app.buttons["requestLogLink"].waitForExistence(timeout: 5))
-        reveal(app.buttons["priceTableLink"], in: app)
     }
 
     @MainActor

@@ -264,8 +264,8 @@ struct ReviewPageView: View {
     @ViewBuilder
     private func imagePane(lines: [RecognizedLine], highlights: [RecognizedHighlight]) -> some View {
         if let pageImage {
-            PageImageView(
-                image: pageImage, lines: lines, highlights: highlights,
+            LayeredPageImageView(
+                source: source, image: pageImage, lines: lines, highlights: highlights,
                 selectedLineID: $selectedLineID, onlyOpen: onlyOpen)
         } else {
             ContentUnavailableView("Kein Bild", systemImage: "photo", description: Text("Das Bild dieser Seite ist nicht gespeichert."))
@@ -293,6 +293,10 @@ struct ReviewPageView: View {
                         .font(.callout)
                         .lineLimit(2)
                     Spacer(minLength: 0)
+                    Button("Text kopieren", systemImage: "doc.on.doc") { UIPasteboard.general.string = line.text }
+                        .labelStyle(.iconOnly)
+                        .disabled(line.text.isEmpty)
+                        .accessibilityIdentifier("copyLineButton")
                     Button("Auswahl aufheben", systemImage: "xmark.circle.fill") { selectedLineID = nil }
                         .labelStyle(.iconOnly)
                         .foregroundStyle(.secondary)

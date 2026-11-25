@@ -78,6 +78,16 @@ struct MockProviderTests {
         #expect(response.metadata.sentContent == [.text, .image])
     }
 
+    @Test("PDFs erscheinen im rawRequest nur als Platzhalter")
+    func documentsRedacted() async throws {
+        let document = DocumentPayload(data: Data(repeating: 1, count: 4321))
+        let messages = [ChatMessage(role: .user, content: [.text("Fasse zusammen."), .document(document)])]
+        let response = try await MockProvider().respond(to: request(messages: messages))
+        #expect(response.metadata.rawRequest.contains("<PDF, 4321 Bytes>"))
+        #expect(!response.metadata.rawRequest.contains(document.data.base64EncodedString()))
+        #expect(response.metadata.sentContent == [.text, .document])
+    }
+
     @Test("Fehler vor dem Stream")
     func errorBeforeStream() async {
         let provider = MockProvider(script: MockScript(error: .invalidAPIKey))

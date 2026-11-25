@@ -12,10 +12,18 @@ final class AppServices {
     let repository: StudyRepository
     let incomingFiles: IncomingFiles
     let ai: AIService
+    /// Builds the digital page (text layer image, PDF) and caches the results in `Caches/DigitalPages`.
+    let digitalPages: DigitalPageStore
 
-    /// - Parameter makeAI: nil builds the production service (settings in UserDefaults, keys in the Keychain).
-    init(container: ModelContainer, makeAI: ((StudyRepository) -> AIService)? = nil) {
+    /// - Parameters:
+    ///   - makeAI: nil builds the production service (settings in UserDefaults, keys in the Keychain).
+    ///   - digitalPages: nil uses the cache folder in `Caches`.
+    init(
+        container: ModelContainer, makeAI: ((StudyRepository) -> AIService)? = nil,
+        digitalPages: DigitalPageStore? = nil
+    ) {
         self.container = container
+        self.digitalPages = digitalPages ?? DigitalPageStore()
         let repository = StudyRepository(container: container)
         self.repository = repository
         self.incomingFiles = IncomingFiles()
@@ -52,7 +60,12 @@ enum AppEnvironment {
             let mockAI = arguments.contains("-uiTestMockAI")
             let services = AppServices(
                 container: container,
-                makeAI: inMemory ? { AppServices.makeUITestAI(repository: $0, mockAI: mockAI) } : nil)
+                makeAI: inMemory ? { AppServices.makeUITestAI(repository: $0, mockAI: mockAI) } : nil,
+                // UI tests build into a throw-away folder: no dependence on files of earlier runs.
+                digitalPages: inMemory ? DigitalPageStore(
+                    directory: FileManager.default.temporaryDirectory
+                        .appendingPathComponent("DigitalPages-\(UUID().uuidString)", isDirectory: true),
+                    pruneAtStart: false) : nil)
             if inMemory, arguments.contains("-uiTestSeed") {
                 try UITestSeeder.seed(
                     services.repository, withVersions: arguments.contains("-uiTestSeedVersions"),

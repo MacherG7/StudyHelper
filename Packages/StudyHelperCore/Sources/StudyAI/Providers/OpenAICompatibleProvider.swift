@@ -90,6 +90,8 @@ public struct OpenAICompatibleProvider: ModelProvider, ModelCatalog {
                         ? ProviderJSON.placeholder(forImageBytes: image.data.count)
                         : "data:\(image.mediaType);base64,\(image.data.base64EncodedString())"
                     parts.append(["type": "image_url", "image_url": ["url": .string(url)]])
+                case .document:
+                    continue  // rejected before sending: Chat Completions has no PDF input
                 case .toolCall(let call):
                     calls.append([
                         "id": .string(call.id), "type": "function",
@@ -144,6 +146,7 @@ public struct OpenAICompatibleProvider: ModelProvider, ModelCatalog {
         let headerApplier: @Sendable (inout URLRequest, String?) -> Void = { self.applyHeaders(&$0, key: $1) }
         let imagesAllowed = ProviderFactory.imagesAllowed(by: configuration)
         return runner.run(for: request, reasoningSent: plan.sent, accumulator: ChatCompletionsStreamState()) {
+            try RequestGuard.checkDocuments(request, allowed: false)
             try RequestGuard.checkImages(request, allowed: imagesAllowed)
             var urlRequest = URLRequest(url: try ProviderEndpoint.url(base: base, path: "/v1/chat/completions"))
             urlRequest.httpMethod = "POST"

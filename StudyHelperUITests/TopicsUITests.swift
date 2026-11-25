@@ -102,7 +102,7 @@ final class TopicsUITests: XCTestCase {
     }
 
     @MainActor
-    func testTappingAnEntryMarksItsPlaceInThePageImage() throws {
+    func testTappingAnEntryMarksItsPlaceInThePageImageAndEditingMakesItYourOwn() throws {
         let app = XCUIApplication()
         openSubject(app, withTopics: true)
         let row = app.buttons["topic-Fotosynthese"]
@@ -146,10 +146,28 @@ final class TopicsUITests: XCTestCase {
         XCTAssertFalse(entry.isSelected)
         XCTAssertTrue(NSPredicate(format: "exists == false").evaluate(with: element(app, "sourceMark"))
             || !element(app, "sourceMark").waitForExistence(timeout: 1))
+
+        // Same launch: editing the entry in the editor makes it the user's own.
+        showPane("Felder", in: app)
+        showPane("Bearbeiten", in: app)
+        let editorRow = app.buttons["entryRow-keyStatement-0"]
+        XCTAssertTrue(editorRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(editorRow.label.contains("Original aus dem Lernstoff"), "Label: \(editorRow.label)")
+        editorRow.tap()
+        let field = app.textFields["entryTextField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        replaceText(field, with: "Ort: Thylakoidmembran")
+        app.buttons["saveEntryButton"].tap()
+
+        let edited = app.buttons["entryRow-keyStatement-0"]
+        XCTAssertTrue(edited.waitForExistence(timeout: 5))
+        XCTAssertTrue(edited.label.contains("Kernaussage: Ort: Thylakoidmembran"), "Label: \(edited.label)")
+        XCTAssertTrue(edited.label.contains("von dir eingegeben"), "Label: \(edited.label)")
     }
 
+    /// Rename, then delete (cancel first) in one launch: both only need the seeded topic list.
     @MainActor
-    func testRenameTopic() throws {
+    func testRenameAndDeleteTopic() throws {
         let app = XCUIApplication()
         openSubject(app, withTopics: true)
         let row = app.buttons["topic-Fotosynthese"]
@@ -170,33 +188,25 @@ final class TopicsUITests: XCTestCase {
 
         XCTAssertTrue(app.buttons["topic-Photosynthese"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["topic-Fotosynthese"].exists)
-    }
 
-    @MainActor
-    func testDeleteTopicAsksForConfirmation() throws {
-        let app = XCUIApplication()
-        openSubject(app, withTopics: true)
-        let row = app.buttons["topic-Fotosynthese"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
-        row.swipeLeft()
+        // Deleting asks for confirmation; cancelling keeps the topic.
+        app.buttons["topic-Photosynthese"].swipeLeft()
         app.buttons["Löschen"].firstMatch.tap()
-
-        // Cancelling keeps the topic.
         let alert = app.alerts["Thema löschen?"]
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
         alert.buttons["Abbrechen"].tap()
-        XCTAssertTrue(app.buttons["topic-Fotosynthese"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["topic-Photosynthese"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["topicsEmptyHint"].exists)
 
         // Delete for real (the row may still show its swipe buttons after cancelling).
         let delete = app.buttons["Löschen"].firstMatch
-        if !delete.exists { app.buttons["topic-Fotosynthese"].swipeLeft() }
+        if !delete.exists { app.buttons["topic-Photosynthese"].swipeLeft() }
         XCTAssertTrue(delete.waitForExistence(timeout: 5))
         delete.tap()
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
         app.buttons["confirmDeleteTopicButton"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["topicsEmptyHint"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["topic-Fotosynthese"].exists)
+        XCTAssertFalse(app.buttons["topic-Photosynthese"].exists)
     }
 
     /// Replaces the text of a text field one character at a time (reliable, no selection menu).
@@ -281,28 +291,6 @@ final class TopicsUITests: XCTestCase {
         XCTAssertTrue(after.waitForExistence(timeout: 5))
         XCTAssertTrue(after.label.contains("Ort: Chloroplasten"), "Label: \(after.label)")
         XCTAssertFalse(after.label.contains("Quelle geändert"), "Label: \(after.label)")
-    }
-
-    @MainActor
-    func testEditingAnEntryMakesItYourOwn() throws {
-        let app = XCUIApplication()
-        openSubject(app, withTopics: true)
-        app.buttons["topic-Fotosynthese"].tap()
-        showPane("Felder", in: app)
-        showPane("Bearbeiten", in: app)
-        let row = app.buttons["entryRow-keyStatement-0"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
-        XCTAssertTrue(row.label.contains("Original aus dem Lernstoff"), "Label: \(row.label)")
-        row.tap()
-        let field = app.textFields["entryTextField"]
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
-        replaceText(field, with: "Ort: Thylakoidmembran")
-        app.buttons["saveEntryButton"].tap()
-
-        let edited = app.buttons["entryRow-keyStatement-0"]
-        XCTAssertTrue(edited.waitForExistence(timeout: 5))
-        XCTAssertTrue(edited.label.contains("Kernaussage: Ort: Thylakoidmembran"), "Label: \(edited.label)")
-        XCTAssertTrue(edited.label.contains("von dir eingegeben"), "Label: \(edited.label)")
     }
 
     @MainActor

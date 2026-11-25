@@ -65,6 +65,25 @@ struct OpenAIRequestTests {
         #expect(!response.metadata.rawResponse.contains(TestSupport.secretKey))
     }
 
+    @Test("PDF als input_file mit Dateiname und Data-URL; Log ohne PDF-Bytes")
+    func document() async throws {
+        let stub = StubTransport([.init(lines: textStream)])
+        let message = ChatMessage(role: .user, content: [
+            .text("Fasse zusammen."), .document(DocumentPayload(data: TestSupport.pdfBytes, filename: "skript.pdf")),
+        ])
+        let (_, response) = try await TestSupport.collect(makeOpenAI(stub: stub), TestSupport.request([message]))
+        let dataURL = "data:application/pdf;base64,\(TestSupport.pdfBytes.base64EncodedString())"
+        let expected = try TestSupport.json(#"""
+        {"model":"gpt-5.5","stream":true,"max_output_tokens":32000,"instructions":"Regel\n\nStil",
+         "input":[{"role":"user","content":[{"type":"input_text","text":"Fasse zusammen."},{"type":"input_file","filename":"skript.pdf","file_data":"\#(dataURL)"}]}]}
+        """#)
+        #expect(try TestSupport.body(of: stub.requests[0]) == expected)
+        let raw = response.metadata.rawRequest
+        #expect(!raw.contains(TestSupport.pdfBytes.base64EncodedString()))
+        #expect(raw.contains("<PDF, 10 Bytes>"))
+        #expect(response.metadata.sentContent == [.text, .document])
+    }
+
     @Test("Werkzeuge flach mit strict false; Aufrufe und Ergebnisse als function_call(_output)-Items")
     func tools() async throws {
         let stub = StubTransport([.init(lines: textStream)])

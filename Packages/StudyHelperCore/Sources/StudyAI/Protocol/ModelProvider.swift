@@ -17,6 +17,10 @@ public enum ProviderKind: String, Codable, Sendable, CaseIterable, Hashable {
 
     /// Providers that cost nothing per request (prices shown as 0 €).
     public var isFree: Bool { self == .mock || self == .openAICompatible || self == .appleFoundation }
+
+    /// Whether this kind of provider can take a PDF as input at all (Claude, OpenAI; the mock mirrors them). The
+    /// OpenAI-compatible servers and the on-device model cannot. A model that accepts PDFs also needs image support.
+    public var acceptsDocuments: Bool { self == .mock || self == .claude || self == .openAI }
 }
 
 /// Reasoning depth, ordered from none to most. Each provider maps it to its own parameter; only the levels a model
@@ -154,6 +158,31 @@ public struct ImagePayload: Codable, Sendable, Hashable {
     }
 }
 
+/// A document (PDF) sent to the model as input. Only models that accept images can process it (each page is
+/// sent as text and as image); the bytes never appear in logs.
+public struct DocumentPayload: Codable, Sendable, Hashable {
+    public var data: Data
+    /// e.g. "application/pdf".
+    public var mediaType: String
+    /// Name shown to the model / required by OpenAI's `input_file`.
+    public var filename: String
+
+    public init(data: Data, mediaType: String = "application/pdf", filename: String = "seite.pdf") {
+        self.data = data
+        self.mediaType = mediaType
+        self.filename = filename
+    }
+
+    private enum CodingKeys: String, CodingKey { case data, mediaType, filename }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        data = try container.decode(Data.self, forKey: .data)
+        mediaType = try container.decodeIfPresent(String.self, forKey: .mediaType) ?? "application/pdf"
+        filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? "seite.pdf"
+    }
+}
+
 /// A function the model may call (tool use / function calling).
 public struct ToolDefinition: Codable, Sendable, Hashable {
     public var name: String
@@ -210,6 +239,8 @@ public struct ReasoningBlock: Codable, Sendable, Hashable {
 public enum MessageContent: Codable, Sendable, Hashable {
     case text(String)
     case image(ImagePayload)
+    /// A PDF document (see `DocumentPayload`).
+    case document(DocumentPayload)
     case toolCall(ToolCall)
     case toolResult(ToolResult)
     /// Provider reasoning data to send back (see `ReasoningBlock`); never shown as text.
@@ -276,13 +307,14 @@ public struct ModelRequest: Codable, Sendable, Hashable {
         self.learningUnitIDsInContext = learningUnitIDsInContext
     }
 
-    /// Whether images or text were sent (developer mode: "Bild, gespeicherter Text oder beides").
+    /// Whether images, documents or text were sent (developer mode: "Bild, gespeicherter Text oder beides").
     public var sentContent: Set<SentContent> {
         var result: Set<SentContent> = []
         for message in messages {
             for part in message.content {
                 switch part {
                 case .image: result.insert(.image)
+                case .document: result.insert(.document)
                 case .text, .toolResult: result.insert(.text)
                 case .toolCall, .reasoning: break
                 }
@@ -292,7 +324,7 @@ public struct ModelRequest: Codable, Sendable, Hashable {
     }
 }
 
-public enum SentContent: String, Codable, Sendable, Hashable { case text, image }
+public enum SentContent: String, Codable, Sendable, Hashable { case text, image, document }
 
 // MARK: - Response
 
@@ -520,6 +552,11 @@ public protocol ModelProvider: Sendable {
 }
 
 extension ModelProvider {
+    /// Whether requests may contain `.document` parts: the provider kind accepts PDFs and the model processes images
+    /// (a PDF is read as text plus page images). Claude and OpenAI follow their image support, OpenAI-compatible
+    /// and Apple never, the mock follows its configured image support. Use `PageContent.parts` to build the content.
+    public var supportsDocuments: Bool { kind.acceptsDocuments && capabilities.supportsImages }
+
     public func respond(to request: ModelRequest) async throws -> ModelResponse {
         for try await event in stream(request) {
             if case .finished(let response) = event { return response }
