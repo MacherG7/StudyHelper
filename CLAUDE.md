@@ -76,6 +76,11 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
 - API-Parameter (Modelle, Reasoning, Usage, Streaming) aus der aktuellen offiziellen
   Doku von Anthropic und OpenAI, nicht aus dem Gedächtnis.
 - Keine E-Mail-Adressen in Dateien, Commits, Tags oder Releases (auch nicht die des Entwicklers, D-030).
+- Agenten: Aufgaben, die nicht voneinander abhängen, laufen **parallel**, jede in einem eigenen Git-Worktree
+  (eigene Builds, kein fremder halbfertiger Code, kein gemeinsamer Simulator) mit getrennten Dateien. Nur was auf dem
+  Ergebnis einer anderen Aufgabe aufbaut, läuft danach. Agenten committen nicht; die Hauptsitzung führt zusammen, testet
+  alles gemeinsam (`scripts/test.sh --ui`) und committet. Danach keine übrigen Prozesse oder gebooteten Simulatoren
+  (`docs/PLAN.md`, Abschnitt 7).
 - Neue Entscheidungen in `docs/DECISIONS.md`, neue Geräte-Prüfpunkte in `docs/MANUAL_TESTS.md`.
 - App-Version A.B.C.D (`project.yml`, Anzeige in den Einstellungen): vor **jedem** Commit
   `scripts/bump-version.sh`. Es erhöht D nur, wenn der Commit die App ändert (Dateien der .ipa); reine Doku-,
