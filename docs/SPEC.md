@@ -214,6 +214,21 @@ Prüfen und korrigieren:
   Vorher anzeigen, dass manuelle Korrekturen dabei erhalten bleiben, und den
   alten Stand als Version behalten, damit man ihn wiederherstellen kann.
 
+Digitale Seite (PDF mit Textebene):
+- Aus jeder Seite erzeugt die App eine "digitale Seite": ein PDF in
+  Originalgröße, das genau wie das Original aussieht (Handschrift, Skizzen,
+  Bilder, Textmarker, Formen) und darunter unsichtbar den erkannten Text an
+  seiner Position enthält, so dass man darin suchen, markieren und kopieren
+  kann. Eine fehlerhafte fremde Textebene (z. B. aus dem reduzierten
+  Goodnotes-PDF) wird nicht übernommen.
+- Die Textebene kommt aus dem gespeicherten Originaltext inklusive aller
+  Korrekturen. Die digitale Seite ist nie Quelle der Wahrheit: Sie wird nach
+  jeder Korrektur, Neuerkennung oder Wiederherstellung neu erzeugt.
+- Sie ist ein eigener Ansichtsmodus in der App (Tippen auf ein Wort springt
+  zur Zeile im Text und umgekehrt) und die Seitenvorlage für KI-Aufgaben, die
+  die Seite selbst brauchen: PDF-fähige Modelle bekommen das PDF, andere
+  bildfähige Modelle das Bild und den gespeicherten Text.
+
 Hervorhebungen:
 Unterstrichene, fett geschriebene, farbige, mit Textmarker markierte, umrandete
 oder eingekreiste Wörter und Sätze sind meist Überschriften, Fachbegriffe oder
@@ -612,9 +627,10 @@ Logs werden in SwiftData gespeichert.
 2. Anbieter-Protokoll inkl. Metadaten, Reasoning und Streaming, Mock-Modell,
    Apple Foundation Model, OpenAI-kompatible Anbieter, Claude- und OpenAI-API
    mit Modell- und Reasoning-Auswahl, Speichern der Anfrage-Logs
-3. Hervorhebungen: KI-Transkription mit bildfähigen Modellen, Bildanalyse als
-   Fallback, Farblegende pro Fach, Bearbeiten der Hervorhebungen,
-   Versionierung bei erneuter Erkennung
+3. Digitale Seite (PDF mit unsichtbarer Textebene, Ansichtsmodus, Seitenvorlage
+   für die KI), Hervorhebungen: KI-Transkription mit bildfähigen Modellen,
+   Bildanalyse als Fallback, Farblegende pro Fach, Darstellung und Bearbeiten
+   der Hervorhebungen, Neuerkennung mit anderem Modell
 4. System-Prompts (Standardtexte, feste Grundregel, Platzhalter, Editor,
    Fach-Zusätze, Export/Import), sortierte Fassung inkl. Vollständigkeits-
    prüfung und Ansicht, Strukturierung per KI und gemischt (Wege b
@@ -625,9 +641,9 @@ Logs werden in SwiftData gespeichert.
    Vorab-Erzeugung von Fragen, Prompt-Caching
 6. Tipp-System mit Stufen, Chat-Modus mit Tool-Zugriff auf den Lernstoff
 7. Leitner-System inkl. Verknüpfung mit Tipps, Auswertung, Fortschrittsübersicht
-8. Farbschemata, Barrierefreiheit, Developer-Modus (Ansichten, Preistabelle,
-   Vergleich der Digitalisierung, Qualitätstest der Texterkennung, Export),
-   Feinschliff
+8. Farbschemata, Barrierefreiheit, restlicher Developer-Modus (Vergleich der
+   Digitalisierung, Qualitätstest der Texterkennung, Statistik pro Modell),
+   Verbesserung der Texterkennung, Feinschliff
 9. Hugging-Face-Download und lokale Ausführung auf dem Gerät
 
 ## Ablauf

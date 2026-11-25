@@ -59,7 +59,7 @@ Regel: Abhängigkeiten zeigen nur nach unten zu `StudyCore`. `StudyCore` kennt w
 | **`StudyCore`** (Package) | Nur Foundation: Wortabgleich sortierte Fassung, kompaktes Kontextformat (Markdown mit IDs), Kontext-Zusammenstellung mit Token-Budget, Leitner, Prompt-Komposition (feste Teile, Platzhalter), robustes JSON-Parsing, Quellenprüfung, Preisberechnung | Gerüst vorhanden (Phase 0), Inhalte ab Phase 1–7 |
 | **`TestFixtures`** (Package, nur Tests) | PDF-Writer, synthetische Goodnotes-PDFs, Ground-Truth-JSON; Executable `make-fixtures` | vorhanden (Phase 0) |
 | **`StudyData`** (Package) | SwiftData-Modelle und Repositories (Ort final in Phase 1, siehe DECISIONS) | geplant, Phase 1 |
-| **`StudyImport`** (Package) | PDFKit/CGPDF-Zugriff, Goodnotes-Parser (Ink-/FreeText-/Stamp-Annotationen, Format-Erkennung, Zuordnung), Vision-Texterkennung, eingebetteter PDF-Text, Bildanalyse für Hervorhebungen | geplant, Phase 1 (Bildanalyse Phase 3) |
+| **`StudyImport`** (Package) | PDFKit/CGPDF-Zugriff, Goodnotes-Parser (Ink-/FreeText-/Stamp-Annotationen, Format-Erkennung, Zuordnung), Vision-Texterkennung, eingebetteter PDF-Text, digitale Seite (PDF mit Textebene), Bildanalyse für Hervorhebungen | vorhanden (Phase 1; digitale Seite und Bildanalyse Phase 3) |
 | **`StudyAI`** (Package) | Anbieter-Protokoll, Mock-Modell, Claude, OpenAI, OpenAI-kompatibel, Apple Foundation Models (`#available(iOS 26, *)`), später MLX; Keychain-Speicher | geplant, ab Phase 2 (MLX Phase 9) |
 
 `StudyCore`-Targets sind plattformneutral und laufen mit `swift test` direkt auf dem Mac (macOS 15 als zusätzliche Package-Plattform, siehe DECISIONS).
@@ -76,6 +76,8 @@ Import ──► Quelle (Bild / PDF-Seite)
           · Hervorhebungen (Art, Farbe, Position, Sicherheit, Bedeutung)
           · Methode (Vision / eingebetteter Text / KI-Modell), Vision-Revision, iOS, Gerät, Zeitpunkt
           · Versionen, Nutzerkorrekturen
+              ├──► Digitale Seite (PDF: Originalseite + unsichtbare Textebene; abgeleitet, immer neu erzeugbar;
+              │    Ansichtsmodus und Seitenvorlage für KI-Aufgaben, D-037)
               ▼
         Sortierte Fassung (KI; Abschnitte mit Verweisen auf Originalstellen; Wortabgleich)
               ▼

@@ -142,10 +142,15 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 
 ---
 
-## Phase 3 – Hervorhebungen (Platzhalter)
+## Phase 3 – Digitale Seite und Hervorhebungen (Platzhalter)
 
 | ID | Prüfung | Erwartung | Ergebnis |
 |---|---|---|---|
+| MT-3.4 | Echten Goodnotes-Export importieren, „Digitale Seite“ öffnen | Sieht aus wie in Goodnotes (Handschrift, Skizzen, Bilder, Textmarker, Formen); kein Text der fehlerhaften Goodnotes-Textebene | |
+| MT-3.5 | In der digitalen Seite ein Wort suchen, eine Zeile markieren und in Notizen einfügen | Treffer an der richtigen Stelle; eingefügter Text entspricht dem korrigierten Text inkl. Umlauten | |
+| MT-3.6 | Eine Zeile korrigieren, dann die digitale Seite erneut öffnen | Korrektur ist enthalten, ohne neue Texterkennung | |
+| MT-3.7 | Foto einer Seite: digitale Seite auf iPhone und iPad (Querformat), Wort antippen | Markierung trifft das Wort; Sprung zur Zeile im Text | |
+| MT-3.8 | Import mit vielen Seiten (z. B. 30) | Digitale Seite erscheint ohne lange Wartezeit, kein Speicherproblem | |
 | MT-3.1 | Echtes Foto einer Buchseite mit Unterstreichung, Textmarker, farbiger Schrift | Bildanalyse-Fallback erkennt Hervorhebungen, als „unsicher“ markiert | |
 | MT-3.2 | Handschrift-Foto mit bildfähigem KI-Modell transkribieren | Hervorhebungen und Struktur plausibel; Qualität im Vergleich zu Vision notieren | |
 | MT-3.3 | Overlay der Hervorhebungen auf dem Originalbild | Positionen stimmen auf Foto und auf iPad-Querformat | |

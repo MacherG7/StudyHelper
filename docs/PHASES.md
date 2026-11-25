@@ -5,14 +5,14 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 | Phase | Status | Commit |
 |---|---|---|
 | 0 Gerüst, Test-PDFs, Skripte, Doku | fertig | 27235ba |
-| 1 Datenmodell, Import, Digitalisierung, manuelle Strukturierung | fertig (Geräteprüfungen offen) | b8bf773, b3622fd, 1c |
-| 2 Anbieter-Protokoll und Anbieter | offen | – |
-| 3 Hervorhebungen | offen | – |
+| 1 Datenmodell, Import, Digitalisierung, manuelle Strukturierung | fertig (Geräteprüfungen offen) | 08d8c3b, 0ee474e, 6208cff |
+| 2 Anbieter-Protokoll und Anbieter | fertig (Geräteprüfungen offen) | 25be96b, d8d353c, dfaf09d, 2f864dc |
+| 3 Digitale Seite (PDF mit Textebene) und Hervorhebungen | offen | – |
 | 4 System-Prompts, sortierte Fassung, KI-Strukturierung, Lerneinheiten | offen | – |
 | 5 Multiple Choice, Freitext, Karteikarten, Vorrat, Caching | offen | – |
 | 6 Tipps und Chat-Modus | offen | – |
 | 7 Leitner, Auswertung, Fortschritt | offen | – |
-| 8 Design, Barrierefreiheit, Developer-Modus | offen | – |
+| 8 Design, Barrierefreiheit, Developer-Modus, Erkennung verbessern | offen | – |
 | 9 Hugging-Face-Download, lokale Ausführung | offen | – |
 
 ---
@@ -107,25 +107,48 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 
 ---
 
-## Phase 3 – Hervorhebungen
+## Phase 3 – Digitale Seite und Hervorhebungen
 
-**Ziel:** Hervorhebungen zuverlässig erkennen, darstellen und bearbeiten; erneute Erkennung versioniert.
+**Ziel:** Jede Seite bekommt eine „digitale Seite“: ein PDF, das genau wie das Original aussieht (Handschrift, Skizzen, Bilder, Textmarker, Formen) und darunter unsichtbar den erkannten und korrigierten Text an seiner Position enthält (D-037). Sie ist ein eigener Ansichtsmodus und die Seitenvorlage für KI-Aufgaben. Dazu Hervorhebungen auch bei Fotos erkennen, sichtbar darstellen, über eine Farblegende deuten und per KI-Transkription verbessern.
 
-- [ ] KI-Transkription mit bildfähigen Modellen (Struktur und Hervorhebungen strukturiert zurück; Vision-Ergebnis wird mitgeschickt; Reihenfolge der Vorlage bleibt)
-- [ ] Optional zwei Durchläufe bei KI-Transkription (abschaltbar, Kostenhinweis)
-- [ ] Bildanalyse als Fallback ohne bildfähiges Modell (Schrift-/Hintergrundfarbe in Textzeilen, Linien unter Zeilen); Ergebnisse als unsicher markiert
-- [ ] Hervorhebungsarten: unterstrichen, doppelt unterstrichen, fett, farbiger Stift, Textmarker, umrandet, eingekreist, Großbuchstaben
-- [ ] Vermutete Bedeutung (Überschrift, Fachbegriff, Definition, Merksatz, Formel, „wichtig“), vom Nutzer änderbar
-- [ ] Farblegende pro Fach; Legende ersetzt Vermutung
-- [ ] Darstellung im erkannten Text (fett, farbig, unterstrichen) und als Overlay im Originalbild
-- [ ] Bearbeiten der Hervorhebungen (Text, Art, Farbe, Bedeutung, Position)
-- [ ] Versionierung bei erneuter Erkennung (Vorher-Hinweis, alter Stand wiederherstellbar)
+Schon vorhanden aus Phase 1: Hervorhebungsarten und -bedeutungen im Datenmodell, Goodnotes-Farben/Textmarker/Unterstreichungen (sicher), Bearbeiten von Text, Art, Farbe und Bedeutung in der Prüfansicht, erneute Erkennung mit Versionen und Wiederherstellen.
+
+Teilschritte (je ein Commit und eine Beta):
+
+**3a – Digitale Seite (PDF mit Textebene)**
+- [ ] Erzeugung in `StudyImport` aus den gespeicherten Daten, Seite für Seite in Originalgröße:
+  PDF-/Goodnotes-Import → Originalseite unverändert (Seiteninhalt, Ink, Textmarker, Stamps, FreeText, Bilder);
+  Foto/Scan → Bild als Seite. Eine vorhandene fremde Textebene (z. B. reduziertes Goodnotes-PDF) wird nicht übernommen.
+- [ ] Unsichtbare Textebene (Text-Render-Modus „unsichtbar“) aus dem gespeicherten Originaltext inkl. Nutzerkorrekturen: je Wort an seiner Box (sonst je Zeile), Breite/Größe an die Box angepasst, Reihenfolge der Vorlage, Absätze zusammenhängend, Umlaute/„→“ korrekt kopierbar; unleserliche Stellen ohne Text
+- [ ] Nie Quelle der Wahrheit: zwischengespeichert, nach jeder Korrektur, Neuerkennung oder Wiederherstellung automatisch neu erzeugt; ältere Versionen lassen sich als digitale Seite ansehen
+- [ ] Ansichtsmodus „Digitale Seite“ (PDFKit) in Prüfansicht und Fach: blättern, zoomen, suchen, Text markieren und kopieren; Tippen auf ein Wort springt zur Zeile im Text und umgekehrt
+- [ ] PDF-Metadaten ohne persönliche Daten (Titel aus Fach/Import, Ersteller StudyHelper)
+- [ ] Vorbereitung für KI: `ModelRequest` kann ein PDF-Dokument senden; Anbieter/Modelle melden die Fähigkeit (Claude, OpenAI laut aktueller offizieller Doku prüfen, `docs/API-REFERENZ.md`); ohne PDF-Fähigkeit Bild + gespeicherter Text wie bisher; im Log als Platzhalter „PDF (n Seiten)“
+
+**3b – Farblegende und Darstellung**
+- [ ] Farblegende pro Fach (Farbe/Textmarker → Bedeutung), im Fach bearbeitbar; Legende ersetzt die Vermutung, Unterstreichung bleibt ohne Vermutung (D-026), Nutzerentscheidungen haben Vorrang
+- [ ] Darstellung im erkannten Text (fett, farbig, unterstrichen, Textmarker-Hintergrund) in Prüfansicht und Themenansicht
+- [ ] Hervorhebungen als einblendbares Overlay über Originalbild und digitaler Seite (Art, Farbe, Bedeutung, Sicherheit erkennbar)
+- [ ] Position einer Hervorhebung im Bild anpassen (Rahmen verschieben/aufziehen); Rest des Bearbeitens existiert
+
+**3c – Bildanalyse für Fotos und Scans**
+- [ ] Ohne bildfähiges Modell: Schrift- und Hintergrundfarbe je erkannter Zeile/Wort (farbiger Stift, Textmarker), Linien direkt unter Zeilen (einfach/doppelt unterstrichen), Rahmen/Kreise um Wörter; Großbuchstaben aus dem Text
+- [ ] Ergebnisse als „unsicher“ markiert; bei Goodnotes nicht nötig (dort exakt bekannt)
+- [ ] Messung mit dem Benchmark (`scripts/bench-recognition.sh`, um Hervorhebungen erweitert) an eigenen Fotos in `LocalSamples/`
+
+**3d – KI-Transkription und Neuerkennung**
+- [ ] KI-Transkription mit bildfähigen Modellen: digitale Seite (bzw. Bild) plus Vision-Ergebnis mit Positionen; Antwort strukturiert (Zeilen mit Bezug auf Positionen, Struktur, Hervorhebungen), robust geparst; Reihenfolge der Vorlage bleibt; Ergebnis landet in Originaltext, Zeilen und Hervorhebungen, die digitale Seite wird neu erzeugt
+- [ ] Optional zwei Durchläufe (abschaltbar, Kostenhinweis); abweichende Wörter gelten als unsicher
+- [ ] „Mit anderem Modell neu erkennen“ für Seite oder Import (Vision, KI-Anbieter); vorhandene Versionierung, Vorher-Hinweis und Korrekturen-Vorrang gelten weiter
+- [ ] Digitalisierungs-Anbieter und Denktiefe aus den Einstellungen (Phase 2); Kosten im Anfrage-Log
 
 **Abnahmekriterien**
-- Mit Mock-Modell wird eine strukturierte Antwort mit Hervorhebungen korrekt gespeichert und dargestellt.
-- Bildanalyse erkennt auf synthetischen Bildern gefärbte Schrift und Unterstreichungen; Ergebnisse tragen das Merkmal „unsicher“.
-- Bei Goodnotes-Fixtures bleiben Farb-/Textmarker-Hervorhebungen als „sicher“ erhalten.
-- Eine hinterlegte Farblegende bestimmt die Bedeutung statt der Vermutung.
+- Für jede Fixture und eine synthetische Foto-Seite entsteht eine digitale Seite mit gleicher Seitenzahl und -größe; gerendert sieht sie aus wie das Original (Pixelvergleich), PDFKit liest die Textebene mit Positionen, jedes Wort liegt in seiner Box (Toleranz), der Text stimmt im Wortabgleich mit dem gespeicherten Originaltext überein (inkl. Umlaute).
+- Die fehlerhafte Goodnotes-Textebene erscheint nicht; nach einer Korrektur enthält die digitale Seite den korrigierten Text.
+- Mit Mock-Modell: PDF-Dokument wird an PDF-fähige Anbieter gesendet, sonst Bild + Text; im Log steht nur ein Platzhalter.
+- Eine hinterlegte Farblegende bestimmt die Bedeutung statt der Vermutung; Unterstreichungen bleiben ohne Vermutung.
+- Bildanalyse erkennt auf synthetischen Bildern gefärbte Schrift, Textmarker und Unterstreichungen; Ergebnisse tragen das Merkmal „unsicher“. Bei Goodnotes-Fixtures bleiben Farb-/Textmarker-Hervorhebungen „sicher“.
+- Mit Mock-Modell wird eine strukturierte Transkription mit Hervorhebungen korrekt gespeichert und dargestellt; kaputte Antworten stürzen nicht ab.
 - Erneute Erkennung erhält manuelle Korrekturen, der alte Stand ist wiederherstellbar.
 - Geräteprüfungen MT-3.x durchgeführt.
 
@@ -140,9 +163,11 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 - [ ] Platzhalter (`{fach}`, `{thema}`, `{anzahl}`, `{schwierigkeit}`, `{tippstufe}`, `{farblegende}`) mit Anzeige im Editor
 - [ ] Prompt-Editor, Zurücksetzen pro Prompt, Fach-Zusätze, Export/Import als JSON
 - [ ] Kurze Prompt-Varianten für das Apple-Modell, Grundregel ungekürzt
+- [ ] Apple-Modell: Guided Generation und Tools für die ersten strukturierten Aufgaben (aus Phase 2 verschoben, D-036)
+- [ ] Seitenvorlage für die KI: Braucht eine Aufgabe die Seite selbst (Mindmaps, Tabellen, Skizzen), geht die digitale Seite als PDF an PDF-fähige Modelle, sonst Bild + gespeicherter Text; sonst immer nur der gespeicherte Text
 - [ ] Sortierte Fassung: Erzeugung, Abschnittsverweise auf Originalstellen, Version bei Neuerzeugung
 - [ ] Vollständigkeitsprüfung (Wortabgleich Original ↔ sortierte Fassung) in `StudyCore`, Bestätigung/Korrektur abweichender Stellen
-- [ ] Ansicht: Original/sortiert umschaltbar oder nebeneinander, Sprung zur Bildstelle; Hinweis und Aktualisierung bei Korrektur des Originals; Bearbeitung von Hand oder per KI-Anweisung
+- [ ] Ansicht: Original/sortiert umschaltbar oder nebeneinander, Sprung zur Stelle in der digitalen Seite (Phase 3); Hinweis und Aktualisierung bei Korrektur des Originals; Bearbeitung von Hand oder per KI-Anweisung
 - [ ] Strukturierung per KI (Weg b) und gemischt (Weg c) inkl. „Nicht zugeordnet“ und leerer vorgegebener Themen; Nutzung von Hervorhebungen
 - [ ] Lückenerkennung und -füllung mit Status vorgeschlagen/angenommen/abgelehnt, Begründung, Markierung (Farbe + Symbol); Schalter „nur Hinweis“
 - [ ] Quellenprüfung (gültige IDs; Warnung bei fehlender Quelle ohne KI-Ergänzung)
@@ -173,7 +198,7 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 - [ ] Freitext: eine Frage pro Bildschirm, Bewertung anhand des Lernstoffs, Teilkorrektheit, Hinweis „Nicht im Lernstoff enthalten“
 - [ ] Karteikarten: Karte umdrehen, Gewusst/Halb gewusst/Nicht gewusst; Begriffe/Definitionen bevorzugt
 - [ ] Gewichtung hervorgehobener Inhalte
-- [ ] Herkunfts-IDs je Frage/Karte, Anzeige der Stelle (Text und Bild), dezente Markierung bei KI-Ergänzungen
+- [ ] Herkunfts-IDs je Frage/Karte, Anzeige der Stelle (Text und digitale Seite), dezente Markierung bei KI-Ergänzungen
 - [ ] Vorab- und Hintergrund-Erzeugung gebündelt, Vorrat speichern und wiederverwenden, Nachgenerierung bei Bedarf
 - [ ] Prompt-Caching der Anbieter (stabile Teile am Prompt-Anfang)
 
@@ -231,27 +256,26 @@ Quelle: `docs/SPEC.md`, Abschnitt „Phasen“. Pro Phase ein Commit nach Verifi
 
 ---
 
-## Phase 8 – Design, Barrierefreiheit, Developer-Modus, Feinschliff
+## Phase 8 – Design, Barrierefreiheit, Developer-Modus, Erkennung verbessern
 
-**Ziel:** Farbschemata, Barrierefreiheit und vollständiger Developer-Modus.
+**Ziel:** Farbschemata, Barrierefreiheit, restlicher Developer-Modus und eine bessere Texterkennung.
+
+Schon in Phase 2 erledigt: Developer-Schalter, Info pro Anfrage (Anbieter, Modell, Denktiefe, Tokens inkl. Cache/Reasoning, Kosten €/$, Dauer, Zeit bis zum ersten Token, gesendete Inhalte, System-Prompt, Prompt, rohe Antwort, Reasoning, Parsing-Fehler), Liste und Summen pro Tag/Monat, bearbeitbare Preistabelle mit „geschätzt“, JSON-Export und Löschen des Logs.
 
 - [ ] Farbschemata: Hell, Dunkel, mindestens zwei weitere; in den Einstellungen wählbar
-- [ ] Markierung von KI-Ergänzungen und farbige Hervorhebungen in jedem Schema gut erkennbar (Kontrastprüfung)
+- [ ] Markierung von KI-Ergänzungen und farbige Hervorhebungen in jedem Schema gut erkennbar (Kontrastprüfung), auch im Overlay der digitalen Seite
 - [ ] Chat-Optik (Sprechblasen, Eingabefeld unten, Tastatur verdeckt nichts)
 - [ ] Dynamic Type; VoiceOver sagt KI-Ergänzungen und Hervorhebungen als solche an
-- [ ] Developer-Modus (Schalter, standardmäßig aus): Info pro Anfrage (Anbieter, Modell, Reasoning, Tokens inkl. Cache/Reasoning, Kosten €/$, Dauer, Zeit bis zum ersten Token, Tokens/s, Apple-Tokens zur Kontextgröße ab iOS 26.4, gesendete Inhalte, Kontext-IDs, Tools, System-Prompt, Prompt, rohe Antwort kopierbar, Reasoning-Inhalte, Parsing-Fehler, Quellenprüfungs-Warnungen)
-- [ ] Übersicht: Kosten/Tokens pro Session, Tag, Monat nach Anbieter, Modell, Aufgabe; Liste letzter Anfragen
-- [ ] Vergleich der Digitalisierung pro Quelle (Vision, KI, manuell) mit Overlay
+- [ ] Developer-Modus ergänzen: Tokens/s, Apple-Tokens zur Kontextgröße ab iOS 26.4, Kontext-IDs und Tool-Aufrufe (ab Phase 4/6), Quellenprüfungs-Warnungen; Summen pro Lernsession und nach Aufgabe
+- [ ] Vergleich der Digitalisierung pro Quelle (Vision, KI, manuell) mit Overlay auf der digitalen Seite
 - [ ] Statistik pro Modell: Anteil Inhalte ohne gültige Quelle, manuelle Korrekturen
-- [ ] Qualitätstest der Texterkennung (Referenztext, Zeichen-/Wortfehlerquote pro Methode, mehrere KI-Durchläufe, iOS-Version und Gerät)
-- [ ] Preistabelle bearbeitbar, Standardwerte, „geschätzt“-Kennzeichnung
-- [ ] Export des Anfrage-Logs als JSON, Logs löschen
+- [ ] Qualitätstest der Texterkennung in der App (Referenztext, Zeichen-/Wortfehlerquote pro Methode, mehrere KI-Durchläufe, iOS-Version und Gerät); Grundlage ist der Mac-Benchmark (D-022)
+- [ ] Erkennung weiter verbessern, gemessen mit dem Benchmark an eigenen Seiten (bekannte Fehler: f/t, ä/a, Anführungszeichen, einzelne Ziffern neben Strichen)
 - [ ] Feinschliff (Fehlerzustände, leere Zustände, Performance, Lokalisierung)
 
 **Abnahmekriterien**
 - Fehlerquoten (CER/WER) werden gegen Referenztexte korrekt berechnet (Unit-Tests mit bekannten Werten).
-- Kostenberechnung stimmt für bekannte, unbekannte und kostenlose Modelle (Tests).
-- Log-Export ist gültiges JSON und enthält keine Keys oder Header-Secrets (Test).
+- Eine Verbesserung der Erkennung wird nur übernommen, wenn der Benchmark besser ist als vorher.
 - UI-Tests laufen in allen Farbschemata; Geräteprüfungen MT-8.x (VoiceOver, Dynamic Type, Kontrast) durchgeführt.
 
 ---

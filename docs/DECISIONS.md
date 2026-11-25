@@ -310,6 +310,18 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   - Nach dem Review: Denkblöcke (Claude, mit Signatur) und Reasoning-Items (OpenAI) werden als `MessageContent.reasoning` unverändert zurückgegeben, damit Tool-Schleifen mit Denken funktionieren; fehlgeschlagene Anfragen werden mit Teil-Metadaten (Tokens, Kosten, gesendete Anfrage) geloggt; unlesbare Einstellungen einer neueren Version werden nur übersprungen und gesichert, nie überschrieben; die Denktiefe bietet „Modell-Standard“; ein beim Bearbeiten getesteter Key wird erst beim Sichern gespeichert; Bilder an Modelle ohne Bildfähigkeit werden abgelehnt; Zugangsdaten in URLs werden in Logs entfernt.
 - **Konsequenzen:** Der Rest der App spricht nur `ModelProvider`/`AIService` an (`AIService.respond(_:decoding:)` setzt Parsing-Fehler in Metadaten und Log). Guided Generation/Tools beim Apple-Modell und Bilder ab iOS 27 folgen mit den ersten KI-Aufgaben (Phase 4). Ollama `reasoning_effort: "none"` für „Aus“ ist eine Annahme (MT-2.6).
 
+## D-037 Digitale Seite: PDF mit unsichtbarer Textebene (Phase 3)
+
+- **Datum:** 2026-11-25
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Die erkannten Texte sollen in einem neuen PDF mit ihrer Position und den zugehörigen Skizzen und Bildern gespeichert werden, als Ansichtsmodus in der App und für die spätere Verwendung durch die KI. Zur Wahl standen eine getippte Neusetzung der Seite (Handschrift ersetzt) und das Original mit unsichtbarer Textebene; der Entwickler hat das Original mit Textebene gewählt.
+- **Entscheidung:**
+  - Pro Seite ein PDF in Originalgröße: PDF-/Goodnotes-Seiten werden unverändert übernommen (Seiteninhalt und Annotationen), Fotos/Scans als Bild. Skizzen, Bilder, Formen und Textmarker bleiben dadurch exakt erhalten, ohne sie vom Text trennen zu müssen.
+  - Darüber eine unsichtbare Textebene aus dem gespeicherten Originaltext samt Korrekturen, je Wort (sonst je Zeile) an der Bounding Box; eine fremde Textebene (reduziertes Goodnotes-PDF) wird nicht übernommen.
+  - Die digitale Seite ist abgeleitet und nie Quelle der Wahrheit (die bleibt die Digitalisierung in SwiftData). Sie wird zwischengespeichert und nach Korrektur, Neuerkennung oder Wiederherstellung neu erzeugt.
+  - KI: Aufgaben, die die Seite selbst brauchen, senden das PDF an Modelle mit PDF-Eingabe (Fähigkeit pro Anbieter/Modell, Parameter vor der Umsetzung aus der aktuellen offiziellen Doku), sonst Bild + gespeicherter Text. Alle anderen Aufgaben bekommen weiterhin nur den gespeicherten Text (spart Tokens).
+- **Konsequenzen:** Die Erzeugung liegt in `StudyImport` (PDFKit/CoreGraphics). Ein Export/Teilen des PDFs ist damit leicht möglich, ist aber nicht beauftragt. Bei Fotos ist die Seite so groß wie das Bild; die Qualität der Textebene hängt direkt an der Erkennung (Verbesserung Phase 8).
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

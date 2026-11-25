@@ -116,4 +116,5 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   OpenAI-kompatibel/Ollama, Apple Foundation Models, Mock; Keys in der Keychain; Anfrage-Log (SchemaV2) mit
   geschätzten Kosten; Einstellungen und Developer-Modus in der App (D-036, `docs/API-REFERENZ.md`).
 - **Offen aus Phase 1 und 2:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12 und MT-S.1–S.7 in `docs/MANUAL_TESTS.md` (macht der Entwickler).
-- **Nächster Schritt:** Phase 3 planen (Hervorhebungen: Farblegende, KI-Ergebnisse) – nach Rückfrage beim Entwickler.
+- **Nächster Schritt:** Phase 3 umsetzen – Plan in `docs/PHASES.md` überarbeitet: 3a digitale Seite (PDF mit unsichtbarer
+  Textebene, D-037), 3b Farblegende/Darstellung, 3c Bildanalyse, 3d KI-Transkription. Start nach Zusage des Entwicklers.
