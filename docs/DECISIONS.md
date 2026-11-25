@@ -322,6 +322,19 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
   - KI: Aufgaben, die die Seite selbst brauchen, senden das PDF an Modelle mit PDF-Eingabe (Fähigkeit pro Anbieter/Modell, Parameter vor der Umsetzung aus der aktuellen offiziellen Doku), sonst Bild + gespeicherter Text. Alle anderen Aufgaben bekommen weiterhin nur den gespeicherten Text (spart Tokens).
 - **Konsequenzen:** Die Erzeugung liegt in `StudyImport` (PDFKit/CoreGraphics). Ein Export/Teilen des PDFs ist damit leicht möglich, ist aber nicht beauftragt. Bei Fotos ist die Seite so groß wie das Bild; die Qualität der Textebene hängt direkt an der Erkennung (Verbesserung Phase 8).
 
+## D-038 Plan-Erweiterungen nach Phase 2
+
+- **Datum:** 2026-11-25
+- **Status:** angenommen (Auswahl des Entwicklers)
+- **Kontext:** Nach Phase 2 wurden Ergänzungen und eine bessere Gliederung des Plans vorgeschlagen; der Entwickler hat ausgewählt. Nicht gewählt: Karteikarten ohne KI schon nach Phase 3 und ein fester Gerätetest-Meilenstein vor Phase 4 (Gerätetests laufen nebenbei).
+- **Entscheidung:**
+  - **Datensicherung** als 3b, direkt nach der digitalen Seite: Ohne iCloud (kostenloser Account) und bei sideloadeten Apps wären sonst alle Daten mit der App weg. Eine Datei mit Formatversion, ohne Keys; jede spätere Phase erweitert das Format um ihre Daten.
+  - **Formeln** in 3c (Darstellung) und 3f (KI liefert sie): gespeichert als LaTeX-Teil im Markdown, der Darstellungsweg wird bei der Umsetzung entschieden.
+  - **Warteschlange, Kostenschutz, Datenschutz** als 3e, vor der ersten echten KI-Aufgabe (Transkription in 3f), damit schon die erste teure Massenaufgabe geschützt ist.
+  - **Phase 4 in 4a/4b/4c** aufgeteilt; **Rückgängig für KI-Änderungen** in 4b. **Suchindex und Embeddings** wandern nach Phase 6, weil erst die Chat-Tools sie brauchen; dort zusätzlich als Suche für den Nutzer.
+  - **Diktieren und Vorlesen** in Phase 5 (Chat-Diktat in 6), **Prüfungstermin, Erinnerungen, Probeklausur, Fehlerheft** in Phase 7, weil sie auf Leitner und Auswertung aufbauen.
+- **Konsequenzen:** Phase 3 wird größer (sechs Teilschritte, je ein Commit und eine Beta). Lokale Mitteilungen und Spracherkennung brauchen Berechtigungen (Info.plist-Texte); beide funktionieren mit dem kostenlosen Account. Widgets und iCloud bleiben ausgeschlossen (D-013).
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

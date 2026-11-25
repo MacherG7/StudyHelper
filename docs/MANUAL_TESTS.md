@@ -151,6 +151,11 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.6 | Eine Zeile korrigieren, dann die digitale Seite erneut öffnen | Korrektur ist enthalten, ohne neue Texterkennung | |
 | MT-3.7 | Foto einer Seite: digitale Seite auf iPhone und iPad (Querformat), Wort antippen | Markierung trifft das Wort; Sprung zur Zeile im Text | |
 | MT-3.8 | Import mit vielen Seiten (z. B. 30) | Digitale Seite erscheint ohne lange Wartezeit, kein Speicherproblem | |
+| MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
+| MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
+| MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |
+| MT-3.12 | Kostenschätzung vor einem großen Auftrag mit echtem Modell | Schätzung liegt in der Größenordnung der tatsächlichen Kosten im Anfrage-Log | |
+| MT-3.13 | Formeln in Handschrift (Bruch, Potenz, CO₂) mit KI transkribieren | Formeln richtig dargestellt, von Hand korrigierbar | |
 | MT-3.1 | Echtes Foto einer Buchseite mit Unterstreichung, Textmarker, farbiger Schrift | Bildanalyse-Fallback erkennt Hervorhebungen, als „unsicher“ markiert | |
 | MT-3.2 | Handschrift-Foto mit bildfähigem KI-Modell transkribieren | Hervorhebungen und Struktur plausibel; Qualität im Vergleich zu Vision notieren | |
 | MT-3.3 | Overlay der Hervorhebungen auf dem Originalbild | Positionen stimmen auf Foto und auf iPad-Querformat | |
@@ -170,6 +175,8 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-5.1 | Session mit echtem Modell | Keine spürbare Wartezeit zwischen Fragen (Vorab-Erzeugung) | |
 | MT-5.2 | Schwere MC-Fragen | Alle vollständig mit dem Lernstoff beantwortbar; Verneinungsfragen korrekt | |
 | MT-5.3 | Karteikarten-Umdrehen auf iPhone und iPad | Geste und Animation flüssig | |
+| MT-5.4 | Freitext-Antwort diktieren, auch im Flugmodus | Deutsch gut erkannt, Fachbegriffe plausibel; funktioniert ohne Netz | |
+| MT-5.5 | Karteikarten vorlesen lassen | Deutsche Stimme, Umlaute und Fachbegriffe verständlich; Stoppen wirkt sofort | |
 
 ## Phase 6 – Tipps und Chat (Platzhalter)
 
@@ -186,6 +193,8 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 |---|---|---|---|
 | MT-7.1 | Mehrere Sessions an verschiedenen Tagen | Niedrige Fächer kommen häufiger; Fortschrittsbalken plausibel | |
 | MT-7.2 | Auswertung nach Session | Zahlen stimmen mit eigenem Mitzählen überein | |
+| MT-7.3 | Erinnerungen bei geschlossener App | Mitteilung kommt zur eingestellten Zeit; Abschalten wirkt | |
+| MT-7.4 | Probeklausur mit Zeitlimit | Ablauf ohne Tipps, Zeit läuft sichtbar ab, Note plausibel | |
 
 ## Phase 8 – Design, Barrierefreiheit, Developer-Modus (Platzhalter)
 

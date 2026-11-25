@@ -260,6 +260,12 @@ besonders wichtige Inhalte und werden gezielt erkannt.
 - Hervorhebungen werden im erkannten Text sichtbar dargestellt (fett, farbig,
   unterstrichen) und bleiben auch im Original nachvollziehbar
 
+Formeln:
+- Formeln (Mathe, Physik, Chemie) werden sauber dargestellt (hoch- und
+  tiefgestellt, Brüche, Wurzeln, Pfeile). Gespeichert werden sie als
+  LaTeX-Teil im Markdown, die KI-Transkription liefert sie in diesem Format,
+  und der Nutzer kann sie von Hand eingeben und korrigieren.
+
 Verwendung der Hervorhebungen:
 - Bei der Strukturierung werden hervorgehobene Inhalte bevorzugt als
   Themen-Überschriften, Begriffe oder Kernaussagen übernommen
@@ -303,6 +309,18 @@ Bildverarbeitung:
 - Das Apple-On-Device-Modell bekommt erst ab iOS 27 Bilder, davor nur den
   gespeicherten Text
 - Reine Textmodelle bekommen immer nur den gespeicherten Text inkl. Hervorhebungen
+
+KI-Aufträge, Kosten und Datenschutz:
+- KI-Aufträge laufen über eine gespeicherte Warteschlange: Sie laufen nach
+  einem Neustart weiter, warten ohne Netz, werden nach Fehlern wiederholt und
+  lassen sich mit Fortschrittsanzeige abbrechen.
+- Vor großen Aufträgen (z. B. ganzer Import) zeigt die App die geschätzten
+  Kosten und fragt ab einer einstellbaren Grenze nach.
+- Optional ein Monatsbudget pro Anbieter: Warnung ab 80 %, bei 100 %
+  wahlweise Warnung oder Stopp.
+- Pro Anbieter ist sichtbar, was gesendet wird (Text, Bild, PDF) und wohin.
+  Vor dem ersten Senden an einen Cloud-Anbieter fragt die App einmal nach.
+  Ein Modus „Nur auf dem Gerät / eigene Server“ sperrt Cloud-Anbieter.
 
 ### 4. System-Prompts
 - Für jede KI-Aufgabe gibt es einen eigenen System-Prompt:
@@ -507,6 +525,16 @@ Für alle Modi:
   Originalbild) anzeigen lassen.
 - Fragen, die auf KI-Ergänzungen beruhen, sind dezent markiert
 
+Weitere Lernformen:
+- Sprache: Freitext-Antworten und Chat-Nachrichten lassen sich diktieren
+  (Spracherkennung auf dem Gerät), Fragen und Karteikarten vorlesen.
+- Probeklausur: gemischte Fragen aus gewählten Themen, optional mit
+  Zeitlimit und ohne Tipps; am Ende Punkte, Note 1–6 (Notenschlüssel
+  einstellbar) und Schwächen pro Thema.
+- Fehlerheft: Alle falsch oder nur mit Tipps beantworteten Fragen eines
+  Fachs werden gesammelt und lassen sich gezielt wiederholen. Nach zweimal
+  „Gewusst“ verlässt eine Frage das Fehlerheft.
+
 ### 7. Tipps und Hilfestellungen
 Bei falschen Antworten in Multiple Choice, Freitext und Chat gibt es gestufte
 Tipps, die mit jedem weiteren Fehlversuch mehr verraten:
@@ -551,6 +579,12 @@ Verknüpfung mit dem Lernstand:
   ebenfalls nur aus dem Lernstoff
 - Bei "gemischt" passt sich die Schwierigkeit an: Themen, die gut sitzen,
   bekommen mehr schwere Fragen
+
+- Optional ein Prüfungstermin pro Fach (mit Themenauswahl): Die
+  Wiederholungen werden so verteilt, dass bis zum Termin alles mehrmals
+  drankommt.
+- Erinnerungen als lokale Mitteilungen (tägliche Lernzeit, fällige
+  Wiederholungen, nahender Prüfungstermin), einzeln abschaltbar
 
 ### 9. Design
 - Mehrere Farbschemata (Hell, Dunkel und mindestens 2 weitere), in den
@@ -614,6 +648,16 @@ Preise:
 
 Logs werden in SwiftData gespeichert.
 
+### 11. Datensicherung
+Alle Daten liegen nur auf dem Gerät, ohne iCloud (kostenloser
+Developer-Account). Deshalb:
+- „Alles sichern“ erzeugt eine Datei (Originale, Digitalisierungen mit
+  Versionen und Korrekturen, Themen, Lernstand, Prompts, Einstellungen) für
+  die Dateien-App oder zum Teilen. API-Keys sind nie enthalten.
+- „Wiederherstellen“ liest eine Sicherung ein, nach einem Hinweis, was
+  ersetzt wird. So lassen sich Daten auch vom iPhone aufs iPad bringen.
+- Die App erinnert in Abständen an eine Sicherung (abschaltbar).
+
 ## Phasen
 0. Künstliche Goodnotes-Test-PDFs, lokales Git-Repository mit .gitignore,
    Projektgerüst mit XcodeGen und Core-Package, lokale Build- und Test-Skripte,
@@ -628,19 +672,22 @@ Logs werden in SwiftData gespeichert.
    Apple Foundation Model, OpenAI-kompatible Anbieter, Claude- und OpenAI-API
    mit Modell- und Reasoning-Auswahl, Speichern der Anfrage-Logs
 3. Digitale Seite (PDF mit unsichtbarer Textebene, Ansichtsmodus, Seitenvorlage
-   für die KI), Hervorhebungen: KI-Transkription mit bildfähigen Modellen,
-   Bildanalyse als Fallback, Farblegende pro Fach, Darstellung und Bearbeiten
-   der Hervorhebungen, Neuerkennung mit anderem Modell
+   für die KI), Datensicherung, Hervorhebungen (Farblegende pro Fach,
+   Darstellung, Bearbeiten, Bildanalyse als Fallback), Formeln,
+   KI-Warteschlange mit Kostenschutz und Datenschutz, KI-Transkription mit
+   bildfähigen Modellen, Neuerkennung mit anderem Modell
 4. System-Prompts (Standardtexte, feste Grundregel, Platzhalter, Editor,
    Fach-Zusätze, Export/Import), sortierte Fassung inkl. Vollständigkeits-
    prüfung und Ansicht, Strukturierung per KI und gemischt (Wege b
    und c) inkl. Nutzung der Hervorhebungen, Lückenerkennung mit Bestätigung,
-   Quellenprüfung, Überprüfung und Korrektur, Lerneinheiten mit IDs,
-   Kurzfassungen, Suchindex inkl. Embeddings, Kontext-Zusammenstellung
+   Quellenprüfung, Überprüfung und Korrektur, Rückgängig für KI-Änderungen,
+   Lerneinheiten mit IDs, Kurzfassungen, Kontext-Zusammenstellung
 5. Multiple Choice mit Schwierigkeitsstufen, Freitext, Karteikarten, Vorrat und
-   Vorab-Erzeugung von Fragen, Prompt-Caching
-6. Tipp-System mit Stufen, Chat-Modus mit Tool-Zugriff auf den Lernstoff
-7. Leitner-System inkl. Verknüpfung mit Tipps, Auswertung, Fortschrittsübersicht
+   Vorab-Erzeugung von Fragen, Prompt-Caching, Diktieren und Vorlesen
+6. Tipp-System mit Stufen, Suchindex inkl. Embeddings, Chat-Modus mit
+   Tool-Zugriff auf den Lernstoff
+7. Leitner-System inkl. Verknüpfung mit Tipps, Auswertung, Fortschrittsübersicht,
+   Prüfungstermin mit Erinnerungen, Probeklausur, Fehlerheft
 8. Farbschemata, Barrierefreiheit, restlicher Developer-Modus (Vergleich der
    Digitalisierung, Qualitätstest der Texterkennung, Statistik pro Modell),
    Verbesserung der Texterkennung, Feinschliff
