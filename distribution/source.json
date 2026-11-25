@@ -71,5 +71,14 @@
       "size": 1758106
     }
   ],
-  "news": [Test News]
+  "news": [
+    {
+      "title": "Test News",
+      "identifier": "test-news",
+      "caption": "Test News",
+      "date": "2026-11-25",
+      "tintColor": "#2F64E0",
+      "appID": "MiloG.StudyHelper1"
+    }
+  ]
 }
