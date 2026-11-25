@@ -122,6 +122,7 @@ Teilschritte (je ein Commit und eine Beta):
 - [ ] Unsichtbare Textebene (Text-Render-Modus „unsichtbar“) aus dem gespeicherten Originaltext inkl. Nutzerkorrekturen: je Wort an seiner Box (sonst je Zeile), Breite/Größe an die Box angepasst, Reihenfolge der Vorlage, Absätze zusammenhängend, Umlaute/„→“ korrekt kopierbar; unleserliche Stellen ohne Text
 - [ ] Nie Quelle der Wahrheit: zwischengespeichert, nach jeder Korrektur, Neuerkennung oder Wiederherstellung automatisch neu erzeugt; ältere Versionen lassen sich als digitale Seite ansehen
 - [ ] Ansichtsmodus „Digitale Seite“ (PDFKit) in Prüfansicht und Fach: blättern, zoomen, suchen, Text markieren und kopieren; Tippen auf ein Wort springt zur Zeile im Text und umgekehrt
+- [ ] Umschalter „Handschrift | Text“ in der Ansicht: „Handschrift“ zeigt das Original (Textebene unsichtbar); „Text“ blendet die Handschrift aus und zeigt die Textebene sichtbar an derselben Stelle (Größe an die Zeile angepasst, in der Stiftfarbe, Hervorhebungen erhalten). Skizzen, Bilder, Formen, Pfeile und Textmarker bleiben in beiden Modi sichtbar. Ausblenden: bei Goodnotes die Ink-Striche, die zu erkannten Zeilen gehören (Skizzen-Striche bleiben); bei Fotos/Scans die Zeilenbereiche mit der umgebenden Papierfarbe überdecken. Unsichere Wörter im Modus „Text“ erkennbar; gewählter Modus bleibt pro Fach gespeichert
 - [ ] PDF-Metadaten ohne persönliche Daten (Titel aus Fach/Import, Ersteller StudyHelper)
 - [ ] Vorbereitung für KI: `ModelRequest` kann ein PDF-Dokument senden; Anbieter/Modelle melden die Fähigkeit (Claude, OpenAI laut aktueller offizieller Doku prüfen, `docs/API-REFERENZ.md`); ohne PDF-Fähigkeit Bild + gespeicherter Text wie bisher; im Log als Platzhalter „PDF (n Seiten)“
 
@@ -159,6 +160,7 @@ Teilschritte (je ein Commit und eine Beta):
 **Abnahmekriterien**
 - Für jede Fixture und eine synthetische Foto-Seite entsteht eine digitale Seite mit gleicher Seitenzahl und -größe; gerendert sieht sie aus wie das Original (Pixelvergleich), PDFKit liest die Textebene mit Positionen, jedes Wort liegt in seiner Box (Toleranz), der Text stimmt im Wortabgleich mit dem gespeicherten Originaltext überein (inkl. Umlaute).
 - Die fehlerhafte Goodnotes-Textebene erscheint nicht; nach einer Korrektur enthält die digitale Seite den korrigierten Text.
+- Umschalter: Im Modus „Text“ ist keine Handschrift der erkannten Zeilen mehr sichtbar, Skizzen-Striche, Bilder, Stamps und Textmarker der Fixtures schon (Render-Test je Ebene); im Modus „Handschrift“ ist die Seite pixelgleich zum Original.
 - Mit Mock-Modell: PDF-Dokument wird an PDF-fähige Anbieter gesendet, sonst Bild + Text; im Log steht nur ein Platzhalter.
 - Eine hinterlegte Farblegende bestimmt die Bedeutung statt der Vermutung; Unterstreichungen bleiben ohne Vermutung.
 - Bildanalyse erkennt auf synthetischen Bildern gefärbte Schrift, Textmarker und Unterstreichungen; Ergebnisse tragen das Merkmal „unsicher“. Bei Goodnotes-Fixtures bleiben Farb-/Textmarker-Hervorhebungen „sicher“.

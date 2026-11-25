@@ -221,6 +221,10 @@ Digitale Seite (PDF mit Textebene):
   seiner Position enthält, so dass man darin suchen, markieren und kopieren
   kann. Eine fehlerhafte fremde Textebene (z. B. aus dem reduzierten
   Goodnotes-PDF) wird nicht übernommen.
+- In der Ansicht lässt sich zwischen „Handschrift“ und „Text“ wechseln: Der
+  eine Modus zeigt das Original, der andere blendet die Handschrift aus und
+  zeigt den erkannten Text sichtbar an derselben Stelle. Skizzen, Bilder,
+  Formen und Textmarker bleiben in beiden Modi sichtbar.
 - Die Textebene kommt aus dem gespeicherten Originaltext inklusive aller
   Korrekturen. Die digitale Seite ist nie Quelle der Wahrheit: Sie wird nach
   jeder Korrektur, Neuerkennung oder Wiederherstellung neu erzeugt.

@@ -151,6 +151,8 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.6 | Eine Zeile korrigieren, dann die digitale Seite erneut öffnen | Korrektur ist enthalten, ohne neue Texterkennung | |
 | MT-3.7 | Foto einer Seite: digitale Seite auf iPhone und iPad (Querformat), Wort antippen | Markierung trifft das Wort; Sprung zur Zeile im Text | |
 | MT-3.8 | Import mit vielen Seiten (z. B. 30) | Digitale Seite erscheint ohne lange Wartezeit, kein Speicherproblem | |
+| MT-3.14 | Echte Goodnotes-Seite mit Skizze und Beschriftung: zwischen „Handschrift“ und „Text“ wechseln | Im Modus „Text“ ist die Handschrift weg, Skizze, Pfeile, Bilder und Textmarker bleiben; Text steht lesbar an der richtigen Stelle | |
+| MT-3.15 | Foto einer handschriftlichen Seite im Modus „Text“ | Handschrift sauber überdeckt (keine Reste, keine Flecken auf kariertem/liniertem Papier notieren) | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
 | MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
 | MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |
