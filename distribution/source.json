@@ -28,6 +28,15 @@
       },
       "versions": [
         {
+          "version": "0.0.2",
+          "buildVersion": "0",
+          "date": "2026-11-25T05:57:54Z",
+          "localizedDescription": "Phase 2 abgeschlossen: Review-Befunde behoben, Version 0.0.2",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.0/StudyHelper-0.0.2.0.ipa",
+          "size": 1758106,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.0.1",
           "buildVersion": "15",
           "date": "2026-11-24T22:49:06Z",
@@ -55,11 +64,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.0.1",
-      "versionDate": "2026-11-24T22:49:06Z",
-      "versionDescription": "Phase 2c: KI-Anbieter in der App, Aufgaben, Preise, Developer-Modus",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.1.15/StudyHelper-0.0.1.15.ipa",
-      "size": 1713898
+      "version": "0.0.2",
+      "versionDate": "2026-11-25T05:57:54Z",
+      "versionDescription": "Phase 2 abgeschlossen: Review-Befunde behoben, Version 0.0.2",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.0/StudyHelper-0.0.2.0.ipa",
+      "size": 1758106
     }
   ],
   "news": []
