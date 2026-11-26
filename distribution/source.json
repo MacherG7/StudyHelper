@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.2",
+          "buildVersion": "6",
+          "date": "2026-11-26T12:27:51Z",
+          "localizedDescription": "Digitale Seite: dichte Zeilen und Arbeitsblätter ohne Überlagerung, Zeilenstücke zusammenführen",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.6/StudyHelper-0.0.2.6.ipa",
+          "size": 1875121,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.2",
           "buildVersion": "5",
           "date": "2026-11-25T23:29:51Z",
           "localizedDescription": "Phase 3a: Digitale Seite – Umschalter Handschrift/Textebene, PDF mit Textebene",
@@ -74,10 +83,10 @@
         }
       ],
       "version": "0.0.2",
-      "versionDate": "2026-11-25T23:29:51Z",
-      "versionDescription": "Phase 3a: Digitale Seite – Umschalter Handschrift/Textebene, PDF mit Textebene",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.5/StudyHelper-0.0.2.5.ipa",
-      "size": 1863694
+      "versionDate": "2026-11-26T12:27:51Z",
+      "versionDescription": "Digitale Seite: dichte Zeilen und Arbeitsblätter ohne Überlagerung, Zeilenstücke zusammenführen",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.6/StudyHelper-0.0.2.6.ipa",
+      "size": 1875121
     }
   ],
   "news": [
