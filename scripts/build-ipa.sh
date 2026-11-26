@@ -4,6 +4,7 @@
 # app on your own device without them, build and run it from Xcode.
 #   scripts/build-ipa.sh            → build/ipa/StudyHelper.ipa (unsigned)
 #   scripts/build-ipa.sh --final    → marks the build as full version (no "(Beta)" in the app, D-032)
+#   scripts/build-ipa.sh --nightly  → marks the build as untested nightly ("(Nightly)" in the app, D-045)
 #   --unsigned                      accepted for older calls; the .ipa is unsigned anyway
 source "$(dirname "$0")/common.sh"
 
@@ -12,6 +13,7 @@ for arg in "$@"; do
     case "$arg" in
         --unsigned) ;;
         --final) CHANNEL=Final ;;
+        --nightly) CHANNEL=Nightly ;;
         *) fail "Unbekannte Option: $arg" ;;
     esac
 done

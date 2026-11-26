@@ -362,7 +362,8 @@ public struct DigitizationPipeline: Sendable {
         try Task.checkCancellation()
         let options = settings.recognitionOptions(prefersDocumentRecognition: prefersDocumentRecognition)
         let first = try await recognizer.recognize(image, options: options)
-        let firstLines = Self.markIllegible(KnownMisreadings.apply(to: ScriptGuard.apply(to: first.lines)))
+        let firstLines = Self.markIllegible(KnownMisreadings.apply(to: ScriptGuard.apply(
+            to: LineMerging.taggedAsRecognized(first.lines))))
         guard settings.multiPass, let scaled = PageRenderer.scaled(image, by: settings.secondPassScale) else {
             return RecognitionOutcome(
                 lines: firstLines, engineVersion: first.engineVersion, method: first.method, passes: 1, variedWords: 0)

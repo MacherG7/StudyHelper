@@ -103,6 +103,12 @@ struct PipelineGoodnotesTests {
         let item = try #require(truth.items(ofKind: .freeText, onPage: 1).first)
         let line = try #require(run.pages[0].result.lines.first { $0.text == item.text })
         #expect(line.status == .confident && line.confidence == 1)
+        #expect(line.origin == .freeText)
+        // Handwriting is recognized (even where Vision reports confidence 1), the worksheet text is embedded.
+        let ink = run.pages.flatMap(\.result.lines).filter { $0.color != nil && $0.origin != .pdfText && $0.origin != .freeText }
+        #expect(!ink.isEmpty && ink.allSatisfy { $0.origin == .recognizer })
+        #expect(run.pages[1].result.lines.first { $0.text == "Arbeitsblatt: Die Zelle" }?.origin == .pdfText)
+        #expect(run.pages.flatMap(\.result.lines).allSatisfy { $0.origin != nil })
         #expect(line.text == "Formel: 6 CO\u{2082} + 6 H\u{2082}O \u{2192} C\u{2086}H\u{2081}\u{2082}O\u{2086} + 6 O\u{2082}")
         let rect = normalizedRect(of: item, in: truth)
         #expect(line.rect.iou(rect) > 0.8)

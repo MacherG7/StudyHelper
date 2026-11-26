@@ -19,7 +19,7 @@ final class ReviewUITests: XCTestCase {
         XCTAssertTrue(openCount(app).waitForExistence(timeout: 10))
     }
 
-    /// The "Noch X Stellen offen" header; its accessibility value is the number.
+    /// The "Noch X Wörter offen" header; its accessibility value is the number.
     @MainActor
     private func openCount(_ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "reviewOpenCount").firstMatch
@@ -38,7 +38,7 @@ final class ReviewUITests: XCTestCase {
         openSeededReview(app)
 
         let counter = openCount(app)
-        XCTAssertEqual(counter.value as? String, "1")
+        XCTAssertEqual(counter.value as? String, "2", "zwei unsichere Wörter: Chlorophyl und grune")
 
         // Tap line 2 (the uncertain one) in the text view …
         showMode("Text", in: app)
@@ -73,6 +73,61 @@ final class ReviewUITests: XCTestCase {
         let corrected = app.buttons["reviewLine-2"]
         XCTAssertTrue(corrected.waitForExistence(timeout: 5))
         XCTAssertEqual(corrected.label, "Zeile 3: Chlorophyll ist der grüne Blattfarbstoff. Von dir korrigiert.")
+    }
+
+    /// Word-level review: only the two uncertain words are marked (not the whole line); a word is corrected with the
+    /// (mock) on-device model's suggestion in the word sheet, the other word stays marked; the second one is confirmed
+    /// from the image.
+    @MainActor
+    func testWordCorrectionWithModelSuggestionKeepsTheOtherMark() throws {
+        let app = XCUIApplication()
+        openSeededReview(app, extraArguments: ["-uiTestMockAI"])
+        XCTAssertEqual(openCount(app).value as? String, "2")
+
+        showMode("Text", in: app)
+        let line = app.buttons["reviewLine-2"]
+        XCTAssertTrue(line.waitForExistence(timeout: 5))
+        XCTAssertTrue(line.label.contains("Unsichere Wörter: Chlorophyl, grune."), "Label: \(line.label)")
+        XCTAssertFalse(app.buttons["reviewWord-0-0"].exists, "Zeile 1 hat keine Markierung")
+        XCTAssertFalse(app.buttons["reviewLine-0"].label.contains("Unsicher"), "Label: \(app.buttons["reviewLine-0"].label)")
+        let word = app.buttons["reviewWord-2-0"]
+        XCTAssertTrue(word.exists)
+        XCTAssertEqual(word.label, "Unsicheres Wort: Chlorophyl")
+        XCTAssertTrue(app.buttons["reviewWord-2-3"].exists)
+        word.tap()
+
+        // The sheet shows the word; the model's suggestions arrive after the local ones.
+        let field = app.textFields["wordCorrectionField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, "Chlorophyl")
+        XCTAssertTrue(app.buttons["wordSuggestion-0"].waitForExistence(timeout: 5))
+        let modelSuggestion = app.buttons["wordSuggestion-1"]
+        XCTAssertTrue(modelSuggestion.waitForExistence(timeout: 10), "Vorschlag des Geräte-Modells fehlt")
+        XCTAssertEqual(modelSuggestion.label, "Chlorofyll, Vorschlag des Geräte-Modells")
+        XCTAssertFalse(app.staticTexts["wordModelHint"].exists)
+        XCTAssertFalse(app.otherElements["wordModelLoading"].exists)
+        XCTAssertFalse(app.buttons["applyWordButton"].isEnabled, "ohne Änderung nichts zu übernehmen")
+
+        app.buttons["wordSuggestion-0"].tap()
+        XCTAssertEqual(field.value as? String, "Chlorophyll")
+        app.buttons["applyWordButton"].tap()
+
+        // One word less open; the other one is still marked and the line is not "corrected as a whole".
+        XCTAssertTrue(waitForValue("1", of: openCount(app), timeout: 10), "Zähler: \(String(describing: openCount(app).value))")
+        XCTAssertFalse(app.buttons["reviewWord-2-0"].exists)
+        XCTAssertTrue(app.buttons["reviewWord-2-3"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["reviewLine-2"].label.contains("Chlorophyll ist der grune Blattfarbstoff."), "Label: \(app.buttons["reviewLine-2"].label)")
+
+        // The same word in the image: tap its frame, confirm it as written.
+        showMode("Bild", in: app)
+        let frame = app.buttons["imageWord-2-3"]
+        XCTAssertTrue(frame.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["imageWord-2-0"].exists)
+        frame.tap()
+        XCTAssertTrue(app.buttons["confirmWordButton"].waitForExistence(timeout: 5))
+        app.buttons["confirmWordButton"].tap()
+        XCTAssertTrue(waitForValue("0", of: openCount(app), timeout: 10), "Zähler: \(String(describing: openCount(app).value))")
+        XCTAssertFalse(app.buttons["imageWord-2-3"].exists)
     }
 
     @MainActor

@@ -176,7 +176,7 @@ private struct BatchRow: View {
                     .font(.footnote.weight(.semibold))
                     .padding(.horizontal, 9).padding(.vertical, 3)
                     .background(.orange.opacity(0.25), in: Capsule())
-                    .accessibilityLabel(summary.open == 1 ? "1 Stelle offen" : "\(summary.open) Stellen offen")
+                    .accessibilityLabel("\(PageWordReview.description(words: summary.openWords, illegible: summary.illegible)) offen")
             }
         }
         .accessibilityElement(children: .combine)

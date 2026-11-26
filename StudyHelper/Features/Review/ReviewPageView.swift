@@ -9,7 +9,6 @@ struct ReviewPageView: View {
     let batch: ImportBatch
 
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(ImportCoordinator.self) private var coordinator
 
     enum Mode: String, CaseIterable, Identifiable {
@@ -21,11 +20,13 @@ struct ReviewPageView: View {
     enum PageSheet: Identifiable {
         case correction(UUID)
         case highlights(UUID)
+        case word(UUID, Int)
         case unmatched
         var id: String {
             switch self {
             case .correction(let id): "c-\(id)"
             case .highlights(let id): "h-\(id)"
+            case .word(let id, let index): "w-\(id)-\(index)"
             case .unmatched: "unmatched"
             }
         }
@@ -38,6 +39,7 @@ struct ReviewPageView: View {
     @State private var openedTopicID: UUID?
     @State private var pageImage: UIImage?
     @State private var snapshotCache = DerivedValue<PageSnapshot>()
+    @State private var report = ReportFlow()
 
     private struct ImageKey: Hashable {
         var digitizationID: UUID?
@@ -53,7 +55,9 @@ struct ReviewPageView: View {
         var damageNote: String?
         /// A stored blob cannot be read (flagged damaged, or undecodable right now): no lines, no editing.
         var unreadable = false
-        var open = 0
+        /// Marked words and illegible lines (`WordReview`); `open` counts both.
+        var review = PageWordReview()
+        var open: Int { review.open }
         /// Highlights that belong to no line; listed in the text view so that VoiceOver can reach them.
         var looseHighlights: [RecognizedHighlight] = []
 
@@ -70,7 +74,8 @@ struct ReviewPageView: View {
             }
             lines = digitization.lines.sorted { $0.order < $1.order }
             highlights = digitization.highlights
-            open = lines.filter(\.needsReview).count
+            review = PageWordReview.cached(
+                digitization: digitization, lines: lines, terms: Set(source.batch?.subject?.confirmedTerms ?? []))
             looseHighlights = highlights.filter { highlight in !lines.contains { highlight.applies(to: $0) } }
         }
     }
@@ -82,18 +87,24 @@ struct ReviewPageView: View {
         let lines = snapshot.lines
         let highlights = snapshot.highlights
         let isActive = coordinator.activeBatchID == batch.id && source.digitizationState == .pending
-        let editingDisabled = damaged || coordinator.activeBatchID == batch.id
+        let editingDisabled = isEditingDisabled(damaged: damaged)
 
         VStack(spacing: 0) {
             banners(snapshot: snapshot, isActive: isActive)
             if hasDigitization, !damaged {
-                header(open: snapshot.open)
+                header(review: snapshot.review)
                 Divider()
             }
-            content(snapshot: snapshot, isActive: isActive)
+            content(snapshot: snapshot, isActive: isActive, editingDisabled: editingDisabled)
             if hasDigitization, !damaged {
                 Divider()
-                lineBar(lines: lines, highlights: highlights, editingDisabled: editingDisabled)
+                lineBar(lines: lines, highlights: highlights, review: snapshot.review, editingDisabled: editingDisabled)
+            }
+        }
+        .reportFlow($report, source: source, batch: batch, lines: lines, pageImage: pageImage)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ReportToolbarButton { report.startDrawing() }
             }
         }
         .task(id: ImageKey(digitizationID: snapshot.digitizationID, state: source.digitizationState)) {
@@ -112,6 +123,8 @@ struct ReviewPageView: View {
                 CorrectionSheet(source: source, lineID: id)
             case .highlights(let id):
                 HighlightsSheet(source: source, lineID: id)
+            case .word(let id, let index):
+                WordCorrectionSheet(source: source, lineID: id, wordIndex: index, pageImage: pageImage)
             case .unmatched:
                 UnmatchedCorrectionsView(source: source)
             }
@@ -183,12 +196,15 @@ struct ReviewPageView: View {
 
     // MARK: Header
 
-    private func header(open: Int) -> some View {
+    private func header(review: PageWordReview) -> some View {
+        let open = review.open
         let status = Group {
             if open == 0 {
                 Label("Alles geprüft", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
             } else {
-                Label(open == 1 ? "Noch 1 Stelle offen" : "Noch \(open) Stellen offen", systemImage: "exclamationmark.triangle.fill")
+                Label(
+                    PageWordReview.headline(words: review.openWords, illegible: review.illegible),
+                    systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
             }
         }
@@ -223,7 +239,7 @@ struct ReviewPageView: View {
     // MARK: Content
 
     @ViewBuilder
-    private func content(snapshot: PageSnapshot, isActive: Bool) -> some View {
+    private func content(snapshot: PageSnapshot, isActive: Bool, editingDisabled: Bool) -> some View {
         let lines = snapshot.lines
         let highlights = snapshot.highlights
         if snapshot.unreadable {
@@ -240,9 +256,9 @@ struct ReviewPageView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if sizeClass == .regular {
             HStack(spacing: 0) {
-                imagePane(lines: lines, highlights: highlights)
+                imagePane(lines: lines, highlights: highlights, review: snapshot.review, wordsEnabled: !editingDisabled)
                 Divider()
-                textPane(snapshot: snapshot)
+                textPane(snapshot: snapshot, wordsEnabled: !editingDisabled)
             }
         } else {
             VStack(spacing: 0) {
@@ -254,40 +270,65 @@ struct ReviewPageView: View {
                 .padding(.vertical, 6)
                 .accessibilityIdentifier("modePicker")
                 switch mode {
-                case .image: imagePane(lines: lines, highlights: highlights)
-                case .text: textPane(snapshot: snapshot)
+                case .image: imagePane(lines: lines, highlights: highlights, review: snapshot.review, wordsEnabled: !editingDisabled)
+                case .text: textPane(snapshot: snapshot, wordsEnabled: !editingDisabled)
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func imagePane(lines: [RecognizedLine], highlights: [RecognizedHighlight]) -> some View {
+    private func imagePane(
+        lines: [RecognizedLine], highlights: [RecognizedHighlight], review: PageWordReview = PageWordReview(),
+        wordsEnabled: Bool = true
+    ) -> some View {
         if let pageImage {
             LayeredPageImageView(
                 source: source, image: pageImage, lines: lines, highlights: highlights,
-                selectedLineID: $selectedLineID, onlyOpen: onlyOpen)
+                selectedLineID: $selectedLineID, onlyOpen: onlyOpen, review: review, wordsEnabled: wordsEnabled, onWordTap: openWord)
         } else {
             ContentUnavailableView("Kein Bild", systemImage: "photo", description: Text("Das Bild dieser Seite ist nicht gespeichert."))
         }
     }
 
-    private func textPane(snapshot: PageSnapshot) -> some View {
+    private func textPane(snapshot: PageSnapshot, wordsEnabled: Bool) -> some View {
         LineListView(
             lines: snapshot.lines, highlights: snapshot.highlights, looseHighlights: snapshot.looseHighlights,
-            selectedLineID: $selectedLineID, onlyOpen: onlyOpen)
+            review: snapshot.review, wordsEnabled: wordsEnabled, selectedLineID: $selectedLineID, onlyOpen: onlyOpen,
+            onWordTap: openWord)
     }
 
     // MARK: Selected line
 
+    /// Opens the word correction for a marked word and selects its line.
+    private func openWord(lineID: UUID, wordIndex: Int) {
+        guard !isEditingDisabled(damaged: source.currentDigitization?.hasUnreadableData ?? false) else { return }
+        selectedLineID = lineID
+        sheet = .word(lineID, wordIndex)
+    }
+
+    /// Editing is blocked while the page is damaged or its import is being recognized or re-recognized.
+    private func isEditingDisabled(damaged: Bool) -> Bool {
+        Self.editingDisabled(damaged: damaged, activeBatchID: coordinator.activeBatchID, batchID: batch.id)
+    }
+
+    /// The rule behind `isEditingDisabled` (testable without a view).
+    static func editingDisabled(damaged: Bool, activeBatchID: UUID?, batchID: UUID) -> Bool {
+        damaged || activeBatchID == batchID
+    }
+
     @ViewBuilder
-    private func lineBar(lines: [RecognizedLine], highlights: [RecognizedHighlight], editingDisabled: Bool) -> some View {
+    private func lineBar(
+        lines: [RecognizedLine], highlights: [RecognizedHighlight], review: PageWordReview, editingDisabled: Bool
+    ) -> some View {
         if let line = lines.first(where: { $0.id == selectedLineID }) {
             let own = highlights.filter { $0.applies(to: line) }
+            let marked = review.markedTokens(of: line.id)
+            let status = line.displayStatus(hasMarks: !marked.isEmpty, isIllegible: review.isIllegible(line.id))
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    if let symbol = line.displayStatus.symbolName {
-                        Image(systemName: symbol).foregroundStyle(line.displayStatus.tint).accessibilityHidden(true)
+                    if let symbol = status.symbolName {
+                        Image(systemName: symbol).foregroundStyle(status.tint).accessibilityHidden(true)
                     }
                     Text(line.text.isEmpty ? "(leer)" : line.text)
                         .font(.callout)
@@ -301,6 +342,25 @@ struct ReviewPageView: View {
                         .labelStyle(.iconOnly)
                         .foregroundStyle(.secondary)
                 }
+                if !marked.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("Unsichere Wörter:")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        FlowLayout(spacing: 6) {
+                            ForEach(marked, id: \.index) { token in
+                                Button(token.core.isEmpty ? token.text : token.core) { openWord(lineID: line.id, wordIndex: token.index) }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                    .tint(.orange)
+                                    .disabled(editingDisabled)
+                                    .accessibilityLabel("Unsicheres Wort: \(token.core.isEmpty ? token.text : token.core)")
+                                    .accessibilityIdentifier("wordChip-\(token.index)")
+                            }
+                        }
+                    }
+                }
                 let buttons = Group {
                     Button("Korrigieren", systemImage: "pencil") { sheet = .correction(line.id) }
                         .buttonStyle(.borderedProminent)
@@ -312,10 +372,10 @@ struct ReviewPageView: View {
                     .accessibilityIdentifier("highlightsButton")
                 }
                 .disabled(editingDisabled)
-                if typeSize.isAccessibilitySize {
-                    VStack(alignment: .leading) { buttons }
-                } else {
-                    HStack { buttons }
+                // Wraps to a second row when the buttons do not fit (narrow screens, large text, developer button).
+                FlowLayout(spacing: 8) {
+                    buttons
+                    ReportLineButton { report.reportLine(line.id) }
                 }
             }
             .padding(12)

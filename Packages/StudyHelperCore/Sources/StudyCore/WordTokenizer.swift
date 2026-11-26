@@ -38,10 +38,13 @@ public enum WordTokenizer {
         return result
     }
 
+    /// Created once; tokenizing runs for every word of every page.
+    static let german = Locale(identifier: "de_DE")
+
     /// NFC, lowercased (German locale), punctuation trimmed at both ends.
     public static func normalize(_ word: String) -> String {
         word.precomposedStringWithCanonicalMapping
-            .lowercased(with: Locale(identifier: "de_DE"))
+            .lowercased(with: german)
             .trimmingCharacters(in: trimmed)
     }
 
@@ -49,6 +52,6 @@ public enum WordTokenizer {
     public static func fold(_ normalizedWord: String) -> String {
         normalizedWord
             .replacingOccurrences(of: "ß", with: "ss")
-            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: Locale(identifier: "de_DE"))
+            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: german)
     }
 }

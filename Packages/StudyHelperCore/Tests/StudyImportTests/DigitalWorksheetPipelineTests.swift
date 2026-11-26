@@ -61,6 +61,15 @@ struct DigitalWorksheetPipelineTests {
         }
     }
 
+    @Test("Herkunft: jede Zeile ist PDF-Text und wird nie markiert, auch nach dem Speichern als JSON")
+    func origin() throws {
+        for page in pages {
+            #expect(page.result.lines.allSatisfy { $0.origin == .pdfText && WordReview.isEmbedded($0) })
+            let decoded = try JSONDecoder().decode(DigitizationResult.self, from: JSONEncoder().encode(page.result))
+            #expect(decoded.lines.allSatisfy { $0.origin == .pdfText })
+        }
+    }
+
     @Test("Lesereihenfolge von oben nach unten")
     func readingOrder() throws {
         let lines = pages[0].result.lines

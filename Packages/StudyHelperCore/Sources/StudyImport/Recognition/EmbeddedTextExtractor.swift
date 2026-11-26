@@ -241,7 +241,7 @@ public enum EmbeddedTextExtractor {
             if blockKind == nil, rowIndex == 0, isWholeBold, lineSize >= 1.4 * bodySize { blockKind = .title }
             lines.append(RecognizedLine(
                 text: text, rect: rect, confidence: 1, words: recognizedWords, status: .confident,
-                color: colorsEqual ? kept.first?.color : nil, blockKind: blockKind, order: rowIndex))
+                color: colorsEqual ? kept.first?.color : nil, blockKind: blockKind, order: rowIndex, origin: .pdfText))
             keptRows.append(kept)
         }
 

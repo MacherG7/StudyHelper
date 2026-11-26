@@ -18,6 +18,7 @@ struct AppVersionTests {
         #expect(AppVersion.display(info: info("1.0.0", "8", channel: "Final")) == "1.0.0.8")
         #expect(AppVersion.display(info: info("0.0.1", "12", channel: nil)) == "0.0.1.12 (Beta)")
         #expect(AppVersion.display(info: info("0.0.2", nil, channel: "Final")) == "0.0.2")
+        #expect(AppVersion.display(info: info("0.0.2", "7", channel: "Nightly")) == "0.0.2.7 (Nightly)")
         #expect(AppVersion.display(info: final) == "unbekannt")
         #expect(AppVersion.isBeta(info: nil) && !AppVersion.isBeta(info: final))
     }

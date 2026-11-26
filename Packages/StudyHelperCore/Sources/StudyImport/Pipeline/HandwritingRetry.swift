@@ -417,7 +417,7 @@ extension DigitizationPipeline {
         }
         let options = settings.recognitionOptions(prefersDocumentRecognition: false)
         let output = try await recognizer.recognize(crop.image, options: options)
-        return KnownMisreadings.apply(to: ScriptGuard.apply(to: output.lines))
+        return KnownMisreadings.apply(to: ScriptGuard.apply(to: LineMerging.taggedAsRecognized(output.lines)))
             .filter { line in
                 !line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     && line.confidence >= HandwritingRetry.minimumConfidence

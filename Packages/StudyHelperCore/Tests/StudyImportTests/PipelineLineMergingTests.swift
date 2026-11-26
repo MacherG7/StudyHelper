@@ -30,6 +30,39 @@ struct PipelineLineMergingTests {
         #expect(merged[0].color == nil, "gemischte Farben")
     }
 
+    @Test("Herkunft: zusammengeführte Zeilen behalten eine gemeinsame Herkunft, gemischte werden recognizer; Reihenfolge ändert sie nicht")
+    func originSurvivesMerging() {
+        var a = line("Das ist", x: 0.1, y: 0.2)
+        var b = line("wichtig", x: 0.30, y: 0.2)
+        a.origin = .recognizer
+        b.origin = .recognizer
+        #expect(LineMerging.combine([a, b]).origin == .recognizer)
+        a.origin = .freeText
+        b.origin = .freeText
+        #expect(LineMerging.combine([a, b]).origin == .freeText)
+        b.origin = nil
+        #expect(LineMerging.combine([a, b]).origin == .recognizer)
+        b.origin = .pdfText
+        #expect(LineMerging.combine([a, b]).origin == .recognizer)
+        let merged = LineMerging.mergeRowFragments(
+            LineMerging.taggedAsRecognized([line("Das ist", x: 0.1, y: 0.2), line("wichtig", x: 0.30, y: 0.2)]),
+            pageSize: PageSize(width: 595, height: 842))
+        #expect(merged.count == 1 && merged[0].origin == .recognizer)
+        var embedded = line("Titel", x: 0.1, y: 0.05)
+        embedded.origin = .pdfText
+        let ordered = LineMerging.assignReadingOrder(embedded: [embedded], others: merged)
+        #expect(ordered.map(\.origin) == [.pdfText, .recognizer])
+        let paragraphs = ParagraphGrouping.assign(ordered)
+        #expect(paragraphs.map(\.origin) == [.pdfText, .recognizer])
+    }
+
+    @Test("Textfelder: Zeilen mit Herkunft freeText")
+    func freeTextOrigin() {
+        let box = FreeTextBox(text: "Formel:\nCO2", rect: NormalizedRect(x: 0.1, y: 0.1, width: 0.5, height: 0.1))
+        let lines = LineMerging.freeTextLines([box])
+        #expect(lines.count == 2 && lines.allSatisfy { $0.origin == .freeText })
+    }
+
     @Test("Klar getrennte Spalten derselben Bandbreite bleiben getrennte Zeilen")
     func columnsStaySeparate() {
         let left = line("Produzenten", x: 0.1, y: 0.4, color: .black)

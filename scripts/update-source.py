@@ -18,6 +18,8 @@ therefore has up to two entries with the same bundle ID: "StudyHelper Beta" (bet
 newest first – its newest version is the latest overall – and, from the first full version on,
 "StudyHelper" (beta: false) with only full versions (latest stable). A news item "studyhelper-versionen"
 names the latest, the latest stable and the latest beta version.
+A third entry "StudyHelper Nightly" ("beta": true, "channel": "nightly", D-045) holds only the newest untested
+build that scripts/nightly-release.sh publishes before the tests (rolling GitHub release "nightly").
 """
 import argparse, datetime, hashlib, json, plistlib, posixpath, re, shlex, struct, sys, zipfile
 
@@ -153,22 +155,35 @@ def release_names(meta):
     return tag, asset
 
 
-CHANNELS = ("beta", "final")
+CHANNELS = ("beta", "final", "nightly")
+NIGHTLY_TAG = "nightly"
+NIGHTLY_ASSET = "StudyHelper-nightly.ipa"
 NEWS_ID = "studyhelper-versionen"
 
 
-def display_name(version, build, final):
-    """Name of a release as on GitHub: "0.0.2 Beta 6" or "1.0" (A.B.0 shortened to A.B, D-032)."""
+def display_name(version, build, final, nightly=False):
+    """Name of a release as on GitHub: "0.0.2 Beta 6", "0.0.2 Nightly 7" or "1.0" (A.B.0 → A.B, D-032)."""
     name = version[:-2] if version.endswith(".0") and version.count(".") == 2 else version
+    if nightly:
+        return "%s Nightly %s" % (name, build)
     return name if final else "%s Beta %s" % (name, build)
+
+
+def is_nightly(app):
+    return app.get("channel") == "nightly"
 
 
 def entries(source, bundle_id):
     """(stable, beta) app entries of `bundle_id`; either may be None."""
-    apps = [a for a in source.get("apps", []) if a.get("bundleIdentifier") == bundle_id]
+    apps = [a for a in source.get("apps", []) if a.get("bundleIdentifier") == bundle_id and not is_nightly(a)]
     stable = next((a for a in apps if not a.get("beta")), None)
     beta = next((a for a in apps if a.get("beta")), None)
     return stable, beta
+
+
+def nightly_entry(source, bundle_id):
+    return next((a for a in source.get("apps", [])
+                 if a.get("bundleIdentifier") == bundle_id and is_nightly(a)), None)
 
 
 def stable_entry_from(beta):
@@ -200,6 +215,14 @@ def _insert(app, entry, replace):
 
 
 def update_news(source, bundle_id, date):
+    _update_news(source, bundle_id, date)
+    nightly = nightly_entry(source, bundle_id)
+    if nightly and nightly.get("versions") and source.get("news") and source["news"][0].get("identifier") == NEWS_ID:
+        v = nightly["versions"][0]
+        source["news"][0]["caption"] += " · Nightly: %s" % display_name(v["version"], v["buildVersion"], False, True)
+
+
+def _update_news(source, bundle_id, date):
     """News item naming the latest, latest stable and latest beta version (D-042)."""
     stable, beta = entries(source, bundle_id)
     finals = {(v["version"], v["buildVersion"]) for v in (stable or {}).get("versions", [])}
@@ -228,9 +251,11 @@ def add_version(source, meta, repo, notes, date, replace=False, channel="beta"):
     A beta goes into the beta entry; a full version into the stable entry (created on the first one) and the
     beta entry, so that the beta entry always offers the latest version overall (D-042)."""
     if channel not in CHANNELS:
-        raise SourceError("Kanal muss beta oder final sein: %r" % channel)
+        raise SourceError("Kanal muss beta, final oder nightly sein: %r" % channel)
     links = urls(repo)
     stable, beta = entries(source, meta["bundleIdentifier"])
+    if channel == "nightly":
+        return add_nightly(source, meta, links, notes, date, beta)
     if beta is None:
         raise SourceError("Bundle-ID %s der .ipa steht nicht (als Beta-Eintrag) in der Source." % meta["bundleIdentifier"])
 
@@ -267,6 +292,38 @@ def add_version(source, meta, repo, notes, date, replace=False, channel="beta"):
     return tag, asset
 
 
+def add_nightly(source, meta, links, notes, date, beta):
+    """The newest untested build as the only version of "StudyHelper Nightly" (D-045)."""
+    if beta is None:
+        raise SourceError("Bundle-ID %s der .ipa steht nicht (als Beta-Eintrag) in der Source." % meta["bundleIdentifier"])
+    app = nightly_entry(source, meta["bundleIdentifier"])
+    if app is None:
+        app = {k: v for k, v in beta.items() if k not in ("versions", "name", "subtitle")}
+        app["name"] = beta["name"].removesuffix(" Beta") + " Nightly"
+        app["subtitle"] = "Ungetesteter Stand zum Ausprobieren"
+        app["beta"] = True
+        app["channel"] = "nightly"
+        apps = source["apps"]
+        apps.insert(apps.index(beta) + 1, app)
+    entry = {
+        "version": meta["version"], "buildVersion": meta["buildVersion"], "date": date,
+        "localizedDescription": notes,
+        "downloadURL": links["download"].format(tag=NIGHTLY_TAG, asset=NIGHTLY_ASSET),
+        "size": meta["size"],
+    }
+    if meta.get("minOSVersion"):
+        entry["minOSVersion"] = meta["minOSVersion"]
+    app["versions"] = []
+    _insert(app, entry, True)
+    app["appPermissions"] = {"entitlements": meta["entitlements"], "privacy": meta["privacy"]}
+    app["iconURL"] = links["icon"]
+    update_news(source, meta["bundleIdentifier"], date)
+    source["sourceURL"] = links["source"]
+    source["iconURL"] = links["icon"]
+    source["website"] = links["website"]
+    return NIGHTLY_TAG, NIGHTLY_ASSET
+
+
 def check(source):
     """Problems that would make SideStore/AltStore/StikStore reject or misread the source."""
     problems = []
@@ -279,9 +336,10 @@ def check(source):
         return problems + ["Source: apps fehlt oder ist keine Liste."]
     ids = [a.get("bundleIdentifier") for a in apps]
     # One bundle ID may appear twice: a stable and a beta entry (StikStore marks entries, D-042).
-    channels = [(a.get("bundleIdentifier"), bool(a.get("beta"))) for a in apps]
+    channels = [(a.get("bundleIdentifier"), bool(a.get("beta")), a.get("channel")) for a in apps]
     if len(channels) != len(set(channels)):
-        problems.append("Source: Bundle-IDs sind nicht eindeutig (je ID höchstens ein stabiler und ein Beta-Eintrag).")
+        problems.append("Source: Bundle-IDs sind nicht eindeutig (je ID höchstens ein stabiler, ein Beta- "
+                        "und ein Nightly-Eintrag).")
     for app in apps:
         label = "App %s" % app.get("bundleIdentifier", "?")
         for key in ("name", "bundleIdentifier", "developerName", "localizedDescription", "iconURL"):
@@ -369,7 +427,8 @@ def main(argv=None):
         for key, value in (("TAG", tag), ("ASSET", asset), ("VERSION", meta["version"]),
                            ("BUILD", meta["buildVersion"]),
                            ("TITLE", "StudyHelper " + display_name(meta["version"], meta["buildVersion"],
-                                                                    args.channel == "final"))):
+                                                                    args.channel == "final",
+                                                                    args.channel == "nightly"))):
             print("%s=%s" % (key, shlex.quote(value)))
         return 0
     except (SourceError, OSError, ValueError, KeyError, zipfile.BadZipFile, struct.error) as error:

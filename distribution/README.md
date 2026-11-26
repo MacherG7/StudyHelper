@@ -27,6 +27,7 @@ hat deshalb zwei Einträge mit derselben App-ID `MiloG.StudyHelper1` (eine App, 
 | Eintrag | `beta` | Versionen |
 |---|---|---|
 | „StudyHelper Beta“ | `true` | jede Version, neueste zuerst – die oberste ist die neueste insgesamt („latest“) |
+| „StudyHelper Nightly“ | `true` (`"channel": "nightly"`) | nur die neueste Nightly: ungetesteter Stand, vor den Tests veröffentlicht (`scripts/nightly-release.sh`, Release `nightly`, D-045) |
 | „StudyHelper“ | `false` | nur Vollversionen – die oberste ist die neueste stabile („latest-stable“); erscheint mit der ersten Vollversion (`scripts/publish.sh --final`) |
 
 Die News „Aktuelle Versionen“ nennt bei jedem Release die neueste, die neueste stabile und die neueste Beta.

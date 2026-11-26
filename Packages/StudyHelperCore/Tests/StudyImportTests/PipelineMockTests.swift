@@ -133,6 +133,32 @@ struct PipelineMockTests {
         #expect(page.result.originalMarkdown.range(of: "oben")!.lowerBound < page.result.originalMarkdown.range(of: "unten")!.lowerBound)
     }
 
+    @Test("Herkunft: Erkanntes ist recognizer, auch wenn der Erkenner keine angibt")
+    func originOfRecognizedLines() async throws {
+        let recognizer = CountingRecognizer { _, _, _ in mockOutput(mockLine("Fotosynthese ist wichtig")) }
+        let page = try await pipeline(recognizer).digitizeImage(blankImage())
+        #expect(page.result.lines.map(\.origin) == [.recognizer])
+        #expect(!WordReview.isEmbedded(page.result.lines[0]))
+    }
+
+    @Test("Herkunft auf einer Goodnotes-Seite: Arbeitsblatt-Text pdfText, Textfeld freeText, Handschrift recognizer")
+    func originOnGoodnotesPage() async throws {
+        let recognizer = CountingRecognizer { _, _, _ in mockOutput(mockLine("Notiz", y: 0.5)) }
+        let data = try fixtureData(GoodnotesFixture.fotosyntheseEditable.url)
+        let pages = try await pipeline(recognizer).digitizePDF(data: data).pages
+        let truth = try GoodnotesFixture.fotosyntheseEditable.loadTruth()
+        let freeTexts = Set(truth.items(ofKind: .freeText).compactMap(\.text))
+        let lines = pages.flatMap(\.result.lines)
+        #expect(lines.allSatisfy { $0.origin != nil })
+        let freeTextLines = lines.filter { freeTexts.contains($0.text) }
+        #expect(!freeTextLines.isEmpty && freeTextLines.allSatisfy { $0.origin == .freeText })
+        let title = try #require(pages[1].result.lines.first { $0.text == "Arbeitsblatt: Die Zelle" })
+        let sentence = try #require(pages[1].result.lines.first { $0.text.hasPrefix("Der Zellkern") })
+        #expect(title.origin == .pdfText && sentence.origin == .pdfText)
+        let ink = lines.filter { $0.text == "Notiz" || $0.status == .illegible }
+        #expect(!ink.isEmpty && ink.allSatisfy { $0.origin == .recognizer })
+    }
+
     @Test("Kein PDF: Fehler notAPDF")
     func notAPDF() async throws {
         let pipeline = pipeline(CountingRecognizer())

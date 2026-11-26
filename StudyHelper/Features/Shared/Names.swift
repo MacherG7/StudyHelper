@@ -171,6 +171,15 @@ extension RecognizedLine {
         if needsReview { return .uncertain }
         return .confident
     }
+
+    /// Status in the word review: only marked words (or an illegible line) make a line open; the recognizer's
+    /// line status alone does not (a line without marked words is "sicher", or "von dir korrigiert").
+    func displayStatus(hasMarks: Bool, isIllegible: Bool) -> LineDisplayStatus {
+        if hasMarks { return .uncertain }
+        if isIllegible { return .illegible }
+        if isUserCorrected { return .corrected }
+        return .confident
+    }
 }
 
 // MARK: Highlights per line

@@ -29,6 +29,7 @@ extension AITask {
         case .chat: "Chat"
         case .tips: "Tipps"
         case .connectionTest: "Verbindungstest"
+        case .wordSuggestions: "Wortvorschläge"
         }
     }
 

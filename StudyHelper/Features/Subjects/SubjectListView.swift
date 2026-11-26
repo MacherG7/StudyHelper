@@ -110,7 +110,7 @@ private struct SubjectRow: View {
                 if summary.open > 0 {
                     Text("\(summary.open) offen")
                         .foregroundStyle(.orange)
-                        .accessibilityLabel(summary.open == 1 ? "1 Stelle offen" : "\(summary.open) Stellen offen")
+                        .accessibilityLabel("\(PageWordReview.description(words: summary.openWords, illegible: summary.illegible)) offen")
                 }
             }
             .font(.subheadline)

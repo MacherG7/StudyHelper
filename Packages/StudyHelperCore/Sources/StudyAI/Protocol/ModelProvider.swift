@@ -277,6 +277,8 @@ public struct ResponseSchema: Codable, Sendable, Hashable {
 /// What a request is for; reasoning can be overridden per task, and costs are reported per task.
 public enum AITask: String, Codable, Sendable, CaseIterable, Hashable {
     case digitization, structuring, query, freeTextGrading, flashcards, chat, tips, connectionTest
+    /// Reading suggestions for one marked word of the review (`WordSuggestions`), usually on-device.
+    case wordSuggestions
 }
 
 public struct ModelRequest: Codable, Sendable, Hashable {

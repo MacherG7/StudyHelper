@@ -220,7 +220,7 @@ enum IllegibleInk {
                 width: Double(box.width) / width, height: Double(box.height) / height)
             result.append(RecognizedLine(
                 text: "", rect: rect, confidence: 0, words: [], status: .illegible,
-                reviewReasons: [.unreadable], color: color))
+                reviewReasons: [.unreadable], color: color, origin: .recognizer))
         }
         return result
     }

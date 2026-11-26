@@ -338,21 +338,62 @@ public final class StudyRepository {
     /// Stores a manual correction (survives re-recognition) and updates the current version.
     /// Throws `.damagedData` (changing nothing) if the version's data is unreadable.
     public func correctLine(source: Source, lineID: UUID, newText: String) throws {
+        try storeLineCorrection(source: source, lineID: lineID) { line, _ in (newText, nil) }
+    }
+
+    /// Word-level review: replaces one word of a line (`WordReview.tokens(of:)` index) or, with the same text,
+    /// confirms it. Only the words corrected or confirmed this way count as checked; the other words of the line
+    /// keep their marks. A replacement with several words ("zum Beispiel" for "zumBeispiel") confirms all of them and
+    /// moves the confirmed words after it; an empty replacement removes the word. Only `correctLine` corrects a line
+    /// as a whole.
+    public func correctWord(source: Source, lineID: UUID, wordIndex: Int, newText: String) throws {
+        try storeLineCorrection(source: source, lineID: lineID) { line, existing in
+            let text = WordReview.replacing(wordIndex: wordIndex, in: line, with: newText)
+            // A line already corrected as a whole stays completely checked.
+            if let existing, existing.confirmedWordIndexes == nil { return (text, nil) }
+            let oldCount = WordTokenizer.tokens(in: line.text).count
+            let newCount = WordTokenizer.tokens(in: text).count
+            guard newCount > 0 else { return (text, nil) }
+            let confirmed = Self.shiftedConfirmations(
+                existing?.confirmedWordIndexes ?? [], replacing: wordIndex, delta: newCount - oldCount, count: newCount)
+            return (text, confirmed)
+        }
+    }
+
+    /// Confirmed word indexes after word `index` was replaced by `delta + 1` words (`delta` -1: removed): earlier
+    /// words keep their index, later ones move by `delta`, and the replacement's words are confirmed.
+    static func shiftedConfirmations(_ existing: [Int], replacing index: Int, delta: Int, count: Int) -> [Int] {
+        var result: Set<Int> = []
+        for i in existing where i != index { result.insert(i < index ? i : i + delta) }
+        if delta >= 0 { for k in 0...delta { result.insert(index + k) } }
+        return result.filter { (0..<count).contains($0) }.sorted()
+    }
+
+    /// Creates or updates the correction of one line. `edit` gets the line and its existing correction and returns
+    /// the corrected text and the confirmed word indexes (nil: whole line).
+    private func storeLineCorrection(
+        source: Source, lineID: UUID, edit: (RecognizedLine, LineCorrectionValue?) -> (String, [Int]?)
+    ) throws {
         guard let digitization = source.currentDigitization else { throw StudyDataError.noCurrentDigitization }
         var lines = try self.lines(of: digitization)
         let highlights = try self.highlights(of: digitization)
         guard let index = lines.firstIndex(where: { $0.id == lineID }) else { throw StudyDataError.lineNotFound }
         let line = lines[index]
-        let value = LineCorrectionValue(rect: line.rect, recognizedText: line.automaticText, correctedText: newText)
 
         // Reuse the correction that belongs to this line (same one-to-one matching as the
         // merge) instead of stacking duplicates.
         let existing = lineCorrections(of: source)
         let matching = CorrectionMerger.matching(existing.values, lines)
-        if let i = existing.records.indices.first(where: { matching[$0] == index }) {
+        let existingIndex = existing.records.indices.first(where: { matching[$0] == index })
+        let (newText, confirmed) = edit(line, existingIndex.map { existing.values[$0] })
+        let value = LineCorrectionValue(
+            rect: line.rect, recognizedText: line.automaticText, correctedText: newText,
+            confirmedWordIndexes: confirmed)
+        if let i = existingIndex {
             var updated = existing.values[i]
             updated.correctedText = newText
             updated.rect = line.rect
+            updated.confirmedWordIndexes = confirmed
             existing.records[i].value = updated
             existing.records[i].isUnmatched = false
         } else {

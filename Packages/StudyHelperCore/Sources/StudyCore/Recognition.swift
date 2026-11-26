@@ -40,6 +40,19 @@ public enum LineBlockKind: String, Codable, Hashable, Sendable {
     case title
 }
 
+/// Where the text of a line came from. Decides whether the word review may mark it: text taken from the PDF's text
+/// layer or a Goodnotes text box is exact; recognized text is not.
+public enum LineOrigin: String, Codable, Hashable, Sendable {
+    /// Embedded text of the PDF (worksheet, typed document).
+    case pdfText
+    /// Exact text of a Goodnotes text box (FreeText annotation).
+    case freeText
+    /// Read by a recognizer (Vision: handwriting, scans, photos, text in images, re-read crops, illegible ink).
+    case recognizer
+    /// Transcribed by an AI model.
+    case ai
+}
+
 public struct RecognizedWord: Codable, Hashable, Sendable {
     public var text: String
     public var rect: NormalizedRect
@@ -49,11 +62,20 @@ public struct RecognizedWord: Codable, Hashable, Sendable {
     public var color: RGBColor?
     public var status: ConfidenceStatus
     public var reviewReasons: [ReviewReason]
+    /// Stored only when true, so that blobs of untouched words stay unchanged.
+    private var userConfirmed: Bool?
+
+    /// The user corrected or confirmed this single word in the word-level review (`LineCorrectionValue
+    /// .confirmedWordIndexes`). Such a word is never marked again; the other words of the line keep their marks.
+    public var isUserConfirmed: Bool {
+        get { userConfirmed ?? false }
+        set { userConfirmed = newValue ? true : nil }
+    }
 
     public init(
         text: String, rect: NormalizedRect, confidence: Double = 1,
         color: RGBColor? = nil, status: ConfidenceStatus = .confident,
-        reviewReasons: [ReviewReason] = []
+        reviewReasons: [ReviewReason] = [], isUserConfirmed: Bool = false
     ) {
         self.text = text
         self.rect = rect
@@ -61,6 +83,7 @@ public struct RecognizedWord: Codable, Hashable, Sendable {
         self.color = color
         self.status = status
         self.reviewReasons = reviewReasons
+        self.userConfirmed = isUserConfirmed ? true : nil
     }
 
     /// True if the user should look at this word.
@@ -78,6 +101,7 @@ public struct RecognizedWord: Codable, Hashable, Sendable {
         color = try c.decodeIfPresent(RGBColor.self, forKey: .color)
         status = try c.decodeIfPresent(ConfidenceStatus.self, forKey: .status) ?? .confident
         reviewReasons = try c.decodeIfPresent([ReviewReason].self, forKey: .reviewReasons) ?? []
+        userConfirmed = (try? c.decodeIfPresent(Bool.self, forKey: .userConfirmed)) == true ? true : nil
     }
 }
 
@@ -105,15 +129,20 @@ public struct RecognizedLine: Codable, Hashable, Sendable, Identifiable {
     /// Lines with the same id form one paragraph (consecutive rows of one text, see `ParagraphGrouping`).
     /// nil: not grouped (digitized before paragraphs existed); such a line is a paragraph of its own.
     public var paragraphID: UUID?
+    /// Where the text came from. nil: unknown (digitized before the origin was stored); treated as recognized.
+    /// Encoded only when set, so that blobs without it stay unchanged.
+    public var origin: LineOrigin?
 
     public init(
         id: UUID = UUID(), text: String, rect: NormalizedRect, confidence: Double = 1,
         candidates: [String] = [], words: [RecognizedWord] = [],
         status: ConfidenceStatus = .confident, reviewReasons: [ReviewReason] = [],
         color: RGBColor? = nil, blockKind: LineBlockKind? = nil, order: Int = 0,
-        isUserCorrected: Bool = false, recognizedText: String? = nil, paragraphID: UUID? = nil
+        isUserCorrected: Bool = false, recognizedText: String? = nil, paragraphID: UUID? = nil,
+        origin: LineOrigin? = nil
     ) {
         self.id = id
+        self.origin = origin
         self.text = text
         self.rect = rect
         self.confidence = confidence
@@ -153,6 +182,8 @@ public struct RecognizedLine: Codable, Hashable, Sendable, Identifiable {
         isUserCorrected = try c.decodeIfPresent(Bool.self, forKey: .isUserCorrected) ?? false
         recognizedText = try c.decodeIfPresent(String.self, forKey: .recognizedText)
         paragraphID = try c.decodeIfPresent(UUID.self, forKey: .paragraphID)
+        // Unknown values (written by a newer version) read as nil instead of failing the whole page.
+        origin = ((try? c.decodeIfPresent(String.self, forKey: .origin)) ?? nil).flatMap(LineOrigin.init(rawValue:))
     }
 }
 

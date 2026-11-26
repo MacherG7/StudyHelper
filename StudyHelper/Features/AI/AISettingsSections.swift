@@ -4,6 +4,7 @@ import SwiftUI
 /// Settings sections for the AI layer: providers, tasks, costs, developer mode.
 struct AISettingsSections: View {
     @Environment(AIService.self) private var ai
+    @Environment(RecognitionReportStore.self) private var reports
     @State private var rateText = ""
 
     var body: some View {
@@ -116,11 +117,13 @@ struct AISettingsSections: View {
             if ai.settings.developerModeEnabled {
                 NavigationLink("Anfrage-Log") { RequestLogView() }
                     .accessibilityIdentifier("requestLogLink")
+                NavigationLink("Erkennungsfehler (\(reports.entries.count))") { RecognitionReportListView() }
+                    .accessibilityIdentifier("recognitionReportsLink")
             }
         } header: {
             Text("Entwickler")
         } footer: {
-            Text("Zeigt im Anfrage-Log, was an die KI gesendet wurde, was zurückkam und was es gekostet hat.")
+            Text("Zeigt im Anfrage-Log, was an die KI gesendet wurde, was zurückkam und was es gekostet hat. In der Prüfansicht lassen sich außerdem Erkennungsfehler melden.")
         }
     }
 }

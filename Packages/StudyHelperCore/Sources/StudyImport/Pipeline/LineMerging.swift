@@ -152,7 +152,25 @@ enum LineMerging {
             confidence: members.map(\.confidence).min() ?? 1, candidates: [], words: words,
             status: status, reviewReasons: reasons,
             color: colors.count == 1 && members.allSatisfy({ $0.color != nil }) ? colors.first : nil,
-            blockKind: kinds.count == 1 ? kinds.first : nil)
+            blockKind: kinds.count == 1 ? kinds.first : nil, origin: combinedOrigin(of: members))
+    }
+
+    /// The origin of a merged line: the members' common origin, else recognized (a line that is partly read by the
+    /// recognizer is not exact).
+    static func combinedOrigin(of members: [RecognizedLine]) -> LineOrigin {
+        let origins = Set(members.map(\.origin))
+        if origins.count == 1, let only = origins.first, let origin = only { return origin }
+        return .recognizer
+    }
+
+    /// Lines from a recognizer: their origin is `.recognizer` unless the recognizer already set one.
+    static func taggedAsRecognized(_ lines: [RecognizedLine]) -> [RecognizedLine] {
+        lines.map { line in
+            guard line.origin == nil else { return line }
+            var line = line
+            line.origin = .recognizer
+            return line
+        }
     }
 
     /// The text of a line cut into pieces that each start at a word (with the tokens that follow it and have no
@@ -276,7 +294,7 @@ enum LineMerging {
                         text: token.original, rect: NormalizedRect(x: x, y: rect.y, width: width, height: rect.height)))
                     x += width
                 }
-                result.append(RecognizedLine(text: text, rect: rect, confidence: 1, words: words))
+                result.append(RecognizedLine(text: text, rect: rect, confidence: 1, words: words, origin: .freeText))
             }
         }
         return result

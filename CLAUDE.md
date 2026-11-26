@@ -29,6 +29,7 @@ scripts/make-fixtures.sh    # synthetische Goodnotes-Test-PDFs neu erzeugen
 scripts/check-secrets.sh    # nach API-Keys in Dateien suchen
 scripts/bench-recognition.sh v2 --baseline v1   # Erkennung auf LocalSamples/ messen und vergleichen (D-022)
 scripts/bump-version.sh     # vor jedem Commit: letzte Stelle +1, nur wenn sich die App ändert (D-039; --set A.B.C nur nach Rückfrage, D-027)
+scripts/nightly-release.sh  # vor den Tests: ungetesteten Stand als Nightly veröffentlichen (Pre-release „nightly“, D-045)
 scripts/publish.sh          # nach jedem Commit: Secret-Check, Push, Xcode-Checkout nachziehen, Beta-Release mit .ipa – nur wenn sich die App geändert hat (D-028, D-033)
 scripts/beta-release.sh     # Beta v<Version> mit .ipa für den aktuellen Commit (läuft in publish.sh; zum Nachholen; --force)
 scripts/publish.sh --final  # Vollversion statt Beta (nur nach Zusage des Entwicklers, D-032; vorher --dry-run)
@@ -90,6 +91,9 @@ docs/                           Spezifikation, Plan, Phasen, Entscheidungen, man
   Eine Vollversion ist dieselbe Version mit dem nächsten Build (nie Build 0), veröffentlicht mit
   `scripts/publish.sh --final` als normales Release „StudyHelper 1.0“ plus Tag `v1.0.0` – nur wenn der
   Entwickler es sagt. Danach `--set 1.0.1` (Fehlerkorrekturen) bzw. `--set 1.1.0` (neue Funktionen), nach Rückfrage.
+- Reihenfolge bei Änderungen an der App (D-045): `scripts/bump-version.sh` → `scripts/nightly-release.sh` (der Entwickler
+  kann sofort testen) → `scripts/test.sh --ui` → Commit → `scripts/publish.sh` (getestete Beta). Ändert sich nach der
+  Nightly noch etwas an der App, vor dem Commit erneut `bump-version.sh`.
 - Ein Commit pro abgeschlossener Phase (bei großen Phasen pro Teilschritt). Nach **jedem** Commit
   `scripts/publish.sh` (GitHub `MacherG7/StudyHelper`, öffentlich; Branch `main`; danach automatisch Beta-Release
   `v<Version>` mit der auf dem Mac gebauten, unsignierten .ipa, sofern sich die App geändert hat), nach jeder
@@ -125,6 +129,10 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
   („Textebene“) und PDF mit unsichtbarer Textebene; Umschalter „Handschrift | Textebene“ im Seitenbild der Prüfansicht
   und der Themen, „Als PDF ansehen“ (QuickLook), „Text kopieren“; Cache in `Caches/DigitalPages/`. StudyAI kann PDFs
   senden (Claude, OpenAI; sonst Bild + Text, `PageContent`). Tests aufgeräumt (UI-Tests 25 → 21).
+- **Danach:** Seiten 2/3 der echten Datei (D-041, Nachtrag D-040); Source-Kanäle stabil/Beta (D-042); Erkennungsfehler
+  melden im Developer-Modus (D-043, `scripts/recognition-reports.py`); unsichere Wörter einzeln markiert mit
+  Vorschlägen (Rechtschreibung, Fachbegriffe, Apple-Modell erst beim Antippen; Herkunft pro Zeile, D-044); Nightly vor
+  den Tests (D-045, `scripts/nightly-release.sh`).
 - **Offen:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12, MT-3.4–3.8, MT-3.14/3.15 und MT-S.1–S.7 (macht der Entwickler).
   Vorschläge zu `scripts/test.sh` (Simulator-Package-Lauf optional, UI-Tests parallel/filterbar) warten auf Entscheidung.
 - **Nächster Schritt:** Phase 3b Datensicherung – nach Zusage des Entwicklers.

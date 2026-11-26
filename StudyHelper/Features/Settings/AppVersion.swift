@@ -2,18 +2,24 @@ import Foundation
 
 /// The app version as shown in the settings: "A.B.C.D" = version (CFBundleShortVersionString) plus build
 /// (CFBundleVersion), both from project.yml (docs/DECISIONS.md D-027), with "(Beta)" unless the build is a full
-/// version (StudyHelperChannel "Final", D-032).
+/// version (StudyHelperChannel "Final", D-032) or "(Nightly)" for an untested nightly build (D-045).
 enum AppVersion {
     static func display(info: [String: Any]?) -> String {
         let version = (info?["CFBundleShortVersionString"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "unbekannt"
         var text = version
         if let build = info?["CFBundleVersion"] as? String, !build.isEmpty { text += ".\(build)" }
+        if isNightly(info: info) { return "\(text) (Nightly)" }
         return isBeta(info: info) ? "\(text) (Beta)" : text
     }
 
     /// Every build is a beta except a full version built with `scripts/beta-release.sh --final`.
     static func isBeta(info: [String: Any]?) -> Bool {
         (info?["StudyHelperChannel"] as? String) != "Final"
+    }
+
+    /// Untested build published before the tests (`scripts/nightly-release.sh`, D-045).
+    static func isNightly(info: [String: Any]?) -> Bool {
+        (info?["StudyHelperChannel"] as? String) == "Nightly"
     }
 
     static var current: String { display(info: Bundle.main.infoDictionary) }

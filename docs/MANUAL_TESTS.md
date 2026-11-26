@@ -121,6 +121,7 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-S.6 | 7 Tage warten bzw. in der Store-App „Refresh“ | App wird aufgefrischt und startet weiter; Daten bleiben erhalten | |
 | MT-S.7 | Kamera (Scan/Foto) in der Source-Installation | Systemabfrage mit dem deutschen Text; Scannen funktioniert | |
 | MT-S.8 | Source in StikStore neu laden | „StudyHelper Beta“ trägt die Beta-Markierung; News „Aktuelle Versionen“ nennt neueste, stabile und Beta-Version | |
+| MT-S.10 | Nightly in StikStore (Eintrag „StudyHelper Nightly“) installieren, danach die getestete Beta | Nightly mit Beta-Markierung sichtbar; Einstellungen zeigen „(Nightly)“; die Beta ersetzt sie als Update, Daten bleiben | |
 | MT-S.9 | Nach der ersten Vollversion: Source in StikStore, SideStore und AltStore | Zwei Einträge „StudyHelper“ (ohne Beta-Markierung) und „StudyHelper Beta“; beide installieren dieselbe App (Daten bleiben), kein Fehler wegen gleicher App-ID – sonst D-042 überdenken | |
 
 ---
@@ -155,6 +156,9 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.8 | Import mit vielen Seiten (z. B. 30): schnell durch die Seiten blättern im Modus „Textebene“, dann „Als PDF ansehen“ | Aktuelle Seite erscheint ohne lange Wartezeit, kein Speicherproblem, App bleibt flüssig | |
 | MT-3.14 | Echte Goodnotes-Seite mit Skizze und Beschriftung: zwischen „Handschrift“ und „Text“ wechseln | Im Modus „Text“ ist die Handschrift weg, Skizze, Pfeile, Bilder und Textmarker bleiben; Text steht lesbar an der richtigen Stelle | |
 | MT-3.15 | Foto einer handschriftlichen Seite im Modus „Text“ | Handschrift sauber überdeckt (keine Reste, keine Flecken auf kariertem/liniertem Papier notieren) | |
+| MT-3.16 | Developer-Modus an: Zeile „Fehler melden“, Bereich aufziehen, „Bericht kopieren“ und in den Chat einfügen, „Als Datei teilen“ per AirDrop | Bereich trifft die gemeinte Stelle; Text und Datei vollständig; `scripts/recognition-reports.py` liest beides | |
+| MT-3.17 | Gerät mit Apple Intelligence: unsicheres Wort antippen | Markierung nur am Wort; Vorschläge des Geräte-Modells erscheinen nach kurzer Zeit, passen zum Satz; Übernehmen ändert nur das Wort | |
+| MT-3.18 | Gerät ohne Apple Intelligence (oder ausgeschaltet): unsicheres Wort antippen | Hinweis „nicht verfügbar“; Rechtschreib- und Fachbegriff-Vorschläge erscheinen sofort | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
 | MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
 | MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |

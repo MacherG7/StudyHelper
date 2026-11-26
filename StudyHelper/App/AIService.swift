@@ -13,6 +13,9 @@ struct AIBackend: Sendable {
     /// backend ignores the key (mocks).
     var makeProviderWithKey: (@Sendable (ProviderConfiguration, String) throws -> any ModelProvider)? = nil
     var makeCatalogWithKey: (@Sendable (ProviderConfiguration, String) throws -> any ModelCatalog)? = nil
+    /// The on-device model for the word suggestions of the review (no configured provider needed). Throws
+    /// `ProviderError.unavailable` with a German reason if the model cannot be used. nil: not available.
+    var makeOnDeviceProvider: (@Sendable () throws -> (ProviderConfiguration, any ModelProvider))? = nil
 
     static func live(keyStore: KeyStore, transport: HTTPTransport = URLSessionTransport()) -> AIBackend {
         let factory = ProviderFactory(keyStore: keyStore, transport: transport)
@@ -20,7 +23,14 @@ struct AIBackend: Sendable {
             makeProvider: { try factory.makeProvider(for: $0) },
             makeCatalog: { try factory.makeCatalog(for: $0) },
             makeProviderWithKey: { try factory.withKeyOverride($1, for: $0.id).makeProvider(for: $0) },
-            makeCatalogWithKey: { try factory.withKeyOverride($1, for: $0.id).makeCatalog(for: $0) })
+            makeCatalogWithKey: { try factory.withKeyOverride($1, for: $0.id).makeCatalog(for: $0) },
+            makeOnDeviceProvider: {
+                let availability = AppleModelAvailability.current
+                guard availability.isAvailable else { throw ProviderError.unavailable(availability.germanDescription) }
+                let configuration = ProviderConfiguration(
+                    name: "Apple-Modell (auf dem Gerät)", kind: .appleFoundation, model: "apple-foundation")
+                return (configuration, try factory.makeProvider(for: configuration))
+            })
     }
 
     func provider(for configuration: ProviderConfiguration, keyOverride: String?) throws -> any ModelProvider {
@@ -46,6 +56,9 @@ struct AIBackend: Sendable {
                 reasoningLevels: [.off, .low, .medium, .high], defaultReasoning: .medium)),
     ]
 
+    /// The answer of the mock on-device model to a word-suggestion request (`AITask.wordSuggestions`).
+    nonisolated static let mockWordSuggestionAnswer = #"{"vorschlaege":["Chlorophyll","Chlorofyll"]}"#
+
     /// A mock provider for every configuration kind, with the mock catalog.
     static func mock(script: MockScript = MockScript(chunks: ["OK"])) -> AIBackend {
         AIBackend(
@@ -57,7 +70,11 @@ struct AIBackend: Sendable {
                 return MockProvider(
                     script: script, name: configuration.name, model: configuration.model, capabilities: capabilities)
             },
-            makeCatalog: { _ in StaticModelCatalog(models: mockModels) })
+            makeCatalog: { _ in StaticModelCatalog(models: mockModels) },
+            makeOnDeviceProvider: {
+                (ProviderConfiguration(name: "Mock (Gerät)", kind: .mock, model: "mock-1"),
+                 MockProvider(script: MockScript(answer: mockWordSuggestionAnswer)))
+            })
     }
 }
 
@@ -274,6 +291,13 @@ final class AIService {
         validate: ((ModelResponse) -> String?)?
     ) async throws -> ModelResponse {
         let (config, provider, prepared) = try prepare(request, configuration: configuration, keyOverride: keyOverride)
+        return try await runAndLog(prepared, configuration: config, provider: provider, validate: validate)
+    }
+
+    private func runAndLog(
+        _ prepared: ModelRequest, configuration config: ProviderConfiguration, provider: any ModelProvider,
+        validate: ((ModelResponse) -> String?)?
+    ) async throws -> ModelResponse {
         let start = now()
         do {
             var response = try await provider.respond(to: prepared)
@@ -285,6 +309,41 @@ final class AIService {
             log(request: prepared, configuration: config, response: nil, error: failure, start: start)
             throw failure.providerError ?? failure
         }
+    }
+
+    // MARK: Word suggestions
+
+    static let onDeviceUnavailableMessage = "Vorschläge des Geräte-Modells sind auf diesem Gerät nicht verfügbar."
+
+    /// Reading suggestions for one marked word from the on-device model (`WordSuggestions`). Needs no configured
+    /// provider; the request is logged like every other. Throws `ProviderError.unavailable` if the model cannot be
+    /// used on this device; then nothing is sent and nothing is logged.
+    func suggestWords(word: String, before: String, after: String, subject: String?) async throws -> [String] {
+        guard let make = backend.makeOnDeviceProvider else {
+            throw ProviderError.unavailable(Self.onDeviceUnavailableMessage)
+        }
+        let (config, provider) = try make()
+        let request = WordSuggestions.request(word: word, before: before, after: after, subject: subject)
+        let response = try await runAndLog(
+            request, configuration: config, provider: provider, validate: { Self.suggestionsParsingError($0.text) })
+        return WordSuggestions.parse(response.text, original: word)
+    }
+
+    /// German reason if an answer is no suggestion list at all (no JSON, or JSON without the suggestions list); nil for a
+    /// well-formed answer, also an empty list. The request is then logged with this parsing error instead of as a success.
+    static func suggestionsParsingError(_ text: String) -> String? {
+        guard case .success(let json) = StructuredOutput.extractJSON(from: text) else {
+            return "Die Antwort enthielt keine Vorschlagsliste (kein JSON)."
+        }
+        guard let value = try? JSONSerialization.jsonObject(with: Data(json.utf8), options: [.fragmentsAllowed]) else {
+            return "Die Antwort enthielt kein lesbares JSON."
+        }
+        if value is [Any] { return nil }
+        if let object = value as? [String: Any] {
+            let keys = ["vorschlaege", "vorschläge", "Vorschlaege", "Vorschläge", "suggestions"]
+            if keys.contains(where: { object[$0] is [Any] }) { return nil }
+        }
+        return "Die Antwort enthielt keine Vorschlagsliste."
     }
 
     func stream(

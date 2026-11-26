@@ -3,16 +3,35 @@ import SwiftUI
 
 /// Builds the visible and spoken representation of a recognized line with its highlights.
 enum LineText {
-    /// Line text with highlights shown visibly (bold, colored, underlined, marker background) and
-    /// uncertain words in orange.
-    static func attributed(line: RecognizedLine, highlights: [RecognizedHighlight]) -> AttributedString {
+    /// Line text with highlights shown visibly (bold, colored, underlined, marker background); the marked words
+    /// (`PageWordReview.markedTokens`) are orange and underlined, nothing else of the line. Without `marked` (views
+    /// that have no word review, e.g. the topic source panel) the recognizer's uncertain words are orange.
+    static func attributed(
+        line: RecognizedLine, highlights: [RecognizedHighlight], marked: [ReviewToken]? = nil
+    ) -> AttributedString {
+        var result = highlighted(line: line, highlights: highlights, legacyUncertain: marked == nil)
+        for token in marked ?? [] {
+            let start = line.text.distance(from: line.text.startIndex, to: token.range.lowerBound)
+            let length = line.text.distance(from: token.range.lowerBound, to: token.range.upperBound)
+            guard length > 0, start + length <= result.characters.count else { continue }
+            let lower = result.characters.index(result.startIndex, offsetBy: start)
+            let upper = result.characters.index(lower, offsetBy: length)
+            result[lower..<upper].foregroundColor = .orange
+            result[lower..<upper].underlineStyle = Text.LineStyle(pattern: .dot, color: .orange)
+        }
+        return result
+    }
+
+    private static func highlighted(
+        line: RecognizedLine, highlights: [RecognizedHighlight], legacyUncertain: Bool
+    ) -> AttributedString {
         let own = highlights.filter { $0.applies(to: line) }
         let wordsJoined = line.words.map(\.text).joined(separator: " ")
         if !line.words.isEmpty, wordsJoined == line.text {
             var result = AttributedString()
             for (index, word) in line.words.enumerated() {
                 var piece = AttributedString(word.text)
-                if !line.isUserCorrected, word.needsReview { piece.foregroundColor = .orange }
+                if legacyUncertain, !line.isUserCorrected, word.needsReview { piece.foregroundColor = .orange }
                 for highlight in own where highlight.words.contains(WordReference(lineID: line.id, wordIndex: index)) {
                     style(&piece, for: highlight)
                 }
@@ -60,11 +79,20 @@ enum LineText {
 }
 
 extension RecognizedLine {
-    /// VoiceOver label: "Zeile 3: Ort: Chloroplasten. Unsicher. Hervorhebung: Chloroplasten, Textmarker, gelb."
-    func spokenLabel(highlights: [RecognizedHighlight]) -> String {
+    /// VoiceOver label: "Zeile 3: Ort: Chloroplasten. Unsichere Wörter: Chlorophyl, grune. Hervorhebung: …".
+    /// `markedWords` are the words of the word review (`PageWordReview.markedTokens`); `isIllegible` is an open
+    /// illegible line.
+    func spokenLabel(
+        highlights: [RecognizedHighlight], markedWords: [String]? = nil, isIllegible: Bool = false
+    ) -> String {
         var parts = ["Zeile \(order + 1): \(text.isEmpty ? "leer" : text)."]
-        let status = displayStatus
-        if status != .confident {
+        // Without word review info (nil) the recognizer's line status is spoken.
+        let status = markedWords == nil
+            ? displayStatus : displayStatus(hasMarks: !(markedWords ?? []).isEmpty, isIllegible: isIllegible)
+        let markedWords = markedWords ?? []
+        if !markedWords.isEmpty {
+            parts.append((markedWords.count == 1 ? "Unsicheres Wort: " : "Unsichere Wörter: ") + markedWords.joined(separator: ", ") + ".")
+        } else if status != .confident {
             let name = status.germanName
             parts.append(name.prefix(1).uppercased() + name.dropFirst() + ".")
         }

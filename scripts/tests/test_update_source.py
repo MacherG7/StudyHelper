@@ -287,6 +287,61 @@ class ChannelTests(unittest.TestCase):
         self.assertIn("true oder false", " ".join(us.check(source)))
 
 
+class NightlyTests(unittest.TestCase):
+    """Nightly entry with only the newest untested build (D-045)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def add(self, source, build, channel):
+        meta = us.read_ipa(make_ipa(self.dir, version="0.0.2", build=build))
+        return us.add_version(source, meta, REPO, "Build %s" % build, "2026-11-26T12:00:00Z", channel=channel)
+
+    def test_nightly_creates_own_entry_with_one_version(self):
+        """Nightly: eigener Eintrag mit Beta-Markierung, nur die neueste Version, festes Release nightly"""
+        source = template()
+        self.assertEqual(self.add(source, "7", "nightly"), ("nightly", "StudyHelper-nightly.ipa"))
+        self.add(source, "8", "nightly")
+        night = us.nightly_entry(source, BUNDLE_ID)
+        self.assertEqual(night["name"], "StudyHelper Nightly")
+        self.assertIs(night["beta"], True)
+        self.assertEqual(night["channel"], "nightly")
+        self.assertEqual([v["buildVersion"] for v in night["versions"]], ["8"])
+        self.assertEqual(night["downloadURL"],
+                         "https://github.com/%s/releases/download/nightly/StudyHelper-nightly.ipa" % REPO)
+        stable, beta = us.entries(source, BUNDLE_ID)
+        self.assertIsNone(stable)
+        self.assertEqual(beta["versions"], [])
+        self.assertIn("Nightly: 0.0.2 Nightly 8", source["news"][0]["caption"])
+        self.assertEqual(us.check(source), [])
+
+    def test_beta_after_nightly_keeps_nightly(self):
+        """Eine getestete Beta landet im Beta-Eintrag, die Nightly bleibt"""
+        source = template()
+        self.add(source, "7", "nightly")
+        self.add(source, "7", "beta")
+        _, beta = us.entries(source, BUNDLE_ID)
+        self.assertEqual([v["buildVersion"] for v in beta["versions"]], ["7"])
+        self.assertIsNotNone(us.nightly_entry(source, BUNDLE_ID))
+        self.assertEqual(us.check(source), [])
+
+    def test_main_nightly_title(self):
+        """Kommandozeile: --channel nightly gibt Titel und Release nightly"""
+        ipa = make_ipa(self.dir, version="0.0.2", build="7")
+        src = os.path.join(self.dir, "source.json")
+        us.save(template(), src)
+        stdout = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(io.StringIO()):
+            code = us.main(["--ipa", ipa, "--source", src, "--repo", REPO, "--channel", "nightly"])
+        self.assertEqual(code, 0)
+        self.assertIn("TITLE='StudyHelper 0.0.2 Nightly 7'", stdout.getvalue())
+        self.assertIn("TAG=nightly", stdout.getvalue())
+
+
 class CheckTests(unittest.TestCase):
     def test_repository_source_is_valid(self):
         """distribution/source.json ist gültig"""

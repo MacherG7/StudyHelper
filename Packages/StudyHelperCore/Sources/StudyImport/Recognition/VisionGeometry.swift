@@ -62,7 +62,7 @@ enum VisionLineBuilder {
         }
         return RecognizedLine(
             text: text, rect: lineRect, confidence: confidence, candidates: candidates, words: words,
-            status: lineStatus, reviewReasons: lineReasons, blockKind: blockKind
+            status: lineStatus, reviewReasons: lineReasons, blockKind: blockKind, origin: .recognizer
         )
     }
 

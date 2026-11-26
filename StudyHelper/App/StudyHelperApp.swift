@@ -5,9 +5,10 @@ import SwiftUI
 /// Entry point of StudyHelper.
 ///
 /// Launch arguments for UI tests:
-/// - `-uiTestInMemory`: use an in-memory store (no data on disk)
+/// - `-uiTestInMemory`: use an in-memory store (no data on disk); the review's spell checker is a fixed word list
 /// - `-uiTestSeed`: additionally fill it with demo data (`UITestSeeder`)
 /// - `-uiTestSeedVersions`: with `-uiTestSeed`, the demo page has a second version
+/// - `-uiTestSeedReports`: with `-uiTestInMemory`, the developer error list holds one demo entry
 /// - `-uiTestMockAI`: with `-uiTestInMemory`, every AI provider kind is a mock (no network, in-memory keys)
 @main
 struct StudyHelperApp: App {
@@ -24,6 +25,7 @@ struct StudyHelperApp: App {
                         .environment(\.digitalPageStore, app.digitalPages)
                         .environment(app.incomingFiles)
                         .environment(app.ai)
+                        .environment(app.reports)
                         .onOpenURL { url in Task { await app.incomingFiles.receive(url) } }
                 case .failed(let message):
                     ContentUnavailableView(

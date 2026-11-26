@@ -9,6 +9,12 @@ struct PageImageView: View {
     let highlights: [RecognizedHighlight]
     @Binding var selectedLineID: UUID?
     let onlyOpen: Bool
+    /// The marked words (small orange frames) and illegible lines (red) of the page; nothing is marked without it.
+    var review = PageWordReview()
+    /// False while the page is locked (damaged, being recognized): the word frames are shown but cannot be tapped.
+    var wordsEnabled = true
+    /// A marked word frame was tapped (line id, word index).
+    var onWordTap: (UUID, Int) -> Void = { _, _ in }
     /// An area of the page to point at (the source of a topic entry); the view scrolls to it.
     var markedRect: NormalizedRect?
     /// Which layer the image shows ("Handschrift", "Textebene"); read out as the image's accessibility value.
@@ -108,12 +114,19 @@ struct PageImageView: View {
                 SourceMark(rect: markedRect, size: size)
             }
             ForEach(lines) { line in
+                let marked = review.markedTokens(of: line.id)
                 LineOverlay(
-                    line: line, highlights: highlights, size: size,
-                    isSelected: line.id == selectedLineID, dimmed: onlyOpen && !line.needsReview
+                    line: line, highlights: highlights, size: size, markedWords: marked.map(\.core),
+                    isIllegible: review.isIllegible(line.id),
+                    isSelected: line.id == selectedLineID, dimmed: onlyOpen && !review.isOpen(line.id)
                 ) {
                     tappedHere = line.id
                     selectedLineID = (selectedLineID == line.id) ? nil : line.id
+                }
+            }
+            ForEach(lines) { line in
+                ForEach(review.markedTokens(of: line.id), id: \.index) { token in
+                    WordFrame(order: line.order, token: token, size: size, isEnabled: wordsEnabled) { onWordTap(line.id, token.index) }
                 }
             }
         }
@@ -153,25 +166,19 @@ private struct LineOverlay: View {
     let line: RecognizedLine
     let highlights: [RecognizedHighlight]
     let size: CGSize
+    let markedWords: [String]
+    let isIllegible: Bool
     let isSelected: Bool
     let dimmed: Bool
     let onTap: () -> Void
-
-    private var tint: Color? {
-        switch line.displayStatus {
-        case .confident: nil
-        case .uncertain: .orange
-        case .illegible: .red
-        case .corrected: .green
-        }
-    }
 
     var body: some View {
         let frame = CGRect(
             x: line.rect.x * size.width, y: line.rect.y * size.height,
             width: max(line.rect.width * size.width, 10), height: max(line.rect.height * size.height, 10))
-        let fill: Color = isSelected ? Color.accentColor.opacity(0.18) : (dimmed ? .clear : (tint?.opacity(0.28) ?? .clear))
-        let stroke: Color = isSelected ? Color.accentColor : (dimmed ? .clear : (tint?.opacity(0.9) ?? Color.blue.opacity(0.22)))
+        // Neutral unless selected; only illegible lines are red. Uncertain words get their own frames (`WordFrame`).
+        let fill: Color = isSelected ? Color.accentColor.opacity(0.18) : (dimmed ? .clear : (isIllegible ? Color.red.opacity(0.28) : .clear))
+        let stroke: Color = isSelected ? Color.accentColor : (dimmed ? .clear : (isIllegible ? Color.red.opacity(0.9) : Color.blue.opacity(0.22)))
         Button(action: onTap) {
             RoundedRectangle(cornerRadius: 3)
                 .fill(fill)
@@ -182,10 +189,42 @@ private struct LineOverlay: View {
         .frame(width: frame.width, height: frame.height)
         .offset(x: frame.minX, y: frame.minY)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(line.spokenLabel(highlights: highlights))
+        .accessibilityLabel(line.spokenLabel(highlights: highlights, markedWords: markedWords, isIllegible: isIllegible))
         .accessibilityValue(isSelected ? "ausgewählt" : "")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("imageLine-\(line.order)")
+    }
+}
+
+/// A small orange frame around a marked word; a tap opens the word correction.
+private struct WordFrame: View {
+    let order: Int
+    let token: ReviewToken
+    let size: CGSize
+    let isEnabled: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        let frame = CGRect(
+            x: token.rect.x * size.width, y: token.rect.y * size.height,
+            width: max(token.rect.width * size.width, 14), height: max(token.rect.height * size.height, 14))
+        Button(action: onTap) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.orange.opacity(0.22))
+                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.orange, lineWidth: 2))
+                .padding(-2)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.45)
+        .frame(width: frame.width, height: frame.height)
+        .offset(x: frame.minX, y: frame.minY)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Unsicheres Wort: \(token.core.isEmpty ? token.text : token.core)")
+        .accessibilityHint(isEnabled ? "Öffnet die Wortkorrektur" : "Gerade nicht bearbeitbar")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("imageWord-\(order)-\(token.index)")
     }
 }
 

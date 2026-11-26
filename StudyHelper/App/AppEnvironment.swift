@@ -14,16 +14,20 @@ final class AppServices {
     let ai: AIService
     /// Builds the digital page (text layer image, PDF) and caches the results in `Caches/DigitalPages`.
     let digitalPages: DigitalPageStore
+    /// Recognition error reports of the developer mode (JSON file in Application Support).
+    let reports: RecognitionReportStore
 
     /// - Parameters:
     ///   - makeAI: nil builds the production service (settings in UserDefaults, keys in the Keychain).
     ///   - digitalPages: nil uses the cache folder in `Caches`.
+    ///   - reports: nil uses `Application Support/StudyHelper/RecognitionReports.json`.
     init(
         container: ModelContainer, makeAI: ((StudyRepository) -> AIService)? = nil,
-        digitalPages: DigitalPageStore? = nil
+        digitalPages: DigitalPageStore? = nil, reports: RecognitionReportStore? = nil
     ) {
         self.container = container
         self.digitalPages = digitalPages ?? DigitalPageStore()
+        self.reports = reports ?? RecognitionReportStore(fileURL: RecognitionReportStore.defaultFileURL())
         let repository = StudyRepository(container: container)
         self.repository = repository
         self.incomingFiles = IncomingFiles()
@@ -58,6 +62,9 @@ enum AppEnvironment {
             let container = try ModelContainerFactory.makeContainer(inMemory: inMemory)
             // UI tests (in-memory) never touch the real Keychain or the real settings.
             let mockAI = arguments.contains("-uiTestMockAI")
+            // The simulator's dictionaries differ between system versions: UI tests use a fixed word list, so that
+            // only the words the recognizer is unsure about are marked (UITestSpellChecker).
+            if inMemory { AppSpellChecker.shared = UITestSpellChecker(unknown: []) }
             let services = AppServices(
                 container: container,
                 makeAI: inMemory ? { AppServices.makeUITestAI(repository: $0, mockAI: mockAI) } : nil,
@@ -65,7 +72,9 @@ enum AppEnvironment {
                 digitalPages: inMemory ? DigitalPageStore(
                     directory: FileManager.default.temporaryDirectory
                         .appendingPathComponent("DigitalPages-\(UUID().uuidString)", isDirectory: true),
-                    pruneAtStart: false) : nil)
+                    pruneAtStart: false) : nil,
+                reports: inMemory ? RecognitionReportStore.temporary() : nil)
+            if inMemory, arguments.contains("-uiTestSeedReports") { services.reports.seedDemoEntry() }
             if inMemory, arguments.contains("-uiTestSeed") {
                 try UITestSeeder.seed(
                     services.repository, withVersions: arguments.contains("-uiTestSeedVersions"),

@@ -5,6 +5,9 @@
 # Usage: scripts/publish.sh            after every commit (beta)
 #        scripts/publish.sh --final    full version (D-032)
 source "$(dirname "$0")/common.sh"
+# The whole script is one compound command: bash parses it completely before running it, so the rebase below may
+# change this file on disk without breaking the running script.
+{
 
 "$ROOT/scripts/check-secrets.sh"
 
@@ -16,6 +19,18 @@ if git -C "$ROOT" fetch -q origin main 2>/dev/null; then
         && [[ "$(git -C "$ROOT" rev-parse HEAD)" != "$(git -C "$ROOT" rev-parse origin/main)" ]] \
         && ! git -C "$ROOT" diff --quiet origin/main HEAD -- "${IPA_PATHS[@]}"; then
         echo "Warnung: Version unverändert ($("$ROOT/scripts/bump-version.sh" --show)). Vor dem Commit scripts/bump-version.sh ausführen."
+    fi
+fi
+
+# scripts/nightly-release.sh pushes source-only commits ("Source: … Nightly …") straight to origin/main: rebase onto
+# them when they are all that the remote has in addition (D-045); anything else stops here.
+if git -C "$ROOT" fetch -q origin main 2>/dev/null && ! git -C "$ROOT" merge-base --is-ancestor origin/main HEAD; then
+    extra="$(git -C "$ROOT" diff --name-only "$(git -C "$ROOT" merge-base origin/main HEAD)" origin/main)"
+    if [[ "$extra" == "distribution/source.json" ]]; then
+        step "Auf neue Source-Commits von GitHub aufsetzen"
+        git -C "$ROOT" rebase -q origin/main || fail "Rebase auf origin/main gescheitert – bitte von Hand lösen."
+    else
+        fail "origin/main hat Änderungen, die hier fehlen ($extra). Erst zusammenführen."
     fi
 fi
 
@@ -46,3 +61,5 @@ BEFORE="$(git -C "$ROOT" rev-parse HEAD)"
 "$ROOT/scripts/beta-release.sh" "$@"
 # A release adds its version to distribution/source.json in a commit of its own (D-034): bring Xcode's checkout along.
 [[ "$(git -C "$ROOT" rev-parse HEAD)" == "$BEFORE" ]] || update_main_checkout
+exit
+}

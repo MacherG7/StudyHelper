@@ -370,6 +370,33 @@ Format: Datum · Status (angenommen / offen) · Kontext · Entscheidung · Konse
 - **Entscheidung:** Zwei Einträge mit **derselben** App-ID `MiloG.StudyHelper1`, damit es eine App mit denselben Daten bleibt: „StudyHelper Beta“ (`beta: true`) mit jeder Version (oberste = neueste insgesamt) und „StudyHelper“ (`beta: false`) nur mit Vollversionen (oberste = neueste stabile), angelegt automatisch mit der ersten Vollversion (`publish.sh --final`; bis dahin gibt es ihn nicht). Eine Vollversion steht in beiden Einträgen. Die News „Aktuelle Versionen“ (`studyhelper-versionen`) nennt bei jedem Release neueste, neueste stabile und neueste Beta; eigene News bleiben. `update-source.py --channel beta|final`, `beta-release.sh` setzt den Kanal (bei `--source-only` aus dem GitHub-Release). Die Prüfung erlaubt je App-ID höchstens einen stabilen und einen Beta-Eintrag.
 - **Konsequenzen:** Ob SideStore, AltStore und StikStore zwei Einträge mit gleicher App-ID sauber anzeigen und installieren, ist erst mit der ersten Vollversion prüfbar (MT-S.9); falls nicht, bekommt die Beta eine eigene App-ID (dann eigene Daten). Phasen-Releases sind Pre-releases ohne .ipa und erscheinen nicht in der Source.
 
+## D-043 Erkennungsfehler melden (Developer-Modus)
+
+- **Datum:** 2026-11-26
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Der Entwickler soll genau zeigen können, wo die Erkennung falsch liegt, damit sie mit dem Benchmark nachgestellt und verbessert werden kann.
+- **Entscheidung:** Im Developer-Modus gibt es „Fehler melden“ (Zeile) und „Bereich als Fehler markieren“ (Rechteck im Seitenbild) mit Art, „Richtig wäre“, Notiz, „gehört hinter“ und optionalem Bildausschnitt. Berichte liegen als JSON (`RecognitionReport`, Format `studyhelper-recognition-report` Version 1, StudyCore) in Application Support; Export als Chat-Text („Bericht kopieren“, mit JSON-Kurzform am Ende) oder als Datei. Korrekturen können automatisch als „falsch gelesen“ mitgehen. Auf dem Mac stellt `scripts/recognition-reports.py` Berichte neben einen Benchmark-Lauf und trägt „Richtig wäre“ auf Wunsch in die lokale Referenz ein (`--into-reference`, erst mit `--write`).
+- **Konsequenzen:** Keine Schema-Änderung. Berichte enthalten nur, was der Nutzer selbst teilt (Text, Positionen, optional Bildausschnitt), keine Keys oder E-Mail-Adressen.
+
+## D-044 Unsichere Wörter einzeln markieren, Vorschläge erst beim Antippen
+
+- **Datum:** 2026-11-26
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Die Erkennung muss nicht perfekt sein; schlampige Wörter bessert der Nutzer aus. Bisher markierte die Prüfansicht ganze Zeilen, Vision liefert keine Sicherheit pro Wort, und viele Fehler galten als „sicher“ („Eingrifte“, „tasst“).
+- **Entscheidung:**
+  - Markiert werden einzelne Wörter (`WordReview`, StudyCore): vom Erkenner als unsicher markierte Wörter und Wörter, die die deutsche Rechtschreibprüfung (`UITextChecker`) nicht kennt und die keine Fachbegriffe des Fachs sind (auch zusammengesetzte Wörter aus bekannten Teilen und Trennungen am Zeilenende gelten als bekannt). Nie markiert: Zahlen, Satzzeichen, Pfeile, Aufzählungszeichen, eingebetteter PDF-Text und Textfelder – erkannt an der gespeicherten Herkunft der Zeile (`RecognizedLine.origin`: pdfText, freeText, recognizer, ai; ältere Digitalisierungen ohne Herkunft werden wie Handschrift geprüft). Die Prüfung läuft beim Anzeigen, gespeicherte Daten bleiben gleich; der Zähler zählt offene Wörter plus unleserliche Stellen.
+  - „Wort korrigieren“ zeigt den Bildausschnitt des Worts und Vorschläge: sofort aus Fachbegriffen, Alternativen des Erkenners und Rechtschreibprüfung; erst beim Öffnen bis zu 5 Vorschläge des Apple-Modells auf dem Gerät mit etwa 8 Wörtern davor und danach (feste Anweisung: nur Lesarten des Geschriebenen, nichts erfinden; Antwort als JSON, robust gelesen). Das Modell braucht keinen eingerichteten Anbieter (kostenlos, lokal) und steht im Anfrage-Log (Aufgabe „Wortvorschläge“); ohne Apple Intelligence bleibt es bei den lokalen Vorschlägen.
+  - Eine Wortkorrektur (`correctWord`) erledigt nur dieses Wort; die übrigen Markierungen bleiben. „Korrigieren“ für die ganze Zeile erledigt die ganze Zeile.
+- **Konsequenzen:** Die Rechtschreibprüfung erkennt echte, aber falsche Wörter nicht („Manschen“ ist ein Wort). Fachbegriffe werden markiert, bis sie gemerkt sind („Als Fachbegriff merken“). Guided Generation des Apple-Modells folgt weiter mit Phase 4 (D-036).
+
+## D-045 Nightly vor den Tests
+
+- **Datum:** 2026-11-26
+- **Status:** angenommen (Wunsch des Entwicklers)
+- **Kontext:** Der Entwickler möchte neue Stände sofort selbst auf dem Gerät testen, ohne auf die automatischen Tests (vor allem die UI-Tests, rund 10 Minuten) zu warten.
+- **Entscheidung:** Bei Änderungen an der App: `bump-version.sh`, dann `scripts/nightly-release.sh` – baut die unsignierte .ipa mit Kanal „Nightly“ (App zeigt „A.B.C.D (Nightly)“, Commit mit „*“ bei nicht committeten Änderungen), ersetzt das rollende GitHub-Pre-release `nightly` (nur die neueste Nightly bleibt; Asset `StudyHelper-nightly.ipa`) und trägt sie als einzige Version im Source-Eintrag „StudyHelper Nightly“ (`beta: true`, `channel: nightly`, gleiche App-ID) ein. Der Source-Commit entsteht in einem temporären Worktree auf `origin/main`, damit nie lokale, ungetestete Arbeit gepusht wird; `publish.sh` setzt danach automatisch auf solche reinen Source-Commits auf. Danach Tests, Commit und `publish.sh` (getestete Beta in „StudyHelper Beta“). Die News „Aktuelle Versionen“ nennt auch die Nightly.
+- **Konsequenzen:** Nightlys sind ungetestet und können Fehler enthalten. Ändert sich nach der Nightly noch etwas an der App, bekommt die Beta eine neue Build-Nummer. Drei Einträge mit derselben App-ID: Verhalten der Store-Apps auf dem Gerät prüfen (MT-S.10).
+
 ## Offene Punkte (spätere Phasen)
 
 - **NLEmbedding für Deutsch verfügbar?** Prüfen und Ergebnis hier festhalten; sonst kleines lokales Embedding-Modell (Phase 4).

@@ -16,6 +16,11 @@ struct LayeredPageImageView: View {
     @Binding var selectedLineID: UUID?
     let onlyOpen: Bool
     var markedRect: NormalizedRect?
+    /// Marked words and illegible lines of the page, and the tap on a marked word (both layers show them).
+    var review = PageWordReview()
+    /// False while the page is locked (damaged, being recognized): the word frames cannot be tapped.
+    var wordsEnabled = true
+    var onWordTap: (UUID, Int) -> Void = { _, _ in }
 
     @Environment(\.digitalPageStore) private var store
     @AppStorage private var storedMode: DigitalPageMode
@@ -29,7 +34,9 @@ struct LayeredPageImageView: View {
 
     init(
         source: Source, image: UIImage, lines: [RecognizedLine], highlights: [RecognizedHighlight],
-        selectedLineID: Binding<UUID?>, onlyOpen: Bool, markedRect: NormalizedRect? = nil
+        selectedLineID: Binding<UUID?>, onlyOpen: Bool, markedRect: NormalizedRect? = nil,
+        review: PageWordReview = PageWordReview(), wordsEnabled: Bool = true,
+        onWordTap: @escaping (UUID, Int) -> Void = { _, _ in }
     ) {
         self.source = source
         self.image = image
@@ -38,6 +45,9 @@ struct LayeredPageImageView: View {
         _selectedLineID = selectedLineID
         self.onlyOpen = onlyOpen
         self.markedRect = markedRect
+        self.review = review
+        self.wordsEnabled = wordsEnabled
+        self.onWordTap = onWordTap
         _storedMode = AppStorage(
             wrappedValue: .handwriting, DigitalPageModePreference.key(for: source.batch?.subject?.id))
     }
@@ -82,8 +92,8 @@ struct LayeredPageImageView: View {
             }
             PageImageView(
                 image: showsText ? (textImage ?? image) : image, lines: lines, highlights: highlights,
-                selectedLineID: $selectedLineID, onlyOpen: onlyOpen, markedRect: markedRect,
-                layerName: (showsText ? DigitalPageMode.textLayer : .handwriting).germanName)
+                selectedLineID: $selectedLineID, onlyOpen: onlyOpen, review: review, wordsEnabled: wordsEnabled, onWordTap: onWordTap,
+                markedRect: markedRect, layerName: (showsText ? DigitalPageMode.textLayer : .handwriting).germanName)
                 .overlay {
                     if wantsText && isLoading {
                         ProgressView("Textebene wird erstellt…")
