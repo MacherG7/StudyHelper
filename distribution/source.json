@@ -88,14 +88,48 @@
       "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.6/StudyHelper-0.0.2.6.ipa",
       "size": 1875121,
       "beta": true
+    },
+    {
+      "bundleIdentifier": "MiloG.StudyHelper1",
+      "developerName": "MacherG7",
+      "localizedDescription": "StudyHelper digitalisiert deinen Lernstoff einmalig – Fotos von Buchseiten, PDFs und Goodnotes-Exporte – und speichert ihn dauerhaft als Text mit Hervorhebungen. Du ordnest ihn in Fächer und Themen; jeder Eintrag verweist auf die Seite, aus der er stammt.\n\nGoodnotes: „Teilen → Exportieren → PDF“ und dann „In StudyHelper öffnen“.\n\nIn Arbeit: KI-Abfragen, Chat und Karteikarten – ausschließlich mit Inhalten aus deinem Lernstoff.\n\nBeta-Version, benötigt iOS 18 oder neuer.",
+      "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/icon.png",
+      "tintColor": "#2F64E0",
+      "category": "utilities",
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "StudyHelper nutzt die Kamera, um Buchseiten und Notizen als Lernstoff zu fotografieren oder zu scannen."
+        }
+      },
+      "version": "0.0.2",
+      "versionDate": "2026-11-26T20:31:54Z",
+      "versionDescription": "Unsichere Wörter einzeln markiert, „Wort prüfen“ mit Vorschlägen (Geräte-Modell erst beim Antippen), Erkennungsfehler melden im Developer-Modus.",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/nightly/StudyHelper-nightly.ipa",
+      "size": 2167350,
+      "beta": true,
+      "name": "StudyHelper Nightly",
+      "subtitle": "Ungetesteter Stand zum Ausprobieren",
+      "channel": "nightly",
+      "versions": [
+        {
+          "version": "0.0.2",
+          "buildVersion": "7",
+          "date": "2026-11-26T20:31:54Z",
+          "localizedDescription": "Unsichere Wörter einzeln markiert, „Wort prüfen“ mit Vorschlägen (Geräte-Modell erst beim Antippen), Erkennungsfehler melden im Developer-Modus.",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/nightly/StudyHelper-nightly.ipa",
+          "size": 2167350,
+          "minOSVersion": "18.0"
+        }
+      ]
     }
   ],
   "news": [
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 6 · Stabil: noch keine · Beta: 0.0.2 Beta 6",
-      "date": "2026-11-26T12:27:51Z",
+      "caption": "Neueste: 0.0.2 Beta 6 · Stabil: noch keine · Beta: 0.0.2 Beta 6 · Nightly: 0.0.2 Nightly 7",
+      "date": "2026-11-26T20:31:54Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
