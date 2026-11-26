@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.2",
+          "buildVersion": "8",
+          "date": "2026-11-26T20:49:05Z",
+          "localizedDescription": "Wörter einzeln prüfen mit Vorschlägen, Erkennungsfehler melden, Nightly vor den Tests",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.8/StudyHelper-0.0.2.8.ipa",
+          "size": 2166986,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.2",
           "buildVersion": "6",
           "date": "2026-11-26T12:27:51Z",
           "localizedDescription": "Digitale Seite: dichte Zeilen und Arbeitsblätter ohne Überlagerung, Zeilenstücke zusammenführen",
@@ -83,10 +92,10 @@
         }
       ],
       "version": "0.0.2",
-      "versionDate": "2026-11-26T12:27:51Z",
-      "versionDescription": "Digitale Seite: dichte Zeilen und Arbeitsblätter ohne Überlagerung, Zeilenstücke zusammenführen",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.6/StudyHelper-0.0.2.6.ipa",
-      "size": 1875121,
+      "versionDate": "2026-11-26T20:49:05Z",
+      "versionDescription": "Wörter einzeln prüfen mit Vorschlägen, Erkennungsfehler melden, Nightly vor den Tests",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.8/StudyHelper-0.0.2.8.ipa",
+      "size": 2166986,
       "beta": true
     },
     {
@@ -128,8 +137,8 @@
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 6 · Stabil: noch keine · Beta: 0.0.2 Beta 6 · Nightly: 0.0.2 Nightly 7",
-      "date": "2026-11-26T20:31:54Z",
+      "caption": "Neueste: 0.0.2 Beta 8 · Stabil: noch keine · Beta: 0.0.2 Beta 8 · Nightly: 0.0.2 Nightly 7",
+      "date": "2026-11-26T20:49:05Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
