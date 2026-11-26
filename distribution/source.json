@@ -1,8 +1,8 @@
 {
   "name": "StudyHelper",
   "identifier": "MiloG.StudyHelper1.source",
-  "subtitle": "Beta-Versionen von StudyHelper",
-  "description": "Source für SideStore, AltStore und StikStore. Enthält die aktuellen Beta-Versionen von StudyHelper. Die App wird beim Installieren mit deiner eigenen Apple-ID signiert.",
+  "subtitle": "Stabile Versionen und Betas von StudyHelper",
+  "description": "Source für SideStore, AltStore und StikStore. „StudyHelper Beta“ enthält jede Version (die neueste insgesamt), „StudyHelper“ nur Vollversionen (erscheint mit der ersten Vollversion). Die App wird beim Installieren mit deiner eigenen Apple-ID signiert.",
   "iconURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/icon.png",
   "website": "https://github.com/MacherG7/StudyHelper",
   "sourceURL": "https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.json",
@@ -12,7 +12,7 @@
   ],
   "apps": [
     {
-      "name": "StudyHelper",
+      "name": "StudyHelper Beta",
       "bundleIdentifier": "MiloG.StudyHelper1",
       "developerName": "MacherG7",
       "subtitle": "Lernstoff digitalisieren und lernen",
@@ -86,10 +86,20 @@
       "versionDate": "2026-11-26T12:27:51Z",
       "versionDescription": "Digitale Seite: dichte Zeilen und Arbeitsblätter ohne Überlagerung, Zeilenstücke zusammenführen",
       "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.6/StudyHelper-0.0.2.6.ipa",
-      "size": 1875121
+      "size": 1875121,
+      "beta": true
     }
   ],
   "news": [
+    {
+      "title": "Aktuelle Versionen",
+      "identifier": "studyhelper-versionen",
+      "caption": "Neueste: 0.0.2 Beta 6 · Stabil: noch keine · Beta: 0.0.2 Beta 6",
+      "date": "2026-11-26T12:27:51Z",
+      "tintColor": "#2F64E0",
+      "appID": "MiloG.StudyHelper1",
+      "notify": false
+    },
     {
       "title": "Test News",
       "identifier": "test-news",

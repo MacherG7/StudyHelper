@@ -179,7 +179,7 @@ class UpdateTests(unittest.TestCase):
             code = us.main(["--ipa", ipa, "--source", src, "--output", out, "--repo", REPO, "--notes", "Text mit 'Quote'"])
         self.assertEqual(code, 0, stderr.getvalue())
         self.assertIn("TAG=v0.2.0.7", stdout.getvalue())
-        self.assertIn("TITLE='StudyHelper 0.2.0 (7)'", stdout.getvalue())
+        self.assertIn("TITLE='StudyHelper 0.2 Beta 7'", stdout.getvalue())
         self.assertEqual(us.load(src)["apps"][0]["versions"], [])   # input untouched
         self.assertEqual(us.load(out)["apps"][0]["versions"][0]["localizedDescription"], "Text mit 'Quote'")
 
@@ -195,6 +195,96 @@ class UpdateTests(unittest.TestCase):
             code = us.main(["--ipa", bad, "--source", src, "--repo", REPO])
         self.assertEqual(code, 1)
         self.assertIn("Fehler:", stderr.getvalue())
+
+
+class ChannelTests(unittest.TestCase):
+    """Stable and beta entries for StikStore (D-042)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def add(self, source, build, channel, date="2026-11-26T12:00:00Z", version="1.0.0"):
+        meta = us.read_ipa(make_ipa(self.dir, version=version, build=build))
+        return us.add_version(source, meta, REPO, "Build %s" % build, date, channel=channel)
+
+    def test_template_has_only_beta_entry(self):
+        """Ohne Vollversion gibt es nur den Beta-Eintrag"""
+        stable, beta = us.entries(template(), BUNDLE_ID)
+        self.assertIsNone(stable)
+        self.assertTrue(beta["beta"])
+        self.assertEqual(beta["name"], "StudyHelper Beta")
+
+    def test_beta_only_in_beta_entry(self):
+        """Eine Beta landet nur im Beta-Eintrag, die News nennt keine stabile Version"""
+        source = template()
+        self.add(source, "3", "beta")
+        stable, beta = us.entries(source, BUNDLE_ID)
+        self.assertIsNone(stable)
+        self.assertEqual([v["buildVersion"] for v in beta["versions"]], ["3"])
+        news = source["news"][0]
+        self.assertEqual(news["identifier"], us.NEWS_ID)
+        self.assertEqual(news["caption"], "Neueste: 1.0 Beta 3 · Stabil: noch keine · Beta: 1.0 Beta 3")
+
+    def test_first_final_creates_stable_entry(self):
+        """Die erste Vollversion legt den stabilen Eintrag an und steht auch im Beta-Eintrag"""
+        source = template()
+        self.add(source, "3", "beta", "2026-11-26T10:00:00Z")
+        self.add(source, "4", "final", "2026-11-27T10:00:00Z")
+        stable, beta = us.entries(source, BUNDLE_ID)
+        self.assertEqual(stable["name"], "StudyHelper")
+        self.assertIs(stable["beta"], False)
+        self.assertEqual(stable["bundleIdentifier"], BUNDLE_ID)
+        self.assertEqual([v["buildVersion"] for v in stable["versions"]], ["4"])
+        self.assertEqual([v["buildVersion"] for v in beta["versions"]], ["4", "3"])
+        self.assertEqual(stable["appPermissions"], beta["appPermissions"])
+        self.assertLess(source["apps"].index(stable), source["apps"].index(beta))
+        self.assertEqual(source["news"][0]["caption"], "Neueste: 1.0 · Stabil: 1.0 · Beta: 1.0 Beta 3")
+        self.assertEqual(us.check(source), [])
+
+    def test_beta_after_final(self):
+        """Eine Beta nach der Vollversion: neueste insgesamt ist die Beta, stabil bleibt die Vollversion"""
+        source = template()
+        self.add(source, "4", "final", "2026-11-27T10:00:00Z")
+        self.add(source, "5", "beta", "2026-11-28T10:00:00Z", version="1.0.1")
+        stable, beta = us.entries(source, BUNDLE_ID)
+        self.assertEqual([v["buildVersion"] for v in stable["versions"]], ["4"])
+        self.assertEqual(beta["version"], "1.0.1")
+        self.assertEqual(source["news"][0]["caption"], "Neueste: 1.0.1 Beta 5 · Stabil: 1.0 · Beta: 1.0.1 Beta 5")
+        self.assertEqual(len([n for n in source["news"] if n["identifier"] == us.NEWS_ID]), 1)
+
+    def test_other_news_kept(self):
+        """Eigene News bleiben erhalten"""
+        source = template()
+        source["news"] = [{"title": "Hallo", "identifier": "eigene", "caption": "x", "date": "2026-11-25"}]
+        self.add(source, "3", "beta")
+        self.assertEqual([n["identifier"] for n in source["news"]], [us.NEWS_ID, "eigene"])
+
+    def test_main_final_title(self):
+        """Kommandozeile: --channel final gibt den Titel der Vollversion"""
+        ipa = make_ipa(self.dir, version="1.0.0", build="4")
+        src = os.path.join(self.dir, "source.json")
+        us.save(template(), src)
+        stdout = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(io.StringIO()):
+            code = us.main(["--ipa", ipa, "--source", src, "--repo", REPO, "--channel", "final"])
+        self.assertEqual(code, 0)
+        self.assertIn("TITLE='StudyHelper 1.0'", stdout.getvalue())
+        self.assertIsNotNone(us.entries(us.load(src), BUNDLE_ID)[0])
+
+    def test_check_allows_one_stable_and_one_beta(self):
+        """Eine Bundle-ID darf je einmal stabil und Beta vorkommen, nicht zweimal Beta"""
+        source = template()
+        self.add(source, "4", "final")
+        self.assertEqual(us.check(source), [])
+        source["apps"].append(json.loads(json.dumps(us.entries(source, BUNDLE_ID)[1])))
+        self.assertIn("eindeutig", " ".join(us.check(source)))
+        source["apps"].pop()
+        source["apps"][0]["beta"] = "ja"
+        self.assertIn("true oder false", " ".join(us.check(source)))
 
 
 class CheckTests(unittest.TestCase):

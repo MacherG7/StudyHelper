@@ -50,7 +50,7 @@ update_source() {
     [[ -n "$notes" ]] || notes="$(git -C "$ROOT" log -1 --format=%s "$TAG^{commit}" 2>/dev/null || git -C "$ROOT" log -1 --format=%s)"
     step "Source für SideStore, AltStore und StikStore aktualisieren"
     python3 "$ROOT/scripts/update-source.py" --ipa "$ipa" --source "$ROOT/distribution/source.json" \
-        --repo "$REPO" --notes "$notes" >/dev/null
+        --repo "$REPO" --notes "$notes" --channel "$CHANNEL" >/dev/null
     python3 "$ROOT/scripts/update-source.py" --check "$ROOT/distribution/source.json"
     git -C "$ROOT" add distribution/source.json
     git -C "$ROOT" commit -q -m "Source: $TITLE" -m "Version $VERSION in distribution/source.json (D-034)." \
@@ -70,9 +70,13 @@ COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
 
 exists() { gh release view "$1" --repo "$REPO" >/dev/null 2>&1 || git -C "$ROOT" ls-remote --exit-code --tags origin "refs/tags/$1" >/dev/null 2>&1; }
 
+# Channel in the source (D-042): betas only in "StudyHelper Beta", full versions also in "StudyHelper".
+CHANNEL=beta
+[[ $FINAL == 1 ]] && CHANNEL=final
 if [[ $SOURCE_ONLY == 1 ]]; then
     [[ -n "$SOURCE_TAG" ]] && { TAG="$SOURCE_TAG"; VERSION="${TAG#v}"; }
     gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 || fail "Release $TAG gibt es nicht."
+    [[ "$(gh release view "$TAG" --repo "$REPO" --json isPrerelease --jq .isPrerelease)" == "true" ]] || CHANNEL=final
     TITLE="$(gh release view "$TAG" --repo "$REPO" --json name --jq .name)"
     DL="$ROOT/build/source-ipa"
     rm -rf "$DL" && mkdir -p "$DL"

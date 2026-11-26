@@ -120,6 +120,8 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-S.5 | Neue Version veröffentlichen (Build erhöht), Store-App aktualisieren lassen | Update wird angeboten; nach dem Update sind Fächer, Importe und Themen noch da | |
 | MT-S.6 | 7 Tage warten bzw. in der Store-App „Refresh“ | App wird aufgefrischt und startet weiter; Daten bleiben erhalten | |
 | MT-S.7 | Kamera (Scan/Foto) in der Source-Installation | Systemabfrage mit dem deutschen Text; Scannen funktioniert | |
+| MT-S.8 | Source in StikStore neu laden | „StudyHelper Beta“ trägt die Beta-Markierung; News „Aktuelle Versionen“ nennt neueste, stabile und Beta-Version | |
+| MT-S.9 | Nach der ersten Vollversion: Source in StikStore, SideStore und AltStore | Zwei Einträge „StudyHelper“ (ohne Beta-Markierung) und „StudyHelper Beta“; beide installieren dieselbe App (Daten bleiben), kein Fehler wegen gleicher App-ID – sonst D-042 überdenken | |
 
 ---
 

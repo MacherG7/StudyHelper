@@ -2,7 +2,7 @@
 """Maintains the app source for SideStore, AltStore and StikStore (distribution/source.json).
 
     scripts/update-source.py --ipa build/ipa/StudyHelper-0.0.1.7.ipa --source distribution/source.json \
-        --repo MacherG7/StudyHelper [--output OUT.json] [--notes TEXT] [--replace]
+        --repo MacherG7/StudyHelper [--channel beta|final] [--output OUT.json] [--notes TEXT] [--replace]
     scripts/update-source.py --check distribution/source.json
 
 Update mode reads bundle ID, version, build, minimum iOS, privacy keys and entitlements straight from
@@ -12,6 +12,12 @@ scripts/beta-release.sh creates (D-034). On success it prints shell assignments 
 BUILD) for scripts/beta-release.sh; messages go to stderr. Format: faq.altstore.io "Make a Source"
 (see docs/DECISIONS.md D-024). AltStore refuses to install an app whose bundle ID, version, build or
 hash differ from the source, or whose entitlements/privacy keys are not all listed in the source.
+
+Channels (D-042): StikStore marks a whole app entry as beta ("beta": true), not single versions. The source
+therefore has up to two entries with the same bundle ID: "StudyHelper Beta" (beta: true) with every release,
+newest first – its newest version is the latest overall – and, from the first full version on,
+"StudyHelper" (beta: false) with only full versions (latest stable). A news item "studyhelper-versionen"
+names the latest, the latest stable and the latest beta version.
 """
 import argparse, datetime, hashlib, json, plistlib, posixpath, re, shlex, struct, sys, zipfile
 
@@ -147,20 +153,86 @@ def release_names(meta):
     return tag, asset
 
 
-def add_version(source, meta, repo, notes, date, replace=False):
-    """Adds the .ipa as newest version; returns (tag, asset). Mutates `source`."""
-    links = urls(repo)
-    apps = [a for a in source.get("apps", []) if a.get("bundleIdentifier") == meta["bundleIdentifier"]]
-    if not apps:
-        raise SourceError("Bundle-ID %s der .ipa steht nicht in der Source." % meta["bundleIdentifier"])
-    app = apps[0]
+CHANNELS = ("beta", "final")
+NEWS_ID = "studyhelper-versionen"
+
+
+def display_name(version, build, final):
+    """Name of a release as on GitHub: "0.0.2 Beta 6" or "1.0" (A.B.0 shortened to A.B, D-032)."""
+    name = version[:-2] if version.endswith(".0") and version.count(".") == 2 else version
+    return name if final else "%s Beta %s" % (name, build)
+
+
+def entries(source, bundle_id):
+    """(stable, beta) app entries of `bundle_id`; either may be None."""
+    apps = [a for a in source.get("apps", []) if a.get("bundleIdentifier") == bundle_id]
+    stable = next((a for a in apps if not a.get("beta")), None)
+    beta = next((a for a in apps if a.get("beta")), None)
+    return stable, beta
+
+
+def stable_entry_from(beta):
+    """The stable entry, created from the beta entry with the first full version (D-042)."""
+    app = {k: v for k, v in beta.items() if k not in ("versions", "beta", "name", "subtitle")}
+    app["name"] = beta["name"].removesuffix(" Beta")
+    app["subtitle"] = beta.get("subtitle", "")
+    app["beta"] = False
+    app["versions"] = []
+    return app
+
+
+def _insert(app, entry, replace):
     versions = app.setdefault("versions", [])
-    same = [v for v in versions if (v.get("version"), v.get("buildVersion")) == (meta["version"], meta["buildVersion"])]
+    key = (entry["version"], entry["buildVersion"])
+    same = [v for v in versions if (v.get("version"), v.get("buildVersion")) == key]
     if same and not replace:
         raise SourceError(
             "Version %s (%s) steht schon in der Source. MARKETING_VERSION oder CURRENT_PROJECT_VERSION in "
-            "project.yml erhöhen (oder --replace)." % (meta["version"], meta["buildVersion"]))
+            "project.yml erhöhen (oder --replace)." % key)
     versions[:] = [v for v in versions if v not in same]
+    versions.insert(0, dict(entry))
+    # Legacy fields mirrored from the newest version for older SideStore/AltStore releases.
+    app["version"] = entry["version"]
+    app["versionDate"] = entry["date"]
+    app["versionDescription"] = entry["localizedDescription"]
+    app["downloadURL"] = entry["downloadURL"]
+    app["size"] = entry["size"]
+
+
+def update_news(source, bundle_id, date):
+    """News item naming the latest, latest stable and latest beta version (D-042)."""
+    stable, beta = entries(source, bundle_id)
+    finals = {(v["version"], v["buildVersion"]) for v in (stable or {}).get("versions", [])}
+    every = (beta or stable or {}).get("versions", [])
+    if not every:
+        return
+    def name(v):
+        return display_name(v["version"], v["buildVersion"], (v["version"], v["buildVersion"]) in finals)
+    newest = every[0]
+    newest_stable = next((v for v in every if (v["version"], v["buildVersion"]) in finals), None)
+    newest_beta = next((v for v in every if (v["version"], v["buildVersion"]) not in finals), None)
+    caption = "Neueste: %s · Stabil: %s · Beta: %s" % (
+        name(newest), name(newest_stable) if newest_stable else "noch keine",
+        name(newest_beta) if newest_beta else "keine")
+    item = {
+        "title": "Aktuelle Versionen", "identifier": NEWS_ID, "caption": caption, "date": date,
+        "tintColor": (beta or stable).get("tintColor", "#2F64E0"), "appID": bundle_id, "notify": False,
+    }
+    news = [n for n in source.get("news", []) if n.get("identifier") != NEWS_ID]
+    source["news"] = [item] + news
+
+
+def add_version(source, meta, repo, notes, date, replace=False, channel="beta"):
+    """Adds the .ipa as newest version of its channel; returns (tag, asset). Mutates `source`.
+
+    A beta goes into the beta entry; a full version into the stable entry (created on the first one) and the
+    beta entry, so that the beta entry always offers the latest version overall (D-042)."""
+    if channel not in CHANNELS:
+        raise SourceError("Kanal muss beta oder final sein: %r" % channel)
+    links = urls(repo)
+    stable, beta = entries(source, meta["bundleIdentifier"])
+    if beta is None:
+        raise SourceError("Bundle-ID %s der .ipa steht nicht (als Beta-Eintrag) in der Source." % meta["bundleIdentifier"])
 
     tag, asset = release_names(meta)
     entry = {
@@ -175,16 +247,19 @@ def add_version(source, meta, repo, notes, date, replace=False):
     }
     if meta.get("minOSVersion"):
         entry["minOSVersion"] = meta["minOSVersion"]
-    versions.insert(0, entry)
 
-    app["appPermissions"] = {"entitlements": meta["entitlements"], "privacy": meta["privacy"]}
-    app["iconURL"] = links["icon"]
-    # Legacy fields mirrored from the newest version for older SideStore/AltStore releases.
-    app["version"] = entry["version"]
-    app["versionDate"] = entry["date"]
-    app["versionDescription"] = entry["localizedDescription"]
-    app["downloadURL"] = entry["downloadURL"]
-    app["size"] = entry["size"]
+    targets = [beta]
+    if channel == "final":
+        if stable is None:
+            stable = stable_entry_from(beta)
+            apps = source["apps"]
+            apps.insert(apps.index(beta), stable)
+        targets.insert(0, stable)
+    for app in targets:
+        _insert(app, entry, replace)
+        app["appPermissions"] = {"entitlements": meta["entitlements"], "privacy": meta["privacy"]}
+        app["iconURL"] = links["icon"]
+    update_news(source, meta["bundleIdentifier"], date)
 
     source["sourceURL"] = links["source"]
     source["iconURL"] = links["icon"]
@@ -203,8 +278,10 @@ def check(source):
     if not isinstance(apps, list):
         return problems + ["Source: apps fehlt oder ist keine Liste."]
     ids = [a.get("bundleIdentifier") for a in apps]
-    if len(ids) != len(set(ids)):
-        problems.append("Source: Bundle-IDs sind nicht eindeutig.")
+    # One bundle ID may appear twice: a stable and a beta entry (StikStore marks entries, D-042).
+    channels = [(a.get("bundleIdentifier"), bool(a.get("beta"))) for a in apps]
+    if len(channels) != len(set(channels)):
+        problems.append("Source: Bundle-IDs sind nicht eindeutig (je ID höchstens ein stabiler und ein Beta-Eintrag).")
     for app in apps:
         label = "App %s" % app.get("bundleIdentifier", "?")
         for key in ("name", "bundleIdentifier", "developerName", "localizedDescription", "iconURL"):
@@ -233,6 +310,9 @@ def check(source):
                 problems.append("%s: Version %s ohne gültige size." % (label, key[0]))
             if not str(v.get("downloadURL", "")).startswith("https://"):
                 problems.append("%s: downloadURL von %s muss https sein." % (label, key[0]))
+    for app in apps:
+        if "beta" in app and not isinstance(app["beta"], bool):
+            problems.append("App %s: beta muss true oder false sein." % app.get("bundleIdentifier", "?"))
     for ident in source.get("featuredApps", []):
         if ident not in ids:
             problems.append("featuredApps: %s ist keine App der Source." % ident)
@@ -260,6 +340,7 @@ def main(argv=None):
     parser.add_argument("--notes", default="", help="Was ist neu (Markdown)")
     parser.add_argument("--date", help="Datum ISO 8601 (Standard: jetzt, UTC)")
     parser.add_argument("--replace", action="store_true", help="gleiche Version/Build ersetzen")
+    parser.add_argument("--channel", choices=CHANNELS, default="beta", help="beta (Standard) oder final")
     args = parser.parse_args(argv)
 
     try:
@@ -277,7 +358,7 @@ def main(argv=None):
         meta = read_ipa(args.ipa)
         date = args.date or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         notes = args.notes.strip() or "Version %s (%s)" % (meta["version"], meta["buildVersion"])
-        tag, asset = add_version(source, meta, args.repo, notes, date, args.replace)
+        tag, asset = add_version(source, meta, args.repo, notes, date, args.replace, args.channel)
         problems = check(source)
         if problems:
             raise SourceError("Source nach dem Update ungültig: " + " ".join(problems))
@@ -287,7 +368,8 @@ def main(argv=None):
             ", ".join(meta["entitlements"]) or "keine", ", ".join(meta["privacy"]) or "keine"), file=sys.stderr)
         for key, value in (("TAG", tag), ("ASSET", asset), ("VERSION", meta["version"]),
                            ("BUILD", meta["buildVersion"]),
-                           ("TITLE", "StudyHelper %s (%s)" % (meta["version"], meta["buildVersion"]))):
+                           ("TITLE", "StudyHelper " + display_name(meta["version"], meta["buildVersion"],
+                                                                    args.channel == "final"))):
             print("%s=%s" % (key, shlex.quote(value)))
         return 0
     except (SourceError, OSError, ValueError, KeyError, zipfile.BadZipFile, struct.error) as error:

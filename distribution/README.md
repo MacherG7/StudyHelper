@@ -16,8 +16,20 @@ Anmeldung abrufbar, wie es die Store-Apps brauchen. Die `.ipa` ist immer unsigni
 
 Passiert automatisch: `scripts/publish.sh` baut nach einem Commit mit Änderungen an der App die `.ipa`,
 legt das Release `v<A.B.C.D>` an (Beta, oder Vollversion mit `--final`) und trägt es danach mit Größe,
-SHA-256, Mindest-iOS, Datenschutz-Texten und Entitlements in `source.json` ein – als eigener Commit
+Mindest-iOS, Datenschutz-Texten und Entitlements in `source.json` ein – als eigener Commit
 „Source: …“, der gleich mit hochgeladen wird.
+
+## Stabil und Beta (D-042)
+
+StikStore markiert einen ganzen App-Eintrag als Beta (`"beta": true`), nicht einzelne Versionen. Die Source
+hat deshalb zwei Einträge mit derselben App-ID `MiloG.StudyHelper1` (eine App, dieselben Daten):
+
+| Eintrag | `beta` | Versionen |
+|---|---|---|
+| „StudyHelper Beta“ | `true` | jede Version, neueste zuerst – die oberste ist die neueste insgesamt („latest“) |
+| „StudyHelper“ | `false` | nur Vollversionen – die oberste ist die neueste stabile („latest-stable“); erscheint mit der ersten Vollversion (`scripts/publish.sh --final`) |
+
+Die News „Aktuelle Versionen“ nennt bei jedem Release die neueste, die neueste stabile und die neueste Beta.
 
 Nachtragen für ein schon vorhandenes Release:
 
