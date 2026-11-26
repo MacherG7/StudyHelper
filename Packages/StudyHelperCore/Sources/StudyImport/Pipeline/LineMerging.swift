@@ -48,6 +48,90 @@ enum LineMerging {
         return gap <= max(a.height, b.height)
     }
 
+    // MARK: Fragments of one row
+
+    /// Two lines are on one row if their vertical centers differ by less than this share of the smaller height.
+    /// Dense handwriting has a row pitch of about half a line box, so the centers of stacked rows differ by
+    /// about 0.5 of the height; fragments of one row by less than 0.2.
+    static let rowCenterTolerance = 0.35
+    /// A small piece whose box lies vertically inside the other one (a short, flat word next to a tall line) may
+    /// be off center by this much, as long as at least `rowNestedShare` of its height is inside the other box.
+    /// Stacked rows of dense handwriting overlap by only about half a box.
+    static let rowNestedCenterTolerance = 0.45
+    static let rowNestedShare = 0.9
+    /// Largest horizontal gap between two fragments of one row, in heights of the taller line …
+    static let rowFragmentGap = 1.0
+    /// … and when an arrow joins them ("Prozesse → für Klima"); a shape-tool arrow is no ink and leaves a gap.
+    static let rowFragmentArrowGap = 2.5
+    /// Fragments may overlap horizontally by at most this share of the smaller height (imprecise boxes).
+    static let rowFragmentOverlap = 0.5
+
+    /// Merges handwritten lines that are pieces of one row, read separately (typically a word the first pass
+    /// skipped, read again in a crop, next to the rest of its row, see docs/DECISIONS.md D-041). Pieces of one
+    /// row are side by side without overlapping, close together and of the same color; separate columns,
+    /// stacked rows of dense handwriting and list entries of different rows stay separate lines. The merged
+    /// line keeps the worst status and all review reasons (a re-read piece keeps the row uncertain).
+    /// - Parameters:
+    ///   - lines: handwritten lines of one page (not embedded text, text boxes or image text).
+    ///   - pageSize: page size in points (normalized widths and heights are not comparable without it).
+    static func mergeRowFragments(_ lines: [RecognizedLine], pageSize: PageSize) -> [RecognizedLine] {
+        var result = lines
+        while true {
+            // The closest pair first, so that a row is assembled from its neighbours outwards.
+            var best: (i: Int, j: Int, gap: Double)?
+            for i in result.indices {
+                for j in result.indices where j > i {
+                    guard let gap = rowFragmentGap(result[i], result[j], pageSize: pageSize) else { continue }
+                    if gap < (best?.gap ?? .infinity) { best = (i, j, gap) }
+                }
+            }
+            guard let best else { return result }
+            result[best.i] = combine([result[best.i], result[best.j]])
+            result.remove(at: best.j)
+        }
+    }
+
+    /// The gap (in points) between two lines that are fragments of one row; nil if they are not.
+    static func rowFragmentGap(_ a: RecognizedLine, _ b: RecognizedLine, pageSize: PageSize) -> Double? {
+        func mergeable(_ line: RecognizedLine) -> Bool {
+            !line.isUserCorrected && line.status != .illegible && !line.rect.isEmpty && line.blockKind == nil
+                && !line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        guard mergeable(a), mergeable(b) else { return nil }
+        if let ca = a.color, let cb = b.color, ca != cb { return nil }
+        let minHeight = min(a.rect.height, b.rect.height)
+        let centerOffset = abs(a.rect.midY - b.rect.midY)
+        let verticalOverlap = min(a.rect.maxY, b.rect.maxY) - max(a.rect.minY, b.rect.minY)
+        let nested = verticalOverlap >= rowNestedShare * minHeight && centerOffset < rowNestedCenterTolerance * minHeight
+        guard centerOffset < rowCenterTolerance * minHeight || nested else { return nil }
+
+        let (left, right) = a.rect.minX <= b.rect.minX ? (a, b) : (b, a)
+        let gap = (right.rect.minX - left.rect.maxX) * pageSize.width
+        let minHeightPoints = minHeight * pageSize.height
+        let maxHeightPoints = max(a.rect.height, b.rect.height) * pageSize.height
+        let minWidthPoints = min(a.rect.width, b.rect.width) * pageSize.width
+        // No real overlap: the right piece starts (nearly) where the left one ends, and does not end inside it.
+        guard gap >= -min(rowFragmentOverlap * minHeightPoints, 0.3 * minWidthPoints),
+              right.rect.maxX > left.rect.maxX else { return nil }
+        let joinedByArrow = endsWithArrow(left.text) || startsWithArrow(right.text)
+        let limit = (joinedByArrow ? rowFragmentArrowGap : rowFragmentGap) * maxHeightPoints
+        return gap <= limit ? max(0, gap) : nil
+    }
+
+    private static let arrowSigns: Set<Character> = ["→", "←", "↔", "⇒", "⇐", "⇔", "↗", "↘", "↙", "↖", "↑", "↓"]
+
+    static func endsWithArrow(_ text: String) -> Bool {
+        let text = text.trimmingCharacters(in: .whitespaces)
+        guard let last = text.last else { return false }
+        return arrowSigns.contains(last) || text.hasSuffix("->") || text.hasSuffix("=>")
+    }
+
+    static func startsWithArrow(_ text: String) -> Bool {
+        let text = text.trimmingCharacters(in: .whitespaces)
+        guard let first = text.first else { return false }
+        return arrowSigns.contains(first) || text.hasPrefix("->") || text.hasPrefix("=>") || text.hasPrefix("-->")
+    }
+
     static func combine(_ members: [RecognizedLine]) -> RecognizedLine {
         var words = members.flatMap(\.words)
         words.sort { $0.rect.minX < $1.rect.minX }

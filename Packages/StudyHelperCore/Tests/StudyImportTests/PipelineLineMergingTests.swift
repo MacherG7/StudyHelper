@@ -164,4 +164,95 @@ struct PipelineLineMergingTests {
         // Without embedded text it is the plain row order.
         #expect(LineMerging.assignReadingOrder(embedded: [], others: [note2, note]).map(\.text) == ["Notiz", "links"])
     }
+
+    // MARK: Fragments of one row (D-041)
+
+    let a4 = PageSize(width: 595.28, height: 841.89)
+
+    @Test("Zwei Bruchstücke einer Reihe (nachgelesenes Wort neben dem Rest) werden eine Zeile")
+    func rowFragmentsMerge() {
+        // Page 2 of the real note: the re-read word next to the Vision line of the same row.
+        var reRead = line("Geosphären", x: 0.065, y: 0.167, height: 0.034, wordWidth: 0.18, status: .uncertain)
+        reRead.reviewReasons = [.reReadSeparately]
+        reRead.confidence = 0.6
+        let rest = line("zusammen. Diese beeinflussen", x: 0.25, y: 0.171, height: 0.031, wordWidth: 0.2)
+        let merged = LineMerging.mergeRowFragments([rest, reRead], pageSize: a4)
+        #expect(merged.count == 1)
+        #expect(merged[0].text == "Geosphären zusammen. Diese beeinflussen")
+        #expect(merged[0].words.map(\.text) == (reRead.words + rest.words).map(\.text))
+        #expect(merged[0].rect == reRead.rect.union(rest.rect))
+        #expect(merged[0].status == .uncertain)
+        #expect(merged[0].reviewReasons == [.reReadSeparately])
+        #expect(merged[0].confidence == 0.6)
+    }
+
+    @Test("Eng gestapelte Reihen dichter Handschrift werden nicht zusammengeführt")
+    func denseStackedRowsStaySeparate() {
+        // Row pitch 0.018 with boxes 0.033 high: the boxes overlap vertically; the short line of the upper row
+        // ends just before the next row begins.
+        let upper = line("Eine Landschaft", x: 0.06, y: 0.149, height: 0.033, wordWidth: 0.09)
+        let lower = line("zusammen. Diese", x: 0.27, y: 0.167, height: 0.033, wordWidth: 0.1)
+        let third = line("eine Einheit", x: 0.06, y: 0.185, height: 0.036, wordWidth: 0.1)
+        let lines = LineMerging.mergeRowFragments([upper, lower, third], pageSize: a4)
+        #expect(lines.count == 3)
+        // List entries of consecutive rows.
+        let first = line("- erste", x: 0.03, y: 0.50, height: 0.022, wordWidth: 0.1)
+        let second = line("- zweite", x: 0.30, y: 0.522, height: 0.022, wordWidth: 0.1)
+        #expect(LineMerging.mergeRowFragments([first, second], pageSize: a4).count == 2)
+    }
+
+    @Test("Getrennte Spalte mit großer Lücke bleibt eine eigene Zeile; ein Pfeil verbindet über die Lücke")
+    func separateColumnStaysSeparate() {
+        let left = line("deutlich schneller", x: 0.08, y: 0.72, height: 0.03, wordWidth: 0.15)
+        let column = line("Syndrom", x: 0.45, y: 0.722, height: 0.028, wordWidth: 0.1)
+        #expect(LineMerging.mergeRowFragments([left, column], pageSize: a4).count == 2)
+        let far = line("Konsumenten", x: 0.7, y: 0.72, height: 0.03, wordWidth: 0.15)
+        #expect(LineMerging.mergeRowFragments([left, far], pageSize: a4).count == 2)
+        // Page 2: a shape-tool arrow (no ink) between the pieces leaves a gap of two line heights.
+        let start = line("- unterer Teil: klimatische Prozesse", x: 0.029, y: 0.514, height: 0.019, wordWidth: 0.115)
+        #expect(abs(start.rect.maxX - 0.548) < 0.01)
+        var arrowed = line("für Klima verantwortlich", x: 0.626, y: 0.513, height: 0.026, wordWidth: 0.09)
+        arrowed.text = "→ für Klima verantwortlich"
+        let merged = LineMerging.mergeRowFragments([arrowed, start], pageSize: a4)
+        #expect(merged.count == 1)
+        #expect(merged.first?.text == "- unterer Teil: klimatische Prozesse → für Klima verantwortlich")
+        // The same gap without an arrow: two columns.
+        let plain = line("für Klima verantwortlich", x: 0.626, y: 0.513, height: 0.026, wordWidth: 0.09)
+        #expect(LineMerging.mergeRowFragments([plain, start], pageSize: a4).count == 2)
+    }
+
+    @Test("Bruchstücke verschiedener Farbe, unleserliche und korrigierte Zeilen werden nicht zusammengeführt")
+    func differentColorsStaySeparate() {
+        let black = line("schwarz", x: 0.1, y: 0.3, color: .black)
+        let red = line("rot", x: 0.2, y: 0.3, color: StudyColor(hex: "#D32F2F"))
+        #expect(LineMerging.mergeRowFragments([black, red], pageSize: a4).count == 2)
+        let blackToo = line("auch", x: 0.2, y: 0.3, color: .black)
+        #expect(LineMerging.mergeRowFragments([black, blackToo], pageSize: a4).count == 1)
+        var corrected = blackToo
+        corrected.isUserCorrected = true
+        #expect(LineMerging.mergeRowFragments([black, corrected], pageSize: a4).count == 2)
+        let illegible = line("", x: 0.2, y: 0.3, color: .black, status: .illegible)
+        #expect(LineMerging.mergeRowFragments([black, illegible], pageSize: a4).count == 2)
+    }
+
+    @Test("Kleines Bruchstück vertikal innerhalb einer höheren Zeile gehört zu ihrer Reihe")
+    func nestedFragmentMerges() {
+        // Page 4: a flat first piece with an arrow inside the band of a taller second piece.
+        let small = line("- übertretende Flüsse →", x: 0.055, y: 0.193, height: 0.019, wordWidth: 0.1)
+        let tall = line("zerstörerische Kraft, Gefahr für", x: 0.456, y: 0.193, height: 0.034, wordWidth: 0.1)
+        #expect(LineMerging.mergeRowFragments([small, tall], pageSize: a4).count == 1)
+        #expect(LineMerging.rowFragmentGap(small, tall, pageSize: a4) != nil)
+        // The same center offset (0.4 heights) between boxes of equal height: they overlap by only 0.6 – another row.
+        let lower = line("nächste Reihe", x: 0.456, y: 0.2006, height: 0.019, wordWidth: 0.1)
+        #expect(LineMerging.mergeRowFragments([small, lower], pageSize: a4).count == 2)
+    }
+
+    @Test("Mehrere Bruchstücke einer Reihe werden von links nach rechts zu einer Zeile")
+    func threeFragmentsMerge() {
+        let a = line("weltweit zu", x: 0.055, y: 0.081, height: 0.018, wordWidth: 0.08)
+        let b = line("Schädigungen. Diese", x: 0.259, y: 0.080, height: 0.027, wordWidth: 0.11)
+        let c = line("fasst man", x: 0.515, y: 0.080, height: 0.026, wordWidth: 0.1)
+        let merged = LineMerging.mergeRowFragments([c, a, b], pageSize: a4)
+        #expect(merged.map(\.text) == ["weltweit zu Schädigungen. Diese fasst man"])
+    }
 }

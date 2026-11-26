@@ -127,12 +127,18 @@ enum DigitalPageInk {
             let box = page.strokes[index].boundingBox(pageSize: page.size)
             return (box.midX, box.midY)
         }
+        // Each hidden stroke covers only the one line it belongs to best (vertically closest center, relative to the
+        // line height): ascenders of handwriting often reach into the box of a printed line above, which must not
+        // count as covered (it would be redrawn over the printed text).
         var result: Set<UUID> = []
-        for line in lines {
-            let r = line.rect, grow = 0.3 * r.height
-            if centers.contains(where: { $0.0 >= r.minX && $0.0 <= r.maxX && $0.1 >= r.minY - grow && $0.1 <= r.maxY + grow }) {
-                result.insert(line.id)
-            }
+        for (x, y) in centers {
+            let best = lines
+                .filter { line in
+                    let r = line.rect, grow = 0.3 * r.height
+                    return x >= r.minX && x <= r.maxX && y >= r.minY - grow && y <= r.maxY + grow
+                }
+                .min { abs(y - $0.rect.midY) / max($0.rect.height, 1e-6) < abs(y - $1.rect.midY) / max($1.rect.height, 1e-6) }
+            if let best { result.insert(best.id) }
         }
         return result
     }

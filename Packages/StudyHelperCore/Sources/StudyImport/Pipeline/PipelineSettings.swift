@@ -35,6 +35,9 @@ public struct PipelineSettings: Hashable, Sendable {
     public var rereadsUnderlinedLines: Bool
     /// Goodnotes: arrows drawn with the shape tool inside a text row ("(→ B.S.35)") are inserted into the line text.
     public var insertsShapeArrows: Bool
+    /// Goodnotes ink: pieces of one handwritten row that were read as separate lines (a word read again in a crop
+    /// next to the rest of its row) are merged into one line.
+    public var mergesRowFragments: Bool
 
     public init(
         multiPass: Bool = false, customWords: [String] = [], renderScale: Double = 2,
@@ -42,7 +45,7 @@ public struct PipelineSettings: Hashable, Sendable {
         usesLanguageCorrection: Bool = true, prefersDocumentRecognition: Bool = true,
         maximumCandidates: Int = 3, imageQuality: Double = 0.85, retryCropLimit: Int = 40,
         recognizesImageText: Bool = true, rereadsUnderlinedLines: Bool = true,
-        insertsShapeArrows: Bool = true
+        insertsShapeArrows: Bool = true, mergesRowFragments: Bool = true
     ) {
         self.multiPass = multiPass
         self.customWords = customWords
@@ -58,6 +61,7 @@ public struct PipelineSettings: Hashable, Sendable {
         self.recognizesImageText = recognizesImageText
         self.rereadsUnderlinedLines = rereadsUnderlinedLines
         self.insertsShapeArrows = insertsShapeArrows
+        self.mergesRowFragments = mergesRowFragments
     }
 
     func recognitionOptions(prefersDocumentRecognition: Bool) -> TextRecognitionOptions {

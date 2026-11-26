@@ -290,6 +290,13 @@ public struct DigitizationPipeline: Sendable {
             inkLines = ShapeArrows.insert(ShapeArrows.arrows(of: pdfPage), into: inkLines)
         }
 
+        // Pieces of one row read as separate lines (a skipped word read again next to the rest of its row) become
+        // one line. After the arrows, so that an arrow between two pieces joins them; before the emphasis, whose
+        // word references point at the final lines.
+        if settings.mergesRowFragments {
+            inkLines = LineMerging.mergeRowFragments(inkLines, pageSize: page.size)
+        }
+
         let provisional = LineMerging.assignReadingOrder(embedded: embedded?.lines ?? [], others: inkLines + printed)
 
         // 4. Emphasis from the annotations; formatting highlights of the embedded text without duplicates.

@@ -29,6 +29,8 @@ struct DigitalTextRun {
     var lineRect: CGRect
     /// The run is the whole line in the line box (the words no longer match the word boxes).
     var isWholeLine: Bool
+    /// The paragraph of the line (lines of one paragraph share one font size in text mode).
+    var paragraphID: UUID? = nil
 }
 
 /// Where and how large a run is drawn visibly (text mode).
@@ -64,6 +66,20 @@ enum DigitalPageText {
     /// Visible text: a line is set at least this share of the size from its height before single words are forced
     /// smaller.
     static let minimumLineFactor = 0.6
+    /// Visible text: ascent + descent of a line fill at most this share of the row pitch (distance between the
+    /// centers of neighboring rows) or of the free band between fixed obstacles, so that dense handwriting with
+    /// overlapping line boxes does not overlap as text.
+    static let pitchFill = 0.9
+    /// Visible text: lines on the same row (centers closer than this many of the smaller line height) share size and
+    /// baseline, as long as they are at most `sameRowGap` line heights apart horizontally.
+    static let sameRowTolerance = 0.35
+    static let sameRowGap = 3.0
+    /// Visible text: neighbors must overlap horizontally by this share of the narrower line.
+    static let neighborOverlap = 0.1
+    /// Visible text: neither the row pitch nor the paragraph uniformity shrink a line below this share of the size
+    /// from its height.
+    static let minimumPitchFactor = 0.45
+    static let minimumParagraphFactor = 0.7
     static let regularFont = "Helvetica"
     static let boldFont = "Helvetica-Bold"
 
@@ -115,7 +131,7 @@ enum DigitalPageText {
         func run(_ tokens: [DigitalTextRun.Token], _ rect: CGRect, trailingSpace: Bool, wholeLine: Bool = false) -> DigitalTextRun {
             DigitalTextRun(
                 tokens: tokens, rect: rect, trailingSpace: trailingSpace, lineID: line.id, lineRect: lineBox,
-                isWholeLine: wholeLine)
+                isWholeLine: wholeLine, paragraphID: line.paragraphID)
         }
         func wordToken(_ text: String, word index: Int?) -> DigitalTextRun.Token {
             guard let index, index < words.count else {
@@ -193,34 +209,197 @@ enum DigitalPageText {
     ///     fitted exactly into its box; true draws the text mode: colored text laid out per line
     ///     (`layoutVisibleLine`), arrows of shape arrows left out, uncertain words underlined.
     ///   - pageWidth: visible text does not reach beyond this x.
-    static func draw(_ runs: [DigitalTextRun], in context: CGContext, visible: Bool, pageWidth: Double = .infinity) {
+    ///   - obstacles: boxes of lines that stay on the page as they are (printed text, text in pictures, writing that
+    ///     is not replaced): visible text keeps clear of them (`linePlacements`).
+    static func draw(
+        _ runs: [DigitalTextRun], in context: CGContext, visible: Bool, pageWidth: Double = .infinity,
+        obstacles: [CGRect] = []
+    ) {
         guard visible else {
             for run in runs { drawInvisible(run, in: context) }
             return
         }
-        for (run, layout) in zip(runs, visibleLayouts(runs, pageWidth: pageWidth)) {
+        for (run, layout) in zip(runs, visibleLayouts(runs, pageWidth: pageWidth, obstacles: obstacles)) {
             if let layout { drawVisible(run, layout: layout, in: context) }
         }
     }
 
+    /// Boxes (displayed page points, origin bottom-left) of the lines in `lines` that are not among `shown`: they
+    /// stay visible on the page, so the drawn text must not run over them.
+    static func obstacleRects(of lines: [RecognizedLine], excluding shown: [RecognizedLine], size: PageSize) -> [CGRect] {
+        let drawn = Set(shown.map(\.id))
+        return lines.filter { line in
+            !drawn.contains(line.id) && !line.rect.isEmpty
+                && (!line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || line.status == .illegible)
+        }.map { line in
+            let l = line.rect.toBottomLeft(spaceWidth: size.width, spaceHeight: size.height)
+            return CGRect(x: l.x, y: l.y, width: l.width, height: l.height)
+        }
+    }
+
     /// The text-mode layout of `runs` (nil for runs that are not drawn), line by line with `layoutVisibleLine`.
-    static func visibleLayouts(_ runs: [DigitalTextRun], pageWidth: Double = .infinity) -> [VisibleRunLayout?] {
-        var result: [VisibleRunLayout?] = []
+    /// Font size and vertical place of each line come from `linePlacements` (neighboring rows never overlap).
+    static func visibleLayouts(
+        _ runs: [DigitalTextRun], pageWidth: Double = .infinity, obstacles: [CGRect] = []
+    ) -> [VisibleRunLayout?] {
         // Runs of one line are consecutive (`runs(for:)` emits them line by line).
+        var ranges: [Range<Int>] = []
         var start = 0
         while start < runs.count {
             var end = start + 1
             while end < runs.count, runs[end].lineID == runs[start].lineID { end += 1 }
-            let line = runs[start..<end]
+            ranges.append(start..<end)
+            start = end
+        }
+        let placements = linePlacements(
+            rects: ranges.map { runs[$0.lowerBound].lineRect }, paragraphs: ranges.map { runs[$0.lowerBound].paragraphID },
+            obstacles: obstacles)
+        var result: [VisibleRunLayout?] = []
+        for (range, placement) in zip(ranges, placements) {
+            let line = runs[range]
             let inputs = line.map { run -> VisibleRunInput in
                 let drawn = run.rect.width > 0 && run.rect.height > 0 && run.tokens.contains(where: \.drawsVisibly)
                 let unitWidth = drawn ? makeLine(run, size: 100, visible: true).width / 100 : 0
                 return VisibleRunInput(rect: run.rect, unitWidth: unitWidth, isWholeLine: run.isWholeLine)
             }
-            result += layoutVisibleLine(inputs, lineRect: line[start].lineRect, pageWidth: pageWidth)
-            start = end
+            result += layoutVisibleLine(
+                inputs, lineRect: runs[range.lowerBound].lineRect, pageWidth: pageWidth,
+                maximumSize: placement.maximumSize, centerY: placement.centerY)
         }
         return result
+    }
+
+    /// Size limit and vertical center of one line in text mode.
+    struct LinePlacement: Equatable {
+        /// The line's font size is at most this (points).
+        var maximumSize: Double
+        /// The ascent + descent of the line are centered on this y (displayed page points, origin bottom-left).
+        var centerY: Double
+    }
+
+    /// Where the lines of a page may put their text so that rows never overlap, although the recognized line boxes
+    /// of dense handwriting do (ascenders and descenders make a box about twice as high as the row pitch):
+    /// - Lines on the same row (centers within `sameRowTolerance` × the smaller height, close horizontally) form a
+    ///   group with one size and one center (their mean).
+    /// - A group's size is at most `pitchFill` of the pitch (distance between the centers) to the nearest group above
+    ///   and below that overlaps it horizontally, and at most the size from its line heights.
+    /// - Obstacles (lines that are not drawn but stay on the page, e.g. a printed question above a handwritten
+    ///   answer) are walls: if one reaches into the line's box from above (below), the text goes into the free band
+    ///   between the wall and the box's bottom (top) edge, because the part of the box next to the wall is only the
+    ///   reach of ascenders (descenders); size and center follow that band.
+    /// - A size is never below `minimumPitchFactor` of the one from its height, so that duplicate boxes do not make
+    ///   the text vanish.
+    /// - Lines of one paragraph share the smallest size of the paragraph, but no line is set below
+    ///   `minimumParagraphFactor` of its own size; same-row groups are then made uniform again.
+    /// - Parameters: `rects` the line boxes (displayed page points, origin bottom-left), `paragraphs` their
+    ///   paragraphs, `obstacles` boxes of fixed lines.
+    static func linePlacements(rects: [CGRect], paragraphs: [UUID?], obstacles: [CGRect] = []) -> [LinePlacement] {
+        let count = rects.count
+        guard count > 0 else { return [] }
+        let reference = CTFontCreateWithName(regularFont as CFString, 100, nil)
+        let unit = (Double(CTFontGetAscent(reference)) + Double(CTFontGetDescent(reference))) / 100
+        let heightSizes = rects.map { fontSize(forHeight: Double($0.height)) }
+
+        // Same-row groups (union-find).
+        var parent = Array(0..<count)
+        func find(_ index: Int) -> Int {
+            var root = index
+            while parent[root] != root { root = parent[root] }
+            var node = index
+            while parent[node] != root { (node, parent[node]) = (parent[node], root) }
+            return root
+        }
+        for a in 0..<count where rects[a].height > 0 {
+            guard a + 1 < count else { break }
+            for b in (a + 1)..<count where rects[b].height > 0 {
+                let smaller = Double(min(rects[a].height, rects[b].height))
+                let larger = Double(max(rects[a].height, rects[b].height))
+                let gap = max(Double(rects[a].minX), Double(rects[b].minX)) - min(Double(rects[a].maxX), Double(rects[b].maxX))
+                if abs(Double(rects[a].midY - rects[b].midY)) <= sameRowTolerance * smaller, gap <= sameRowGap * larger {
+                    parent[find(a)] = find(b)
+                }
+            }
+        }
+        var members: [Int: [Int]] = [:]
+        for index in 0..<count where rects[index].height > 0 { members[find(index), default: []].append(index) }
+        let roots = members.keys.sorted()
+        let center = Dictionary(uniqueKeysWithValues: roots.map { root in
+            (root, members[root]!.map { Double(rects[$0].midY) }.reduce(0, +) / Double(members[root]!.count))
+        })
+
+        func overlap(_ a: CGRect, _ b: CGRect) -> Bool {
+            let shared = Double(min(a.maxX, b.maxX) - max(a.minX, b.minX))
+            return shared > 0 && shared >= neighborOverlap * Double(min(a.width, b.width))
+        }
+        func overlaps(_ a: [Int], _ b: [Int]) -> Bool {
+            a.contains { i in b.contains { j in overlap(rects[i], rects[j]) } }
+        }
+
+        var placement: [Int: (size: Double, center: Double)] = [:]
+        for root in roots {
+            let group = members[root]!
+            let c = center[root]!
+            let fromHeight = group.map { heightSizes[$0] }.min()!
+            let smallestHeight = Double(group.map { rects[$0].height }.min()!)
+            let boxBottom = Double(group.map { rects[$0].minY }.min()!)
+            let boxTop = Double(group.map { rects[$0].maxY }.max()!)
+
+            // Pitch to the nearest drawn rows above and below.
+            var above = Double.infinity, below = Double.infinity
+            for other in roots where other != root && overlaps(group, members[other]!) {
+                let distance = center[other]! - c
+                if distance > 1e-9 { above = min(above, distance) } else if distance < -1e-9 { below = min(below, -distance) }
+            }
+            // Walls: obstacles that reach into the box from above or below (not on the same row).
+            var wallAbove = Double.infinity, wallBelow = -Double.infinity
+            for obstacle in obstacles where obstacle.height > 0 && group.contains(where: { overlap(rects[$0], obstacle) }) {
+                let sameRow = abs(Double(obstacle.midY) - c) <= sameRowTolerance * min(Double(obstacle.height), smallestHeight)
+                guard !sameRow else { continue }
+                if Double(obstacle.midY) > c, Double(obstacle.minY) < boxTop { wallAbove = min(wallAbove, Double(obstacle.minY)) }
+                if Double(obstacle.midY) < c, Double(obstacle.maxY) > boxBottom { wallBelow = max(wallBelow, Double(obstacle.maxY)) }
+            }
+            var size: Double, middle = c
+            if wallAbove.isFinite || wallBelow.isFinite {
+                // Free band: from the wall to the box edge on the other side, within the half pitch to the neighbors.
+                var top = min(boxTop, wallAbove), bottom = max(boxBottom, wallBelow)
+                if above.isFinite { top = min(top, c + pitchFill / 2 * above) }
+                if below.isFinite { bottom = max(bottom, c - pitchFill / 2 * below) }
+                let band = top - bottom
+                if band > 0 {
+                    size = min(fromHeight, pitchFill * band / unit)
+                    middle = (top + bottom) / 2
+                } else {
+                    size = minimumPitchFactor * fromHeight
+                }
+            } else {
+                let pitch = min(above, below)
+                size = pitch.isFinite ? min(fromHeight, pitchFill * pitch / unit) : fromHeight
+            }
+            placement[root] = (max(size, minimumPitchFactor * fromHeight), middle)
+        }
+        var size = (0..<count).map { rects[$0].height > 0 ? placement[find($0)]!.size : heightSizes[$0] }
+
+        // Paragraph uniformity.
+        var smallest: [UUID: Double] = [:]
+        for index in 0..<count {
+            if let id = paragraphs[index], rects[index].height > 0 { smallest[id] = min(smallest[id] ?? .infinity, size[index]) }
+        }
+        let own = size
+        for index in 0..<count {
+            if let id = paragraphs[index], let shared = smallest[id], rects[index].height > 0 {
+                size[index] = max(shared, minimumParagraphFactor * own[index])
+            }
+        }
+        // Same-row groups stay uniform.
+        for root in roots {
+            let shared = members[root]!.map { size[$0] }.min()!
+            for index in members[root]! { size[index] = shared }
+        }
+        return (0..<count).map { index in
+            LinePlacement(
+                maximumSize: size[index],
+                centerY: rects[index].height > 0 ? placement[find(index)]!.center : Double(rects[index].midY))
+        }
     }
 
     /// Invisible text layer: font size from the line height, then horizontal scaling to the box (the selection then
@@ -307,15 +486,18 @@ enum DigitalPageText {
     /// - a whole-line run may be `wholeLineOverflow` times as wide as the line box; the last word may reach
     ///   `lastWordOverflow` line heights beyond its box.
     /// - Returns: a layout per input, nil for runs that are not drawn.
+    /// - `maximumSize` caps the font size (row pitch, free band; see `linePlacements`); `centerY` centers the text's
+    ///   ascent + descent on this y instead of the line box's center.
     static func layoutVisibleLine(
-        _ runs: [VisibleRunInput], lineRect: CGRect, pageWidth: Double = .infinity
+        _ runs: [VisibleRunInput], lineRect: CGRect, pageWidth: Double = .infinity,
+        maximumSize: Double = .infinity, centerY: Double? = nil
     ) -> [VisibleRunLayout?] {
         let lineHeight = Double(lineRect.height)
         guard lineHeight > 0 else { return runs.map { _ in nil } }
         let reference = CTFontCreateWithName(regularFont as CFString, 100, nil)
         let ascentUnit = Double(CTFontGetAscent(reference)) / 100, descentUnit = Double(CTFontGetDescent(reference)) / 100
         let spaceUnit = spaceWidth(of: reference) / 100
-        let lineSize = fontSize(forHeight: lineHeight)
+        let lineSize = min(fontSize(forHeight: lineHeight), max(0.5, maximumSize))
         let gap = visibleGap * spaceUnit * lineSize
 
         // Room of each drawn run: from its minX to the next run's minX (minus the gap) or its overflow limit.
@@ -348,7 +530,8 @@ enum DigitalPageText {
         }.sorted()
         let lineFactor = needed.isEmpty ? 1 : max(minimumLineFactor, needed[(needed.count - 1) / 4])
         let size = max(0.5, lineSize * lineFactor)
-        let baseline = Double(lineRect.minY) + (lineHeight - (ascentUnit + descentUnit) * size) / 2 + descentUnit * size
+        let center = centerY ?? Double(lineRect.midY)
+        let baseline = center - (ascentUnit + descentUnit) * size / 2 + descentUnit * size
 
         return runs.indices.map { index in
             guard let room = rooms[index] else { return nil }

@@ -230,7 +230,7 @@ struct DigitalPageLayoutTests {
         return (DigitalPageInput(background: .pdf(data: data, pageIndex: 0, variant: nil), lines: lines), written, ink)
     }
 
-    @Test("Bearbeitbares PDF mit Scan: Text auf dem Scan wird übermalt, nicht überschrieben; die Tinte wird ausgeblendet")
+    @Test("Bearbeitbares PDF mit Scan und Tinte: gedruckter Scantext bleibt unverändert, die Tinte wird ausgeblendet")
     func editableWithScan() throws {
         let (input, written, ink) = Self.editableInput(scan: true)
         let original = try DigitalPageTests.image(input, .handwriting)
@@ -238,9 +238,10 @@ struct DigitalPageLayoutTests {
         let shown = try DigitalPageTests.image(input, .textLayer)
         #expect(original.ink(in: written) > 200)
         #expect(original.ink(in: ink) > 100)
-        #expect(Double(hidden.ink(in: written)) <= 0.02 * Double(original.ink(in: written)), "Scantext übermalt: \(hidden.ink(in: written))")
+        // Live ink on the page: the scan is a printed worksheet; its text is neither painted over nor redrawn.
+        #expect(hidden.ink(in: written) == original.ink(in: written), "Scantext unverändert: \(hidden.ink(in: written))")
+        #expect(shown.ink(in: written) == original.ink(in: written), "kein Text über dem Scantext")
         #expect(Double(hidden.ink(in: ink)) <= 0.02 * Double(original.ink(in: ink)), "Tinte ausgeblendet: \(hidden.ink(in: ink))")
-        #expect(shown.ink(in: written) > hidden.ink(in: written) + 100, "Text steht an der Stelle des Scantexts")
         #expect(shown.ink(in: ink) > hidden.ink(in: ink) + 50, "Text steht an der Stelle der Tinte")
 
         let document = try DigitalPageTests.pdf([input])

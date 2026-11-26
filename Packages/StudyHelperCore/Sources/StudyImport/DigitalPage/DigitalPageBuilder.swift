@@ -24,7 +24,7 @@ import StudyCore
 /// on the input and `version`.
 public enum DigitalPageBuilder {
     /// Changes whenever the output for the same input changes (cache key of the app).
-    public static let version = 2
+    public static let version = 4
     /// An image covering at least this share of the page is the page itself (scan), not a picture on it.
     static let pageSizedImage = 0.8
     /// A line counts as lying in an area (printed text, image) if at least this share of it is covered.
@@ -77,11 +77,13 @@ public enum DigitalPageBuilder {
                         if !hidden.hidden.isEmpty { keepsDocument = false }
                         drawOriginal(source, in: context)
                         DigitalPageInk.draw(hidden.redraw, of: goodnotes, in: context)
-                        // Lines without hidden ink are still visible on the page (text on a scan, flattened writing):
-                        // a scan is painted over like a photo; other visible writing gets no text drawn over it (the
-                        // line stays in the invisible text layer of the PDF).
+                        // Lines without hidden ink are still visible on the page (text on a scan, flattened writing).
+                        // With live ink on the page, such text is the printed worksheet under the handwriting: it
+                        // stays untouched (repainting it leaves ghosts and duplicates). Only a scan without any ink
+                        // annotations is painted over like a photo. Other visible writing gets no text drawn over
+                        // it (the line stays in the invisible text layer of the PDF).
                         let covered = DigitalPageInk.coveredLines(lines, hiddenStrokes: hidden.hiddenStrokes, of: goodnotes)
-                        let scans = source.scanRegions()
+                        let scans = hidden.hiddenStrokes.isEmpty ? source.scanRegions() : []
                         painted = lines.filter { !covered.contains($0.id) && Self.covered($0.rect, by: scans) >= coveredShare }
                         shown = lines.filter { covered.contains($0.id) } + painted
                     } else {
@@ -94,7 +96,10 @@ public enum DigitalPageBuilder {
                 if options.drawsText {
                     let runs = DigitalPageText.runs(
                         for: shown, highlights: input.highlights, arrows: source.shapeArrows(), size: source.size)
-                    DigitalPageText.draw(runs, in: context, visible: true, pageWidth: source.size.width)
+                    // Everything recognized that is not drawn stays on the page (printed text, text in pictures):
+                    // the drawn text keeps clear of it.
+                    let obstacles = DigitalPageText.obstacleRects(of: input.lines, excluding: shown, size: source.size)
+                    DigitalPageText.draw(runs, in: context, visible: true, pageWidth: source.size.width, obstacles: obstacles)
                 }
             }
             guard let image = context.makeImage() else { throw DigitalPageError.renderingFailed }
