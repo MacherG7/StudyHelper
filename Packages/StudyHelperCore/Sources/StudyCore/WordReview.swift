@@ -228,9 +228,18 @@ public enum WordReview {
                 } else {
                     let isLast = token.index == tokens.count - 1
                     let isFirst = token.index == 0
+                    // Words that may complete a hyphen fragment: the rest of the line, then the first words of the
+                    // next lines (the reading order may put the continuation a line further down).
+                    var following: [String] = []
+                    if splitPunctuation(token.text).trailing.hasPrefix("-") {
+                        following = tokens.dropFirst(token.index + 1).prefix(fragmentLookahead).map(\.text)
+                        for later in tokensByLine.dropFirst(position + 1).prefix(fragmentLineLookahead) {
+                            if let first = later.first { following.append(first.text) }
+                        }
+                    }
                     reason = isSpelledCorrectly(
                         token.text, dictionary: dictionary, nextLineStart: isLast ? next?.text : nil,
-                        previousLineEnd: isFirst ? previous?.text : nil) ? nil : .spelling
+                        previousLineEnd: isFirst ? previous?.text : nil, following: following) ? nil : .spelling
                 }
                 if let reason {
                     marked.append(token.index)
@@ -253,9 +262,19 @@ public enum WordReview {
         return false
     }
 
+    /// Words after a hyphen fragment on the same line that may complete it ("Atmo-, Hydro- und Biosphäre").
+    static let fragmentLookahead = 6
+    /// Following lines whose first word may continue a line-final hyphen fragment.
+    static let fragmentLineLookahead = 3
+    /// Longest abbreviation with a final period that is not spell-checked ("medz.", "etz.", "bzw.").
+    static let maximumAbbreviationLetters = 5
+
     /// The spell-check rule for a confident word (the token as written, with punctuation).
+    /// - Parameter following: words after the token (rest of the line, then the next lines' first words); used only
+    ///   for hyphen fragments.
     static func isSpelledCorrectly(
-        _ token: String, dictionary: Lexicon, nextLineStart: String?, previousLineEnd: String?
+        _ token: String, dictionary: Lexicon, nextLineStart: String?, previousLineEnd: String?,
+        following: [String] = []
     ) -> Bool {
         let parts = splitPunctuation(token)
         let core = parts.core
@@ -266,7 +285,9 @@ public enum WordReview {
         let letters = core.filter(\.isLetter)
         if letters.count <= 6, !letters.isEmpty, letters.allSatisfy(\.isUppercase), letters.count >= 2 { return true }
         if core.contains(".") { return true }
-        if parts.trailing.hasPrefix("."), core.count + 1 <= 5 { return true }
+        if parts.trailing.hasPrefix("."), core.count <= maximumAbbreviationLetters, core.allSatisfy(\.isLetter) {
+            return true
+        }
 
         if dictionary.knows(core) { return true }
 
@@ -276,7 +297,10 @@ public enum WordReview {
                 let continuation = splitPunctuation(nextLineStart).core
                 if !continuation.isEmpty, dictionary.knows(core + continuation.lowercased()) { return true }
             }
-            return core.count < 4 || dictionary.knows(core)
+            if core.count < 4 || dictionary.knows(core) { return true }
+            // A fragment completed by a following word: a continuation on a later line ("Atmo-" … "sphäre") or the
+            // shared last part of an enumeration ("Atmo-, Hydro- und Biosphäre").
+            return following.contains { completes(fragment: core, with: $0, dictionary: dictionary) }
         }
         // Continuation of a hyphenated line break.
         if let previousLineEnd {
@@ -289,6 +313,20 @@ public enum WordReview {
         // Compounds and alternatives ("Erde-Mensch", "Tiere/Pflanzen"): every part known.
         let pieces = core.split(whereSeparator: { $0 == "-" || $0 == "/" || $0 == "–" }).map(String.init)
         if pieces.count > 1, pieces.allSatisfy({ $0.count <= 1 || dictionary.knows($0) }) { return true }
+        return false
+    }
+
+    /// Whether `fragment` plus `word` (a continuation) or plus a last part of `word` with at least 4 letters (the
+    /// shared part of an enumeration) is a known word.
+    static func completes(fragment: String, with word: String, dictionary: Lexicon) -> Bool {
+        let core = Array(splitPunctuation(word).core)
+        guard core.count >= 3, core.allSatisfy(\.isLetter) else { return false }
+        if dictionary.knows(fragment + String(core).lowercased()) { return true }
+        guard core.count > 4 else { return false }
+        for start in 1...(core.count - 4)
+        where dictionary.knowsSimple(fragment + String(core[start...]).lowercased()) {
+            return true
+        }
         return false
     }
 

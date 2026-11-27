@@ -135,14 +135,15 @@ private struct PendingBatchDeletion: Equatable {
 private struct BatchRow: View {
     let batch: ImportBatch
     @Environment(ImportCoordinator.self) private var coordinator
-    @State private var summaryCache = DerivedValue<BatchSummary>()
+    @State private var loader = PageSummaryLoader()
 
     private var title: String {
         batch.originalFileName ?? batch.kind.germanName
     }
 
     var body: some View {
-        let summary = summaryCache.value(key: batch.id) { BatchSummary(batch) }
+        // Pages, waiting and failed are cheap; the open counts follow from the background computation.
+        let summary = BatchSummary(batch, reviewed: loader.pages ?? [])
         let isActive = coordinator.activeBatchID == batch.id
         HStack(spacing: 12) {
             Image(systemName: batch.kind.symbolName)
@@ -171,7 +172,12 @@ private struct BatchRow: View {
                 }
             }
             Spacer(minLength: 4)
-            if summary.open > 0 {
+            if loader.pages == nil, summary.pages > 0 {
+                Text("…")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Offene Stellen werden gezählt")
+            } else if summary.open > 0 {
                 Text("\(summary.open)")
                     .font(.footnote.weight(.semibold))
                     .padding(.horizontal, 9).padding(.vertical, 3)
@@ -180,6 +186,10 @@ private struct BatchRow: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .task(priority: .utility) {
+            let checker = AppSpellChecker.shared
+            await loader.run(sources: { batch.sortedSources }, checker: checker)
+        }
     }
 }
 

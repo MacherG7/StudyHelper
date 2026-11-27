@@ -132,7 +132,8 @@ Vor Sitzungsende oder bei knappem Kontext hier aktualisieren.
 - **Danach:** Seiten 2/3 der echten Datei (D-041, Nachtrag D-040); Source-Kanäle stabil/Beta (D-042); Erkennungsfehler
   melden im Developer-Modus (D-043, `scripts/recognition-reports.py`); unsichere Wörter einzeln markiert mit
   Vorschlägen (Rechtschreibung, Fachbegriffe, Apple-Modell erst beim Antippen; Herkunft pro Zeile, D-044); Nightly vor
-  den Tests (D-045, `scripts/nightly-release.sh`).
+  den Tests (D-045, `scripts/nightly-release.sh`); Wortvorschläge durch erneutes Lesen der Tinte, ein Tipp öffnet das Wort,
+  schneller Start (D-046, 0.0.2.9).
 - **Offen:** Geräteprüfungen MT-1.1–1.48, MT-2.1–2.12, MT-3.4–3.8, MT-3.14/3.15 und MT-S.1–S.7 (macht der Entwickler).
   Vorschläge zu `scripts/test.sh` (Simulator-Package-Lauf optional, UI-Tests parallel/filterbar) warten auf Entscheidung.
 - **Nächster Schritt:** Phase 3b Datensicherung – nach Zusage des Entwicklers.

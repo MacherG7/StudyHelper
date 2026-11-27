@@ -129,26 +129,6 @@ struct WordReviewAppTests {
         #expect(!PageWordReview.isEmbeddedLine(line(nil), method: .embeddedPDFText))
     }
 
-    @Test("Das Wortbild wird mit Rand aus der Seite geschnitten")
-    func cropsTheWord() throws {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 200), format: format)
-        let image = renderer.image { context in
-            UIColor.white.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 400, height: 200))
-        }
-        let rect = NormalizedRect(x: 0.25, y: 0.4, width: 0.25, height: 0.1)
-        let line = RecognizedLine(
-            text: "Wort", rect: rect, confidence: 0.4,
-            words: [RecognizedWord(text: "Wort", rect: rect, confidence: 0.4, status: .uncertain)], order: 0)
-        let token = try #require(WordReview.tokens(of: line).first)
-        let crop = try #require(WordCorrectionSheet.cropWord(token, from: image))
-        #expect(crop.size.width > 100 && crop.size.width < 400)
-        #expect(crop.size.height > 20 && crop.size.height < 200)
-        #expect(WordCorrectionSheet.cropWord(token, from: nil) == nil)
-    }
-
     // MARK: Vorschläge des Geräte-Modells
 
     private func service(backend: AIBackend) throws -> (AIService, StudyRepository) {

@@ -23,6 +23,8 @@ let package = Package(
         .executable(name: "make-fixtures", targets: ["make-fixtures"]),
         // Dev tool: digitizes a local PDF and dumps the lines for scripts/score-recognition.py.
         .executable(name: "recognition-bench", targets: ["recognition-bench"]),
+        // Dev tool: measures the word-level review (marks, suggestions) on a local PDF and its reference.
+        .executable(name: "word-review-bench", targets: ["word-review-bench"]),
     ],
     targets: [
         .target(name: "StudyCore"),
@@ -51,6 +53,10 @@ let package = Package(
         .executableTarget(
             name: "recognition-bench",
             dependencies: ["StudyCore", "StudyImport"]
+        ),
+        .executableTarget(
+            name: "word-review-bench",
+            dependencies: ["StudyCore", "StudyImport", "StudyAI"]
         ),
         .testTarget(
             name: "StudyCoreTests",

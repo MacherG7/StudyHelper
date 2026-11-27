@@ -11,6 +11,10 @@ struct ReviewScreen: View {
     @State private var pageIndex = 0
     @State private var showVersions = false
     @State private var rerunScope: RerunScope?
+    @State private var loader = PageSummaryLoader()
+    @State private var termsDismissed = false
+    @State private var errorMessage: String?
+    @Environment(\.studyRepository) private var repository
 
     enum RerunScope: Identifiable {
         case page, all
@@ -22,8 +26,12 @@ struct ReviewScreen: View {
         let index = min(pageIndex, max(sources.count - 1, 0))
         let current = sources.indices.contains(index) ? sources[index] : nil
         VStack(spacing: 0) {
+            if let terms = loader.termCandidates, !terms.isEmpty, !termsDismissed {
+                TermSuggestionBanner(terms: terms, onAdopt: adopt, onDismiss: dismissTerms)
+            }
             if sources.count > 1 {
-                PageStepper(sources: sources, index: Binding(get: { index }, set: { pageIndex = $0 }))
+                PageStepper(
+                    sources: sources, summaries: loader.pages ?? [], index: Binding(get: { index }, set: { pageIndex = $0 }))
             }
             if let current {
                 ReviewPageView(source: current, batch: batch)
@@ -32,6 +40,7 @@ struct ReviewScreen: View {
                 ContentUnavailableView("Keine Seiten", systemImage: "doc")
             }
         }
+        .errorAlert($errorMessage)
         .navigationTitle(batch.originalFileName ?? batch.kind.germanName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -61,6 +70,11 @@ struct ReviewScreen: View {
                 .accessibilityIdentifier("reRecognizeButton")
             }
         }
+        .task(id: sources.map(\.id), priority: .utility) {
+            termsDismissed = TermSuggestionPreference.isDismissed(batch.id)
+            let checker = AppSpellChecker.shared
+            await loader.run(sources: { batch.sortedSources }, checker: checker, suggestTerms: true)
+        }
         .quickLookPreview(Bindable(pdfPreview).url)
         .errorAlert(Bindable(pdfPreview).errorMessage)
         .onDisappear { pdfPreview.cancel() }
@@ -88,14 +102,31 @@ struct ReviewScreen: View {
     }
 }
 
+extension ReviewScreen {
+    /// Adds the suggested terms to the subject: the marks of these words disappear everywhere.
+    private func adopt(_ terms: [String]) {
+        guard let repository, let subject = batch.subject else { return }
+        do {
+            for term in terms { try repository.addConfirmedTerm(term, to: subject) }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func dismissTerms() {
+        TermSuggestionPreference.dismiss(batch.id)
+        termsDismissed = true
+    }
+}
+
 /// "‹  Seite 2 von 5  ›" with a menu to jump to a page.
 private struct PageStepper: View {
     let sources: [Source]
+    /// The open counts per page, computed in the background; the menu shows none until they are ready.
+    let summaries: [PageSummary]
     @Binding var index: Int
-    @State private var summariesCache = DerivedValue<[PageSummary]>()
 
     var body: some View {
-        let summaries = summariesCache.value(key: sources.map(\.id)) { sources.map { PageSummary($0) } }
         HStack {
             Button("Vorherige Seite", systemImage: "chevron.left") { index = max(index - 1, 0) }
                 .labelStyle(.iconOnly)
@@ -104,7 +135,7 @@ private struct PageStepper: View {
             Spacer()
             Menu {
                 ForEach(Array(sources.enumerated()), id: \.element.id) { i, source in
-                    let page = summaries.indices.contains(i) ? summaries[i] : PageSummary(source)
+                    let page = summaries.indices.contains(i) ? summaries[i] : PageSummary()
                     Button {
                         index = i
                     } label: {

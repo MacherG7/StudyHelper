@@ -22,6 +22,41 @@ enum LineText {
         return result
     }
 
+    /// One whitespace-delimited piece of a line (see `pieces`).
+    struct Piece: Identifiable {
+        var id: Int
+        var text: AttributedString
+        /// The marked word this piece shows, if it is one.
+        var token: ReviewToken?
+    }
+
+    /// The line cut into its words, each styled like in `attributed`; a piece that holds a marked word carries that
+    /// token, so that the list can make the word a button of its own. A line whose characters do not match the styled
+    /// text (never expected) comes back as one piece.
+    static func pieces(
+        line: RecognizedLine, highlights: [RecognizedHighlight], marked: [ReviewToken]
+    ) -> [Piece] {
+        let full = attributed(line: line, highlights: highlights, marked: marked)
+        let characters = Array(line.text)
+        guard full.characters.count == characters.count else { return [Piece(id: 0, text: full, token: nil)] }
+        let markedStarts: [(offset: Int, token: ReviewToken)] = marked.map {
+            (line.text.distance(from: line.text.startIndex, to: $0.range.lowerBound), $0)
+        }
+        var result: [Piece] = []
+        var i = 0
+        while i < characters.count {
+            if characters[i].isWhitespace { i += 1; continue }
+            var j = i
+            while j < characters.count, !characters[j].isWhitespace { j += 1 }
+            let lower = full.characters.index(full.startIndex, offsetBy: i)
+            let upper = full.characters.index(lower, offsetBy: j - i)
+            let token = markedStarts.first { $0.offset >= i && $0.offset < j }?.token
+            result.append(Piece(id: result.count, text: AttributedString(full[lower..<upper]), token: token))
+            i = j
+        }
+        return result
+    }
+
     private static func highlighted(
         line: RecognizedLine, highlights: [RecognizedHighlight], legacyUncertain: Bool
     ) -> AttributedString {

@@ -65,6 +65,11 @@ nonisolated struct UITestSpellChecker: SpellChecking, SpellCheckerIdentifying {
 
     var cacheIdentity: AnyHashable { unknown }
 
-    func isKnown(_ word: String) -> Bool { !unknown.contains(word.lowercased()) }
+    /// A listed word and every fragment of it is unknown, so that the compound rule of the review ("Chloro" + "plasten")
+    /// cannot make it known again.
+    func isKnown(_ word: String) -> Bool {
+        let lowered = word.lowercased()
+        return !unknown.contains { $0.contains(lowered) }
+    }
     func guesses(for word: String) -> [String] { [] }
 }

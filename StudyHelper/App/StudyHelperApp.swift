@@ -9,6 +9,7 @@ import SwiftUI
 /// - `-uiTestSeed`: additionally fill it with demo data (`UITestSeeder`)
 /// - `-uiTestSeedVersions`: with `-uiTestSeed`, the demo page has a second version
 /// - `-uiTestSeedReports`: with `-uiTestInMemory`, the developer error list holds one demo entry
+/// - `-uiTestUnknownWords a,b`: with `-uiTestInMemory`, the review's spell checker does not know these words
 /// - `-uiTestMockAI`: with `-uiTestInMemory`, every AI provider kind is a mock (no network, in-memory keys)
 @main
 struct StudyHelperApp: App {

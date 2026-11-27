@@ -10,6 +10,8 @@ struct ReviewPageView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(ImportCoordinator.self) private var coordinator
+    @Environment(\.studyRepository) private var repository
+    @Environment(AIService.self) private var ai
 
     enum Mode: String, CaseIterable, Identifiable {
         case image = "Bild"
@@ -40,10 +42,21 @@ struct ReviewPageView: View {
     @State private var pageImage: UIImage?
     @State private var snapshotCache = DerivedValue<PageSnapshot>()
     @State private var report = ReportFlow()
+    /// Computes the best reading of the marked words in the background (D-044).
+    @State private var prefetcher = WordCandidatePrefetcher()
+    @State private var errorMessage: String?
 
     private struct ImageKey: Hashable {
         var digitizationID: UUID?
         var state: DigitizationState
+    }
+
+    /// Restarts the background reading when the page, its marks or the editing state change.
+    private struct PrefetchKey: Hashable {
+        var digitizationID: UUID?
+        var marks: [UUID: [Int]]
+        var enabled: Bool
+        var terms: Int
     }
 
     /// The current digitization decoded once per change (the JSON blobs are not read on every render).
@@ -88,6 +101,10 @@ struct ReviewPageView: View {
         let highlights = snapshot.highlights
         let isActive = coordinator.activeBatchID == batch.id && source.digitizationState == .pending
         let editingDisabled = isEditingDisabled(damaged: damaged)
+        let prefetchKey = PrefetchKey(
+            digitizationID: snapshot.digitizationID, marks: snapshot.review.result.marks,
+            enabled: !editingDisabled && !damaged && hasDigitization,
+            terms: (batch.subject?.confirmedTerms ?? []).hashValue)
 
         VStack(spacing: 0) {
             banners(snapshot: snapshot, isActive: isActive)
@@ -114,6 +131,9 @@ struct ReviewPageView: View {
                 pageImage = nil
             }
         }
+        .task(id: prefetchKey) { await startPrefetch(prefetchKey) }
+        .onDisappear { prefetcher.cancel() }
+        .errorAlert($errorMessage)
         .navigationDestination(item: $openedTopicID) { id in
             TopicLookupView(subject: batch.subject, topicID: id)
         }
@@ -124,7 +144,7 @@ struct ReviewPageView: View {
             case .highlights(let id):
                 HighlightsSheet(source: source, lineID: id)
             case .word(let id, let index):
-                WordCorrectionSheet(source: source, lineID: id, wordIndex: index, pageImage: pageImage)
+                WordCorrectionSheet(source: source, lineID: id, wordIndex: index)
             case .unmatched:
                 UnmatchedCorrectionsView(source: source)
             }
@@ -295,16 +315,60 @@ struct ReviewPageView: View {
         LineListView(
             lines: snapshot.lines, highlights: snapshot.highlights, looseHighlights: snapshot.looseHighlights,
             review: snapshot.review, wordsEnabled: wordsEnabled, selectedLineID: $selectedLineID, onlyOpen: onlyOpen,
-            onWordTap: openWord)
+            onWordTap: openWord, guesses: guesses(in: snapshot, enabled: wordsEnabled), onQuickFix: quickFix)
     }
 
     // MARK: Selected line
 
-    /// Opens the word correction for a marked word and selects its line.
+    /// Opens the word correction for a marked word with one tap; the line stays as it is.
     private func openWord(lineID: UUID, wordIndex: Int) {
         guard !isEditingDisabled(damaged: source.currentDigitization?.hasUnreadableData ?? false) else { return }
-        selectedLineID = lineID
         sheet = .word(lineID, wordIndex)
+    }
+
+    // MARK: Best reading
+
+    /// The best reading found so far for each marked word of the page ("→ word?" next to it).
+    private func guesses(in snapshot: PageSnapshot, enabled: Bool) -> [WordReference: String] {
+        guard enabled, let digitizationID = snapshot.digitizationID else { return [:] }
+        let cache = WordCandidateCache.shared
+        var result: [WordReference: String] = [:]
+        for line in snapshot.lines {
+            for token in snapshot.review.markedTokens(of: line.id) {
+                let key = WordKey(digitizationID: digitizationID, lineID: line.id, wordIndex: token.index, text: token.text)
+                if let guess = cache.bestGuess(for: key) {
+                    result[WordReference(lineID: line.id, wordIndex: token.index)] = guess
+                }
+            }
+        }
+        return result
+    }
+
+    /// Computes the readings of the page's marked words in the background; nothing runs while editing is disabled.
+    private func startPrefetch(_ key: PrefetchKey) async {
+        prefetcher.cancel()
+        guard key.enabled, let digitizationID = key.digitizationID else { return }
+        // Let the page appear and settle first.
+        try? await Task.sleep(for: .milliseconds(200))
+        guard !Task.isCancelled else { return }
+        let snapshot = snapshotCache.value(key: source.id) { PageSnapshot(source) }
+        guard snapshot.digitizationID == digitizationID, !snapshot.unreadable,
+              let context = WordCandidateContext.make(
+                source: source, digitizationID: digitizationID, lines: snapshot.lines, ai: ai)
+        else { return }
+        prefetcher.start(context.jobs(for: snapshot.review))
+    }
+
+    /// Applies the best reading of a word without opening it.
+    private func quickFix(lineID: UUID, wordIndex: Int, text: String) {
+        guard let repository,
+              !isEditingDisabled(damaged: source.currentDigitization?.hasUnreadableData ?? false) else { return }
+        do {
+            try repository.correctWord(source: source, lineID: lineID, wordIndex: wordIndex, newText: text)
+            coordinator.reportImpact(of: [source])
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     /// Editing is blocked while the page is damaged or its import is being recognized or re-recognized.

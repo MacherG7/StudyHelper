@@ -329,6 +329,20 @@ final class AIService {
         return WordSuggestions.parse(response.text, original: word)
     }
 
+    /// Orders the candidates for one marked word by how well they fit the surrounding words (on-device model, logged
+    /// like every request). Returns nil if the model is not available or fails; the candidates are then used as they
+    /// are. Never throws and never adds or removes candidates (`WordSuggestions.parseRerank` keeps only the given ones).
+    func rerankWords(candidates: [String], before: String, after: String, subject: String?) async -> [String]? {
+        guard candidates.count > 1, let make = backend.makeOnDeviceProvider, let (config, provider) = try? make() else {
+            return nil
+        }
+        let request = WordSuggestions.rerankRequest(candidates: candidates, before: before, after: after, subject: subject)
+        guard let response = try? await runAndLog(request, configuration: config, provider: provider, validate: nil) else {
+            return nil
+        }
+        return WordSuggestions.parseRerank(response.text, candidates: candidates)
+    }
+
     /// German reason if an answer is no suggestion list at all (no JSON, or JSON without the suggestions list); nil for a
     /// well-formed answer, also an empty list. The request is then logged with this parsing error instead of as a success.
     static func suggestionsParsingError(_ text: String) -> String? {

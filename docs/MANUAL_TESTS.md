@@ -159,6 +159,10 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.16 | Developer-Modus an: Zeile „Fehler melden“, Bereich aufziehen, „Bericht kopieren“ und in den Chat einfügen, „Als Datei teilen“ per AirDrop | Bereich trifft die gemeinte Stelle; Text und Datei vollständig; `scripts/recognition-reports.py` liest beides | |
 | MT-3.17 | Gerät mit Apple Intelligence: unsicheres Wort antippen | Markierung nur am Wort; Vorschläge des Geräte-Modells erscheinen nach kurzer Zeit, passen zum Satz; Übernehmen ändert nur das Wort | |
 | MT-3.18 | Gerät ohne Apple Intelligence (oder ausgeschaltet): unsicheres Wort antippen | Hinweis „nicht verfügbar“; Rechtschreib- und Fachbegriff-Vorschläge erscheinen sofort | |
+| MT-3.19 | Markiertes Wort einmal antippen (Seite 6 der echten Datei: „Schooligungen“, „Eingrifte“, „togen“) | „Wort prüfen“ öffnet sofort; enger Ausschnitt nur des Wortes; richtiges Wort an 1. Stelle oder unter den ersten 5; keine sinnlosen Vorschläge | |
+| MT-3.20 | „→ Wort?“ neben einem markierten Wort antippen | Wort wird übernommen, Zähler „offen“ sinkt | |
+| MT-3.21 | Hinweis „Mögliche Fachbegriffe“ in der Prüfansicht übernehmen | Begriffe zählen danach nicht mehr als offen | |
+| MT-3.22 | App starten (Fächerliste mit vielen Seiten) | Fächerliste erscheint in unter 1 s, Zahlen füllen sich nach | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
 | MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
 | MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |

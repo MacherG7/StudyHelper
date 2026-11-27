@@ -15,6 +15,9 @@ struct LineListView: View {
     let onlyOpen: Bool
     /// A marked word was tapped (line id, word index).
     var onWordTap: (UUID, Int) -> Void = { _, _ in }
+    /// The best reading found for marked words (shown as "→ word?" next to them) and its use (line id, word index, text).
+    var guesses: [WordReference: String] = [:]
+    var onQuickFix: (UUID, Int, String) -> Void = { _, _, _ in }
 
     var body: some View {
         let visible = lines.filter { !onlyOpen || review.isOpen($0.id) || $0.id == selectedLineID }
@@ -33,7 +36,9 @@ struct LineListView: View {
                         LineRow(
                             line: line, highlights: highlights, marked: review.markedTokens(of: line.id),
                             isIllegible: review.isIllegible(line.id), isSelected: line.id == selectedLineID, wordsEnabled: wordsEnabled,
-                            onWordTap: { onWordTap(line.id, $0) }
+                            guesses: guesses,
+                            onWordTap: { onWordTap(line.id, $0) },
+                            onQuickFix: { onQuickFix(line.id, $0, $1) }
                         ) {
                             selectedLineID = (selectedLineID == line.id) ? nil : line.id
                         }
@@ -61,43 +66,29 @@ private struct LineRow: View {
     let isIllegible: Bool
     let isSelected: Bool
     let wordsEnabled: Bool
+    let guesses: [WordReference: String]
     let onWordTap: (Int) -> Void
+    let onQuickFix: (Int, String) -> Void
     let onTap: () -> Void
 
     var body: some View {
         let status = line.displayStatus(hasMarks: !marked.isEmpty, isIllegible: isIllegible)
         let own = highlights.filter { $0.applies(to: line) }
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .top, spacing: 10) {
+            // The line as one element for VoiceOver (its label reads the whole line); tapping anywhere else on the row
+            // selects it, too. The marked words are buttons of their own.
             Button(action: onTap) {
-                HStack(alignment: .top, spacing: 10) {
-                    Group {
-                        if let symbol = status.symbolName {
-                            Image(systemName: symbol).foregroundStyle(status.tint)
-                        } else {
-                            Color.clear
-                        }
+                Group {
+                    if let symbol = status.symbolName {
+                        Image(systemName: symbol).foregroundStyle(status.tint)
+                    } else {
+                        Color.clear
                     }
-                    .frame(width: 22, height: 22)
-                    .accessibilityHidden(true)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(LineText.attributed(line: line, highlights: highlights, marked: marked))
-                            .font(.body)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        ForEach(own) { highlight in
-                            Label(highlight.visibleDescription, systemImage: highlight.kind.symbolName)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer(minLength: 0)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityElement(children: .ignore)
             .accessibilityLabel(line.spokenLabel(
                 highlights: highlights, markedWords: marked.map(\.core), isIllegible: isIllegible))
             .accessibilityValue(isSelected ? "ausgewählt" : "")
@@ -105,32 +96,40 @@ private struct LineRow: View {
             .accessibilityHint("Wählt die Zeile aus, um sie zu korrigieren")
             .accessibilityIdentifier("reviewLine-\(line.order)")
 
-            if !marked.isEmpty {
-                // The marked words as buttons of their own: a tap opens the word correction.
-                FlowLayout(spacing: 6) {
-                    ForEach(marked, id: \.index) { token in
-                        Button { onWordTap(token.index) } label: {
-                            Text(token.core.isEmpty ? token.text : token.core)
-                                .font(.callout.weight(.medium))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.orange.opacity(0.18), in: Capsule())
-                                .overlay(Capsule().strokeBorder(Color.orange.opacity(0.8), lineWidth: 1))
-                                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 4) {
+                if marked.isEmpty {
+                    Text(LineText.attributed(line: line, highlights: highlights, marked: marked))
+                        .font(.body)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityHidden(true)
+                } else {
+                    // The marked words are the tap targets: one tap opens the word.
+                    FlowLayout(spacing: 4) {
+                        ForEach(LineText.pieces(line: line, highlights: highlights, marked: marked)) { piece in
+                            if let token = piece.token {
+                                WordButton(
+                                    order: line.order, token: token, text: piece.text, enabled: wordsEnabled,
+                                    guess: wordsEnabled ? guesses[WordReference(lineID: line.id, wordIndex: token.index)] : nil,
+                                    onTap: { onWordTap(token.index) }, onQuickFix: { onQuickFix(token.index, $0) })
+                            } else {
+                                Text(piece.text).font(.body).accessibilityHidden(true)
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .disabled(!wordsEnabled)
-                        .opacity(wordsEnabled ? 1 : 0.45)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("Unsicheres Wort: \(token.core.isEmpty ? token.text : token.core)")
-                        .accessibilityHint(wordsEnabled ? "Öffnet die Wortkorrektur" : "Gerade nicht bearbeitbar")
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityIdentifier("reviewWord-\(line.order)-\(token.index)")
                     }
                 }
-                .padding(.leading, 32)
+                ForEach(own) { highlight in
+                    Label(highlight.visibleDescription, systemImage: highlight.kind.symbolName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
             }
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
@@ -141,6 +140,56 @@ private struct LineRow: View {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
         )
+    }
+}
+
+/// A marked word inside its line: a tap opens the word correction; the best reading found so far follows as a small
+/// "→ word?" button that applies it at once.
+private struct WordButton: View {
+    let order: Int
+    let token: ReviewToken
+    let text: AttributedString
+    let enabled: Bool
+    let guess: String?
+    let onTap: () -> Void
+    let onQuickFix: (String) -> Void
+
+    var body: some View {
+        let name = token.core.isEmpty ? token.text : token.core
+        HStack(spacing: 3) {
+            Button(action: onTap) {
+                Text(text)
+                    .font(.body)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(Color.orange.opacity(0.18), in: RoundedRectangle(cornerRadius: 5))
+                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.orange.opacity(0.7), lineWidth: 1))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.45)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Unsicheres Wort: \(name)")
+            .accessibilityHint(enabled ? "Öffnet die Wortkorrektur" : "Gerade nicht bearbeitbar")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier("reviewWord-\(order)-\(token.index)")
+
+            if let guess {
+                Button { onQuickFix(guess) } label: {
+                    Text("→ \(guess)?")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.accentColor.opacity(0.15), in: Capsule())
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Vorschlag übernehmen: \(guess)")
+                .accessibilityHint("Ersetzt \(name) durch \(guess)")
+                .accessibilityIdentifier("quickFix-\(order)-\(token.index)")
+            }
+        }
     }
 }
 

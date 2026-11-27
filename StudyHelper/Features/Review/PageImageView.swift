@@ -126,7 +126,12 @@ struct PageImageView: View {
             }
             ForEach(lines) { line in
                 ForEach(review.markedTokens(of: line.id), id: \.index) { token in
-                    WordFrame(order: line.order, token: token, size: size, isEnabled: wordsEnabled) { onWordTap(line.id, token.index) }
+                    // The frame is the word's band between the neighbouring rows, so that it covers no other row.
+                    WordFrame(
+                        order: line.order, token: token,
+                        rect: WordGeometry.bandRect(for: token.rect, line: line, pageLines: lines),
+                        size: size, isEnabled: wordsEnabled
+                    ) { onWordTap(line.id, token.index) }
                 }
             }
         }
@@ -196,18 +201,19 @@ private struct LineOverlay: View {
     }
 }
 
-/// A small orange frame around a marked word; a tap opens the word correction.
+/// An orange frame around a marked word (its band of the page); one tap opens the word correction.
 private struct WordFrame: View {
     let order: Int
     let token: ReviewToken
+    let rect: NormalizedRect
     let size: CGSize
     let isEnabled: Bool
     let onTap: () -> Void
 
     var body: some View {
         let frame = CGRect(
-            x: token.rect.x * size.width, y: token.rect.y * size.height,
-            width: max(token.rect.width * size.width, 14), height: max(token.rect.height * size.height, 14))
+            x: rect.x * size.width, y: rect.y * size.height,
+            width: max(rect.width * size.width, 14), height: max(rect.height * size.height, 14))
         Button(action: onTap) {
             RoundedRectangle(cornerRadius: 3)
                 .fill(Color.orange.opacity(0.22))

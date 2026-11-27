@@ -64,7 +64,18 @@ enum AppEnvironment {
             let mockAI = arguments.contains("-uiTestMockAI")
             // The simulator's dictionaries differ between system versions: UI tests use a fixed word list, so that
             // only the words the recognizer is unsure about are marked (UITestSpellChecker).
-            if inMemory { AppSpellChecker.shared = UITestSpellChecker(unknown: []) }
+            if inMemory {
+                // `-uiTestUnknownWords a,b`: words the checker does not know (marked as spelling errors, and the term
+                // suggestions of the import look for them).
+                var unknown: Set<String> = []
+                if let index = arguments.firstIndex(of: "-uiTestUnknownWords"), arguments.indices.contains(index + 1) {
+                    unknown = Set(arguments[index + 1].split(separator: ",").map { $0.lowercased() })
+                }
+                AppSpellChecker.shared = UITestSpellChecker(unknown: unknown)
+                // Readings and term suggestions are deterministic in UI tests: no Vision, no model.
+                AppWordCandidates.provider = UITestWordCandidateProvider()
+                AppTermSuggestions.provider = AppTermSuggestions.uiTestProvider
+            }
             let services = AppServices(
                 container: container,
                 makeAI: inMemory ? { AppServices.makeUITestAI(repository: $0, mockAI: mockAI) } : nil,

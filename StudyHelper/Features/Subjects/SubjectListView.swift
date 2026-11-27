@@ -94,10 +94,12 @@ struct SubjectListView: View {
 
 private struct SubjectRow: View {
     let subject: Subject
-    @State private var summaryCache = DerivedValue<SubjectSummary>()
+    @State private var loader = PageSummaryLoader()
 
     var body: some View {
-        let summary = summaryCache.value(key: subject.id) { SubjectSummary(subject) }
+        // Imports are cheap; the open counts are computed in the background ("…" until they are ready).
+        let reviewed = loader.pages
+        let summary = SubjectSummary(subject, reviewed: reviewed ?? [])
         VStack(alignment: .leading, spacing: 2) {
             Text(subject.name).font(.headline)
             HStack(spacing: 8) {
@@ -107,7 +109,11 @@ private struct SubjectRow: View {
                         .foregroundStyle(.red)
                         .accessibilityLabel(summary.unreadablePages == 1 ? "1 Seite beschädigt" : "\(summary.unreadablePages) Seiten beschädigt")
                 }
-                if summary.open > 0 {
+                if reviewed == nil, summary.imports > 0 {
+                    Text("…")
+                        .accessibilityLabel("Offene Stellen werden gezählt")
+                        .accessibilityIdentifier("subjectCountPlaceholder")
+                } else if summary.open > 0 {
                     Text("\(summary.open) offen")
                         .foregroundStyle(.orange)
                         .accessibilityLabel("\(PageWordReview.description(words: summary.openWords, illegible: summary.illegible)) offen")
@@ -117,6 +123,10 @@ private struct SubjectRow: View {
             .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+        .task(priority: .utility) {
+            let checker = AppSpellChecker.shared
+            await loader.run(sources: { subject.imports.flatMap(\.sources) }, checker: checker)
+        }
     }
 }
 
