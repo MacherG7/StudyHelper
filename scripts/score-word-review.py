@@ -7,6 +7,10 @@ production provider (VisionWordCandidateProvider, D-046).
         LocalSamples/bench/<run>.json [--rerank] [--terms none|suggested|reference]
     scripts/score-word-review.py LocalSamples/bench/<run>.json [--list]
 
+Marks follow the app (D-047): repeated words count as intended (measure with --no-repeated for the old rule), and
+the rows "− bestätigte Lesung" drop confirmable marks whose reading the provider confirmed. Suggestions are the
+provider's plausible candidates (real words, or a best candidate at least two readings agree on).
+
 Ground truth: a recognized word is wrong if it differs from its aligned reference word (case-insensitive,
 punctuation trimmed) or has no counterpart. Structural tokens (numbers, single characters) are never marked by
 WordReview and are left out of the marking numbers. Suggestion hits compare case-insensitively.
@@ -98,11 +102,20 @@ def main():
     spell = lambda t: t.get("markedPlain") is not None
     spellT = lambda t: t.get("markedTerms") is not None
     spellS = lambda t: t.get("markedSuggested") is not None
+    # A confirmed reading of the ink removes a confirmable mark (D-047); words never re-read keep their mark.
+    confirmed = lambda t: t.get("confirmable") and (t.get("suggestions") or {}).get("confirmed")
+    spellC = lambda t: spell(t) and not confirmed(t)
+    spellSC = lambda t: spellS(t) and not confirmed(t)
     marker_table("WordReview (keine Fachbegriffe)", spell)
+    marker_table("WordReview − bestätigte Lesung", spellC)
     marker_table("WordReview + Termvorschläge übernommen", spellS)
+    marker_table("  … − bestätigte Lesung", spellSC)
     marker_table("WordReview + Referenz-Fachbegriffe", spellT)
 
     if a.list:
+        print("\nBestätigte Lesung entfernt (richtig):", ", ".join(t["text"] for t in words if spell(t) and confirmed(t) and not t["wrong"]))
+        print("Bestätigte Lesung entfernt (echter Fehler!):", ", ".join(t["text"] for t in words if spell(t) and confirmed(t) and t["wrong"]))
+        print("Falsch positiv nach bestätigter Lesung:", ", ".join(t["text"] for t in words if spellC(t) and not t["wrong"]))
         print("\nFalsch positiv (ohne Fachbegriffe):", ", ".join(t["text"] for t in words if spell(t) and not t["wrong"]))
         print("Falsch positiv (Termvorschläge):", ", ".join(t["text"] for t in words if spellS(t) and not t["wrong"]))
         print("Übersehen (Termvorschläge):", ", ".join(f"{t['text']}→{t.get('ref')}" for t in words if t["wrong"] and not spellS(t)))

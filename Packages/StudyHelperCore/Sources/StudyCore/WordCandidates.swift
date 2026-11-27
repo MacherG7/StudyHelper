@@ -24,11 +24,37 @@ public struct WordCandidate: Sendable, Hashable {
     /// 0…1, relative to the best candidate of the same list.
     public var score: Double
     public var sources: Set<WordCandidateSource>
+    /// How many readings of the ink (Vision passes) found this word among their first candidates.
+    public var readings: Int
 
-    public init(text: String, score: Double, sources: Set<WordCandidateSource>) {
+    public init(text: String, score: Double, sources: Set<WordCandidateSource>, readings: Int = 0) {
         self.text = text
         self.score = score
         self.sources = sources
+        self.readings = readings
+    }
+}
+
+/// The result of reading one marked word again (D-046, D-047).
+public struct WordRereadResult: Sendable, Hashable {
+    /// Plausible suggestions, best first (`WordCandidateRanking.plausible`); never the written word itself.
+    public var candidates: [WordCandidate]
+    /// The readings of the ink agree with the written word (`WordCandidateRanking.isConfirmed`): the recognizer read
+    /// it the same way again, so it is most likely what the writer wrote. Demotes spelling marks (D-047).
+    public var readingConfirmed: Bool
+    /// Diagnostics for measurements (`word-review-bench`): the cleaned candidates of each reading of the ink …
+    public var readings: [[String]]
+    /// … and the ranked candidates before the plausibility filter.
+    public var ranked: [WordCandidate]
+
+    public init(
+        candidates: [WordCandidate] = [], readingConfirmed: Bool = false, readings: [[String]] = [],
+        ranked: [WordCandidate] = []
+    ) {
+        self.candidates = candidates
+        self.readingConfirmed = readingConfirmed
+        self.readings = readings
+        self.ranked = ranked
     }
 }
 
@@ -423,7 +449,7 @@ public enum WordCandidateRanking {
         }
 
         let allReadings = readingsByCrop.values.reduce(into: Set<String>()) { $0.formUnion($1) }
-        var ranked: [(text: String, score: Double, sources: Set<WordCandidateSource>, order: Int)] = []
+        var ranked: [(text: String, score: Double, sources: Set<WordCandidateSource>, order: Int, readings: Int)] = []
         for (key, e) in entries {
             let spelling = preferredSpelling(e.spellings, checker: cached, terms: terms)
             guard spelling != writtenCore else { continue }
@@ -440,12 +466,91 @@ public enum WordCandidateRanking {
                     continue
                 }
             }
-            ranked.append((spelling, e.score, e.sources, e.order))
+            ranked.append((spelling, e.score, e.sources, e.order, e.lists.count))
         }
         ranked.sort { ($0.score, -$0.order) > ($1.score, -$1.order) }
         let top = ranked.prefix(limit)
         let best = max(top.first?.score ?? 1, 0.0001)
-        return top.map { WordCandidate(text: $0.text, score: min(1, max(0, $0.score) / best), sources: $0.sources) }
+        return top.map {
+            WordCandidate(
+                text: $0.text, score: min(1, max(0, $0.score) / best), sources: $0.sources, readings: $0.readings)
+        }
+    }
+
+    // MARK: Confirmed reading and plausibility (D-047)
+
+    /// Readings that must read the written word as their first candidate for it to count as confirmed.
+    static let confirmingFirstReadings = 2
+
+    /// Whether the readings of the ink confirm the written word (D-047). All of:
+    /// - it is the consensus top reading: highest score from the readings alone (rank and agreement, no dictionary
+    ///   bonus, which would favour any known neighbour of an unknown but correct term such as "Hydro" → "Hydra");
+    /// - at least `confirmingFirstReadings` readings have it as their first candidate;
+    /// - no reading has another word that the dictionary or the terms know as its first candidate. A reading that
+    ///   prefers a real word ("fasst" for "tasst", "Eingriffe" for "Eingrifte") is the typical sign of a misreading
+    ///   that the other passes repeat; on the real export this keeps every such error marked.
+    /// Compared case-insensitively, without surrounding punctuation; single letters are no readings of longer words.
+    public static func isConfirmed(
+        written: String, vision: [VisionList], checker: any SpellChecking, terms: Set<String> = []
+    ) -> Bool {
+        let writtenCore = WordReview.splitPunctuation(written.trimmingCharacters(in: .whitespacesAndNewlines)).core
+        let writtenKey = WordReview.lowered(writtenCore)
+        guard !writtenKey.isEmpty else { return false }
+        let cached = checker as? CachingSpellChecker ?? CachingSpellChecker(checker)
+        let lexicon = WordReview.Lexicon(checker: cached, terms: terms)
+        var scores: [String: Double] = [:]
+        var lists: [String: Int] = [:]
+        var first = 0
+        for list in vision {
+            var seen: [String] = []
+            var firstWord: String?
+            for word in list.candidates.compactMap({ clean($0, written: writtenCore) }) where seen.count < readingDepth {
+                let key = WordReview.lowered(word)
+                guard !seen.contains(key) else { continue }
+                if seen.isEmpty { firstWord = word }
+                seen.append(key)
+                scores[key, default: 0] += list.weight / Double(seen.count)
+                lists[key, default: 0] += 1
+            }
+            guard let firstWord, let firstKey = seen.first else { continue }
+            if firstKey == writtenKey {
+                first += 1
+            } else if WordReview.isKnownWord(firstWord, dictionary: lexicon) {
+                return false
+            }
+        }
+        guard first >= confirmingFirstReadings, scores[writtenKey] != nil else { return false }
+        let total: (String) -> Double = { (scores[$0] ?? 0) + agreementBonus * Double(max(0, (lists[$0] ?? 0) - 1)) }
+        let mine = total(writtenKey)
+        return scores.keys.allSatisfy { $0 == writtenKey || total($0) < mine }
+    }
+
+    /// Readings that must agree on a top candidate the dictionary does not know for it to be offered.
+    static let plausibleReadings = 2
+
+    /// The candidates worth offering: words the dictionary or the subject terms know (also compounds of known parts
+    /// and hyphenated words of known pieces), and the best candidate when at least `plausibleReadings` readings of
+    /// the ink agree on it (an unknown term such as "Pedosphäre"). Mutations of the written word that are no words
+    /// ("Erdeii", "db" for "ab") are dropped. When the written word is itself a real word, a candidate needs a
+    /// reading of the ink too (the spell checker's neighbours of a correct word, "dusch" for "durch", are no
+    /// readings). At most `limit`, order kept. `allowsUnknownBest` false: only known words (after a confirmed
+    /// reading).
+    public static func plausible(
+        _ candidates: [WordCandidate], written: String? = nil, checker: any SpellChecking, terms: Set<String> = [],
+        limit: Int = 5, allowsUnknownBest: Bool = true
+    ) -> [WordCandidate] {
+        let cached = checker as? CachingSpellChecker ?? CachingSpellChecker(checker)
+        let lexicon = WordReview.Lexicon(checker: cached, terms: terms)
+        let writtenIsKnown = written.map { WordReview.isKnownWord($0, dictionary: lexicon) } ?? false
+        var result: [WordCandidate] = []
+        for (index, candidate) in candidates.enumerated() where result.count < max(0, limit) {
+            if writtenIsKnown, candidate.readings == 0, !candidate.sources.contains(.term) { continue }
+            if WordReview.isKnownWord(candidate.text, dictionary: lexicon)
+                || (allowsUnknownBest && index == 0 && candidate.readings >= plausibleReadings) {
+                result.append(candidate)
+            }
+        }
+        return result
     }
 
     /// The spelling to show: one the dictionary or the terms know exactly, else the one with the most weight.

@@ -135,6 +135,115 @@ struct WordCandidateTests {
         #expect(provider.callCount == 2)
     }
 
+    // MARK: Confirmed readings and repeated words (D-047)
+
+    @Test("Bestätigte Lesung: gemerkt, kein Schnellvorschlag; die Zähler-Revision steigt nur bei neuer Bestätigung")
+    func confirmedReadingInCache() {
+        let cache = WordCandidateCache()
+        let key = WordKey(digitizationID: UUID(), lineID: UUID(), wordIndex: 0, text: "Lithosphäre,")
+        let candidates = [WordCandidate(text: "Litosphäre", score: 1, sources: [.vision], readings: 2)]
+        #expect(!cache.isConfirmed(key))
+        cache.store(WordRereadResult(candidates: candidates, readingConfirmed: true), for: key)
+        #expect(cache.isConfirmed(key) && cache.result(for: key)?.readingConfirmed == true)
+        #expect(cache.bestGuess(for: key) == nil, "kein „→ Wort?“ für ein bestätigtes Wort")
+        #expect(cache.confirmationRevision == 1)
+        cache.store(WordRereadResult(candidates: candidates, readingConfirmed: true), for: key)
+        cache.store([], for: WordKey(digitizationID: UUID(), lineID: UUID(), wordIndex: 1, text: "x"))
+        #expect(cache.confirmationRevision == 1, "dieselbe Bestätigung und neue Vorschläge ändern die Zähler nicht")
+        // A case-only variant is no quick fix.
+        let other = WordKey(digitizationID: UUID(), lineID: UUID(), wordIndex: 0, text: "lauch")
+        cache.store([WordCandidate(text: "Lauch", score: 1, sources: [.vision]),
+                     WordCandidate(text: "auch", score: 0.8, sources: [.vision])], for: other)
+        #expect(cache.bestGuess(for: other) == "auch")
+    }
+
+    private final class ConfirmingProvider: WordCandidateProviding, @unchecked Sendable {
+        func candidates(for request: WordRereadRequest) async throws -> [WordCandidate] { [] }
+        func reread(for request: WordRereadRequest) async throws -> WordRereadResult {
+            WordRereadResult(candidates: [], readingConfirmed: request.line.text.hasPrefix("Wort1"))
+        }
+    }
+
+    @Test("Hintergrundberechnung speichert, ob die Lesung bestätigt ist")
+    func prefetchStoresConfirmation() async {
+        let cache = WordCandidateCache()
+        let prefetcher = WordCandidatePrefetcher(cache: cache, provider: ConfirmingProvider())
+        let jobs = [job(1), job(2)]
+        prefetcher.start(jobs)
+        await prefetcher.waitUntilIdle()
+        #expect(cache.isConfirmed(jobs[0].key) && !cache.isConfirmed(jobs[1].key))
+        #expect(cache.result(for: jobs[1].key) != nil)
+    }
+
+    private func page(_ texts: [String]) -> [RecognizedLine] {
+        texts.enumerated().map { order, text in
+            let rect = NormalizedRect(x: 0.1, y: 0.05 * Double(order + 1), width: 0.8, height: 0.04)
+            let words = WordTokenizer.tokens(in: text).enumerated().map { i, token in
+                RecognizedWord(text: token.original, rect: NormalizedRect(
+                    x: 0.1 + 0.15 * Double(i), y: rect.y, width: 0.14, height: rect.height))
+            }
+            return RecognizedLine(text: text, rect: rect, words: words, order: order, origin: .recognizer)
+        }
+    }
+
+    @Test("Bestätigte Wörter zählen nicht als offen; Wörter ohne Bestätigung bleiben markiert")
+    func confirmedWordsAreNotOpen() {
+        let checker = UITestSpellChecker(unknown: ["lithosphäre", "klimg"])
+        let lines = page(["Die Lithosphäre und das Klimg"])
+        let review = PageWordReview(lines: lines, method: nil, terms: [], checker: checker)
+        #expect(review.openWords == 2)
+        let digitization = UUID()
+        let confirmed = WordKey(digitizationID: digitization, lineID: lines[0].id, wordIndex: 1, text: "Lithosphäre")
+        let shown = review.excludingConfirmed(digitizationID: digitization) { $0 == confirmed }
+        #expect(shown.openWords == 1)
+        #expect(shown.markedTokens(of: lines[0].id).map(\.core) == ["Klimg"])
+        // Another digitization (new recognition) or another text: still open.
+        #expect(review.excludingConfirmed(digitizationID: UUID()) { $0 == confirmed }.openWords == 2)
+
+        // The background summary leaves confirmed words out too.
+        var input = PageReviewInput()
+        input.digitizationID = digitization
+        input.lines = lines
+        input.state = .done
+        let store = ConfirmedReadings()
+        #expect(PageSummary(input: input, checker: checker, confirmed: store).openWords == 2)
+        store.insert(confirmed)
+        #expect(PageSummary(input: input, checker: checker, confirmed: store).openWords == 1)
+    }
+
+    @Test("Wörter anderer Seiten des Fachs: je Seite gemerkt, ohne die eigene Seite; Revision nur bei Änderung")
+    func subjectWords() {
+        let index = SubjectWords()
+        let subject = UUID(), pageA = UUID(), pageB = UUID()
+        index.update([
+            .init(subjectID: subject, sourceID: pageA, words: ["aralsee-syndrom", "lithosphäre"]),
+            .init(subjectID: subject, sourceID: pageB, words: ["eritrea"]),
+            .init(subjectID: UUID(), sourceID: UUID(), words: ["fremd"]),
+        ])
+        #expect(index.revision == 1)
+        #expect(index.otherPageWords(subjectID: subject, excluding: pageB) == ["aralsee-syndrom", "lithosphäre"])
+        #expect(index.otherPageWords(subjectID: subject, excluding: pageA) == ["eritrea"])
+        #expect(index.otherPageWords(subjectID: nil, excluding: pageA).isEmpty)
+        index.update([.init(subjectID: subject, sourceID: pageB, words: ["eritrea"])])
+        #expect(index.revision == 1, "gleiche Wörter: keine neue Runde")
+        // A new recognition of page A replaces its words.
+        index.update([.init(subjectID: subject, sourceID: pageA, words: ["pedosphäre"])])
+        #expect(index.revision == 2)
+        #expect(index.otherPageWords(subjectID: subject, excluding: pageB) == ["pedosphäre"])
+
+        // A word of another page counts as intended; the memo key follows those words.
+        let checker = UITestSpellChecker(unknown: ["eritrea"])
+        let lines = page(["Länder wie Eritrea"])
+        #expect(PageWordReview(lines: lines, method: nil, terms: [], checker: checker).openWords == 1)
+        #expect(PageWordReview(lines: lines, method: nil, terms: [], checker: checker, otherPageWords: ["eritrea"])
+            .openWords == 0)
+        let id = UUID()
+        #expect(PageWordReviewCache.Key(digitizationID: id, lines: lines, terms: [], method: nil, checker: checker)
+                != PageWordReviewCache.Key(
+                    digitizationID: id, lines: lines, terms: [], method: nil, checker: checker,
+                    otherPageWords: ["eritrea"]))
+    }
+
     // MARK: Word picture
 
     @Test("Wortbild: Rand um das Wort, an der Seite beschnitten")
@@ -232,6 +341,16 @@ struct WordCandidateTests {
 
     // MARK: Background counts
 
+    /// A word of letters only that occurs nowhere else (repeated words count as intended, D-047).
+    private static func uniqueWord(_ number: Int) -> String {
+        var n = number, letters = ""
+        repeat {
+            letters.append(Character(UnicodeScalar(UInt8(97 + n % 26))))
+            n /= 26
+        } while n > 0
+        return "Zwerg" + letters
+    }
+
     private func subjectWithPages(_ pages: Int) throws -> (StudyRepository, Subject) {
         let container = try ModelContainerFactory.makeContainer(inMemory: true)
         let repository = StudyRepository(container: container)
@@ -239,11 +358,12 @@ struct WordCandidateTests {
         let batch = try repository.createBatch(
             in: subject, kind: .pdf, originalFileName: "x.pdf",
             pages: (0..<pages).map { _ in SourceInput(imageData: Data([1]), pageSize: PageSize(width: 600, height: 800)) })
-        for source in batch.sortedSources {
+        for (page, source) in batch.sortedSources.enumerated() {
             let lines = (0..<20).map { order in
-                RecognizedLine(
-                    text: "Zwergkaninchen Hamster Pflanze", rect: NormalizedRect(x: 0.1, y: 0.04 * Double(order), width: 0.5, height: 0.03),
-                    words: ["Zwergkaninchen", "Hamster", "Pflanze"].enumerated().map {
+                let texts = (0..<3).map { Self.uniqueWord(page * 100 + order * 3 + $0) }
+                return RecognizedLine(
+                    text: texts.joined(separator: " "), rect: NormalizedRect(x: 0.1, y: 0.04 * Double(order), width: 0.5, height: 0.03),
+                    words: texts.enumerated().map {
                         RecognizedWord(text: $1, rect: NormalizedRect(x: 0.1 + 0.1 * Double($0), y: 0.04 * Double(order), width: 0.09, height: 0.03))
                     }, order: order, origin: .recognizer)
             }
@@ -311,11 +431,13 @@ struct WordCandidateTests {
         let checker = SlowChecker()
         let run = Task { await loader.run(sources: { subject.imports.flatMap(\.sources) }, checker: checker) }
         #expect(await waitUntil(timeout: .seconds(20)) { loader.rounds >= 1 })
-        #expect(loader.pages?.first?.open == 60)
+        // The order of a batch's sources is not fixed: compare the total of both pages.
+        func total() -> Int { loader.pages?.reduce(0) { $0 + $1.open } ?? 120 }
+        #expect(total() == 120)
 
-        try repository.addConfirmedTerm("Pflanze", to: subject)
-        #expect(await waitUntil(timeout: .seconds(20)) { (loader.pages?.first?.open ?? 60) < 60 })
-        #expect(loader.pages?.first?.open == 40, "Pflanze gilt als Fachbegriff: 20 Wörter weniger")
+        try repository.addConfirmedTerm(Self.uniqueWord(0), to: subject)
+        #expect(await waitUntil(timeout: .seconds(20)) { total() < 120 })
+        #expect(total() == 119, "das Wort gilt als Fachbegriff: eines weniger")
 
         run.cancel()
         _ = await run.value

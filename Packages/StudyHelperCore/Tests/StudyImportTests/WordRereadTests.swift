@@ -101,6 +101,30 @@ struct WordRereadTests {
         #expect(calls.filter { !$0.languageCorrection }.allSatisfy { $0.customWords.isEmpty })
     }
 
+    @Test("Bestätigte Lesung: das Wort wird überall gleich gelesen; Vorschläge nur echte Wörter (D-047)")
+    func confirmedReading() async throws {
+        let reader = FakeReader(
+            word: { _ in ["Lithosphäre", "Lithophäre", "Litosphäre"] },
+            line: { _ in ["Durch die Lithosphäre des Menschen", "Durch die Lithophäre des Menschen"] })
+        let provider = VisionWordCandidateProvider(sources: nil, reader: reader)
+        let result = try await provider.reread(for: try photoRequest("Durch die Lithosphäre des Menschen", wordIndex: 2))
+        #expect(result.readingConfirmed)
+        // The mutations ("Lithophäre", "Litosphäre") are no words: nothing is offered.
+        #expect(result.candidates.isEmpty)
+        #expect(result.ranked.contains { $0.text == "Lithophäre" })
+        #expect(result.readings.count == 4)
+
+        // A misreading the other passes repeat: one reading prefers a real word, so it is not confirmed.
+        let misread = FakeReader(
+            word: { $0 ? ["Eingrifte"] : ["Eingrifte"] },
+            line: { $0 ? ["Durch die Eingriffe des Menschen"] : ["Durch die Eingrifte des Menschen"] })
+        let other = try await VisionWordCandidateProvider(sources: nil, reader: misread)
+            .reread(for: try photoRequest("Durch die Eingrifte des Menschen", wordIndex: 2))
+        #expect(!other.readingConfirmed)
+        #expect(other.candidates.map(\.text) == ["Eingriffe"])
+        #expect(other.candidates.count <= VisionWordCandidateProvider.plausibleCount)
+    }
+
     @Test("Knappe Wahl zwischen bekannten Wörtern: das Modell ordnet um, erfundene Antworten zählen nicht")
     func rerank() async throws {
         let reader = FakeReader(word: { _ in ["Lauch", "auch"] }, line: { _ in ["Teil Lauch alle", "Teil auch alle"] })

@@ -11,12 +11,36 @@ nonisolated struct PageWordReview: Equatable, Sendable {
 
     init() {}
 
+    /// - Parameter otherPageWords: words of the subject's other pages (`SubjectWords`); a word the spell checker does
+    ///   not know counts as intended when it repeats on this page or occurs there too (D-047).
     init(
         lines: [RecognizedLine], method: RecognitionMethod?, terms: Set<String>,
-        checker: any SpellChecking
+        checker: any SpellChecking, otherPageWords: Set<String> = []
     ) {
-        result = WordReview.review(lines, checker: checker, terms: terms) { Self.isEmbeddedLine($0, method: method) }
+        result = WordReview.review(
+            lines, checker: checker, terms: terms, acceptsRepeatedWords: true, otherPageWords: otherPageWords
+        ) { Self.isEmbeddedLine($0, method: method) }
         for line in lines where result.marks[line.id] != nil { tokens[line.id] = WordReview.tokens(of: line) }
+    }
+
+    /// The review without the marks whose reading the ink confirmed (D-047): only confirmable marks (spelling, and
+    /// recognizer marks of real words) are removed; words not read again yet keep their mark.
+    func excludingConfirmed(digitizationID: UUID, isConfirmed: (WordKey) -> Bool) -> PageWordReview {
+        var confirmed: Set<WordReference> = []
+        for reference in result.confirmable {
+            guard let token = tokens[reference.lineID]?.first(where: { $0.index == reference.wordIndex }) else {
+                continue
+            }
+            let key = WordKey(
+                digitizationID: digitizationID, lineID: reference.lineID, wordIndex: reference.wordIndex,
+                text: token.text)
+            if isConfirmed(key) { confirmed.insert(reference) }
+        }
+        guard !confirmed.isEmpty else { return self }
+        var copy = self
+        copy.result = result.removing(confirmed: confirmed)
+        for lineID in tokens.keys where copy.result.marks[lineID] == nil { copy.tokens[lineID] = nil }
+        return copy
     }
 
     /// Lines taken from the embedded PDF text or a typed text box are exact: they are never marked. Decided by the
@@ -31,24 +55,29 @@ nonisolated struct PageWordReview: Equatable, Sendable {
     /// checkers without a stable identity.
     @MainActor
     static func cached(
-        digitization: Digitization, lines: [RecognizedLine], terms: Set<String>,
+        digitization: Digitization, lines: [RecognizedLine], terms: Set<String>, otherPageWords: Set<String> = [],
         checker: any SpellChecking = AppSpellChecker.shared, cache: PageWordReviewCache = .shared
     ) -> PageWordReview {
         cached(
             digitizationID: digitization.id, lines: lines, terms: terms, method: digitization.metadata.method,
-            checker: checker, cache: cache)
+            otherPageWords: otherPageWords, checker: checker, cache: cache)
     }
 
     /// Same, from plain values: usable off the main actor (`PageSummary(input:checker:)`).
     static func cached(
         digitizationID: UUID, lines: [RecognizedLine], terms: Set<String>, method: RecognitionMethod?,
-        checker: any SpellChecking, cache: PageWordReviewCache = .shared
+        otherPageWords: Set<String> = [], checker: any SpellChecking, cache: PageWordReviewCache = .shared
     ) -> PageWordReview {
+        let make = {
+            PageWordReview(
+                lines: lines, method: method, terms: terms, checker: checker, otherPageWords: otherPageWords)
+        }
         guard let key = PageWordReviewCache.Key(
-            digitizationID: digitizationID, lines: lines, terms: terms, method: method, checker: checker)
-        else { return PageWordReview(lines: lines, method: method, terms: terms, checker: checker) }
+            digitizationID: digitizationID, lines: lines, terms: terms, method: method, checker: checker,
+            otherPageWords: otherPageWords)
+        else { return make() }
         if let hit = cache.value(for: key) { return hit }
-        let review = PageWordReview(lines: lines, method: method, terms: terms, checker: checker)
+        let review = make()
         cache.store(review, for: key)
         return review
     }
@@ -86,6 +115,8 @@ nonisolated struct PageWordReview: Equatable, Sendable {
 /// Everything the review count of one page depends on, as plain values: read from the models on the main actor
 /// (`init(_ source:)`), then handed to a background task. Reading decodes the stored JSON blobs.
 nonisolated struct PageReviewInput: Sendable {
+    var sourceID: UUID?
+    var subjectID: UUID?
     var digitizationID: UUID?
     var lines: [RecognizedLine] = []
     var terms: Set<String> = []
@@ -99,6 +130,8 @@ nonisolated struct PageReviewInput: Sendable {
     @MainActor
     init(_ source: Source) {
         state = source.digitizationState
+        sourceID = source.id
+        subjectID = source.batch?.subject?.id
         guard let digitization = source.currentDigitization else { return }
         digitizationID = digitization.id
         if digitization.hasUnreadableData {
@@ -129,15 +162,24 @@ nonisolated struct PageSummary: Equatable, Sendable {
 
     /// Computes the review (word marks) of the page: heavy, so run it off the main actor for many pages. The result
     /// is memoized in `PageWordReviewCache.shared`, so that opening the page afterwards does not compute it again.
-    init(input: PageReviewInput, checker: any SpellChecking) {
+    /// - Parameters:
+    ///   - otherPageWords: words of the subject's other pages (`SubjectWords`).
+    ///   - confirmed: confirmed readings (`ConfirmedReadings`); their words do not count as open (D-047).
+    init(
+        input: PageReviewInput, checker: any SpellChecking, otherPageWords: Set<String> = [],
+        confirmed: ConfirmedReadings? = nil
+    ) {
         state = input.state
         guard let digitizationID = input.digitizationID else { return }
         if input.unreadable {
             unreadable = true
         } else {
-            let review = PageWordReview.cached(
+            var review = PageWordReview.cached(
                 digitizationID: digitizationID, lines: input.lines, terms: input.terms, method: input.method,
-                checker: checker)
+                otherPageWords: otherPageWords, checker: checker)
+            if let confirmed {
+                review = review.excludingConfirmed(digitizationID: digitizationID, isConfirmed: confirmed.contains)
+            }
             open = review.open
             openWords = review.openWords
             illegible = review.illegible
@@ -147,7 +189,11 @@ nonisolated struct PageSummary: Equatable, Sendable {
     /// Synchronous variant on the main actor (tests, small amounts). Screens use `PageSummaryLoader` instead.
     @MainActor
     init(_ source: Source, checker: any SpellChecking = AppSpellChecker.shared) {
-        self.init(input: PageReviewInput(source), checker: checker)
+        let input = PageReviewInput(source)
+        self.init(
+            input: input, checker: checker,
+            otherPageWords: SubjectWords.shared.otherPageWords(subjectID: input.subjectID, excluding: source.id),
+            confirmed: .shared)
     }
 }
 
@@ -249,7 +295,12 @@ final class PageSummaryLoader {
             let flag = ChangeFlag()
             let (changes, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
             let onChange: @Sendable () -> Void = { flag.set(); continuation.yield() }
-            let list = withObservationTracking({ sources() }, onChange: onChange)
+            // Also follows the words of the subjects' pages and newly confirmed readings (D-047).
+            let list = withObservationTracking({
+                _ = SubjectWords.shared.revision
+                _ = WordCandidateCache.shared.confirmationRevision
+                return sources()
+            }, onChange: onChange)
             var inputs: [PageReviewInput] = []
             for source in list {
                 if flag.isSet || Task.isCancelled { break }
@@ -257,8 +308,17 @@ final class PageSummaryLoader {
                 await Task.yield()
             }
             if Task.isCancelled { return }
-            guard !flag.isSet else { continue }
-            let result = await Self.compute(inputs, checker: checker)
+            // A change during the round: observation fires before the new value is stored, so let it settle first.
+            guard !flag.isSet else {
+                try? await Task.sleep(for: .milliseconds(80))
+                continue
+            }
+            // The words of these pages join the subject's index (a change starts one more round; the memo makes
+            // it cheap), then every page is reviewed with the words of its subject's other pages.
+            let pageWords = await Self.repetitionKeys(inputs)
+            if Task.isCancelled { return }
+            SubjectWords.shared.update(pageWords)
+            let result = await Self.compute(inputs, checker: checker, index: SubjectWords.shared.snapshot)
             if Task.isCancelled { return }
             if pages != result { pages = result }
             if let termProvider {
@@ -282,14 +342,81 @@ final class PageSummaryLoader {
     }
 
     @concurrent
-    private static func compute(_ inputs: [PageReviewInput], checker: any SpellChecking) async -> [PageSummary] {
+    private static func repetitionKeys(_ inputs: [PageReviewInput]) async -> [SubjectWords.PageWords] {
+        inputs.compactMap { input in
+            guard let subjectID = input.subjectID, let sourceID = input.sourceID else { return nil }
+            let words = input.digitizationID == nil || input.unreadable
+                ? [] : WordReview.repetitionKeys(of: input.lines) { PageWordReview.isEmbeddedLine($0, method: input.method) }
+            return SubjectWords.PageWords(subjectID: subjectID, sourceID: sourceID, words: words)
+        }
+    }
+
+    @concurrent
+    private static func compute(
+        _ inputs: [PageReviewInput], checker: any SpellChecking, index: SubjectWords.Index
+    ) async -> [PageSummary] {
         var result: [PageSummary] = []
         result.reserveCapacity(inputs.count)
         for input in inputs {
             if Task.isCancelled { break }
-            result.append(PageSummary(input: input, checker: checker))
+            let other = SubjectWords.otherPageWords(in: index, subjectID: input.subjectID, excluding: input.sourceID)
+            result.append(PageSummary(input: input, checker: checker, otherPageWords: other, confirmed: .shared))
         }
         return result
+    }
+}
+
+// MARK: - Words of a subject's pages
+
+/// The words of every page of each subject, for the repetition rule of the word review (D-047): a word the spell
+/// checker does not know counts as intended when it occurs on another page of the same subject too. Filled by
+/// `PageSummaryLoader` (which reads the pages anyway, off the main actor) and by the review page for its own page;
+/// keyed by source, so a new recognition replaces the page's words. `revision` changes only when the words of a
+/// subject change, so views and loaders that follow it settle.
+@MainActor
+@Observable
+final class SubjectWords {
+    static let shared = SubjectWords()
+
+    /// Subject → source → words (`WordReview.repetitionKeys`).
+    typealias Index = [UUID: [UUID: Set<String>]]
+
+    nonisolated struct PageWords: Sendable {
+        var subjectID: UUID
+        var sourceID: UUID
+        var words: Set<String>
+    }
+
+    private(set) var revision = 0
+    @ObservationIgnored private(set) var snapshot: Index = [:]
+
+    nonisolated init() {}
+
+    func update(_ pages: [PageWords]) {
+        var changed = false
+        for page in pages where snapshot[page.subjectID]?[page.sourceID] != page.words {
+            snapshot[page.subjectID, default: [:]][page.sourceID] = page.words
+            changed = true
+        }
+        if changed { revision += 1 }
+    }
+
+    /// The words of the subject's pages except `sourceID` (read by views: they follow `revision`).
+    func otherPageWords(subjectID: UUID?, excluding sourceID: UUID?) -> Set<String> {
+        _ = revision
+        return Self.otherPageWords(in: snapshot, subjectID: subjectID, excluding: sourceID)
+    }
+
+    func removeAll() {
+        snapshot = [:]
+        revision += 1
+    }
+
+    nonisolated static func otherPageWords(in index: Index, subjectID: UUID?, excluding sourceID: UUID?) -> Set<String> {
+        guard let subjectID, let pages = index[subjectID] else { return [] }
+        var words: Set<String> = []
+        for (id, pageWords) in pages where id != sourceID { words.formUnion(pageWords) }
+        return words
     }
 }
 
@@ -313,12 +440,14 @@ nonisolated final class PageWordReviewCache: @unchecked Sendable {
         let digitizationID: UUID
         let linesHash: Int
         let termsHash: Int
+        /// Words of the subject's other pages (repetition rule, D-047).
+        let otherWordsHash: Int
         let method: RecognitionMethod?
         let checker: AnyHashable
 
         init?(
             digitizationID: UUID, lines: [RecognizedLine], terms: Set<String>, method: RecognitionMethod?,
-            checker: any SpellChecking
+            checker: any SpellChecking, otherPageWords: Set<String> = []
         ) {
             if let identified = checker as? any SpellCheckerIdentifying {
                 self.checker = identified.cacheIdentity
@@ -332,6 +461,7 @@ nonisolated final class PageWordReviewCache: @unchecked Sendable {
             hasher.combine(lines)
             linesHash = hasher.finalize()
             termsHash = terms.hashValue
+            otherWordsHash = otherPageWords.hashValue
             self.method = method
         }
     }

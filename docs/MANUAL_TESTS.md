@@ -163,6 +163,12 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.20 | „→ Wort?“ neben einem markierten Wort antippen | Wort wird übernommen, Zähler „offen“ sinkt | |
 | MT-3.21 | Hinweis „Mögliche Fachbegriffe“ in der Prüfansicht übernehmen | Begriffe zählen danach nicht mehr als offen | |
 | MT-3.22 | App starten (Fächerliste mit vielen Seiten) | Fächerliste erscheint in unter 1 s, Zahlen füllen sich nach | |
+| MT-3.23 | Echte Datei, Seite 2 öffnen und einige Sekunden warten (D-047) | „Lithosphäre“, „Anthroposphäre“, „Atmo-“, „Hydro-“, „etz)“ verlieren ihre Markierung, der Zähler „offen“ sinkt ohne Flackern; „Klimg“, „Erdel“, „Teilberreichen“ bleiben markiert | |
+| MT-3.24 | Seite 7: „Aralsee-Syndrom“ (zweimal auf der Seite) | Nicht markiert, auch bevor die Lesungen fertig sind | |
+| MT-3.25 | Fach mit mehreren Importen: ein unbekanntes Wort, das auf einer anderen Seite des Fachs auch vorkommt, erst nach Öffnen des Fachs ansehen | Wort nicht markiert; Fach-, Import- und Seitenzähler stimmen überein | |
+| MT-3.26 | Markiertes Wort öffnen, dessen Lesung bestätigt ist (z. B. vor Ende der Vorberechnung antippen) | „Lesung bestätigt – Wort ist wahrscheinlich richtig“, „Wort ist richtig“ steht zuerst, keine Unsinns-Varianten | |
+| MT-3.27 | Einstellung „Mehrfacherkennung“ an, echte Datei neu erkennen, Seite 6 | „ab“ in „baut Bodenschätze ab“ und „Das“ nicht markiert; bei richtigen Wörtern nie Vorschläge wie „db“ | |
+| MT-3.28 | Markiertes Wort ohne plausible Lesart (Seite 6: „za“) öffnen und „→ Wort?“ neben Wörtern prüfen | Nur „Wort ist richtig“ und Eingabefeld, höchstens 5 Vorschläge und nur echte Wörter; kein „→ Wort?“ mit Unsinn | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
 | MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
 | MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |

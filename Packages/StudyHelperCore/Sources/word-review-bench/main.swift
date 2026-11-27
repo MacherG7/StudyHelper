@@ -2,15 +2,19 @@
 // word-review-bench: measures the word-level review (WordReview, D-044) and its reading suggestions
 // (VisionWordCandidateProvider, D-046) on a local, never committed sample (LocalSamples/, see docs/MANUAL_TESTS.md).
 //
-//   swift run -c release word-review-bench dump <pdf> <lines.json> [pages…]
-//       Runs the real digitization pipeline and writes every page's RecognizedLines as JSON.
+//   swift run -c release word-review-bench dump <pdf> <lines.json> [pages…] [--multipass]
+//       Runs the real digitization pipeline and writes every page's RecognizedLines as JSON (--multipass: with the
+//       app's "Mehrfacherkennung").
 //   swift run -c release word-review-bench measure <pdf> <lines.json> <ref.json> <out.json>
 //                                                 [--rerank] [--terms none|suggested|reference] [--subject <name>]
+//                                                 [--no-repeated]
 //       Aligns the recognized words with the reference text (`*.reference.json`: {"pages": {"2": ["line", …]}}),
 //       marks them with WordReview (NSSpellChecker "de" instead of UITextChecker; without terms, with the reference's
 //       unknown words as terms, and with the terms TermSuggestions proposes), and asks the production provider for
 //       suggestions for every wrong or marked word. --rerank lets the on-device Apple model reorder the candidates
-//       (as the app does), --terms chooses the subject terms passed to the provider (default: none).
+//       (as the app does), --terms chooses the subject terms passed to the provider (default: none). Marks follow
+//       the app: repeated words (on the page or another reference page) count as intended unless --no-repeated;
+//       the provider's confirmed readings (D-047) are recorded per word.
 //
 //   scripts/score-word-review.py <out.json> [--list] turns the output into tables.
 import Foundation
@@ -41,8 +45,10 @@ final class PageCollector: @unchecked Sendable {
 
 if args[1] == "dump" {
     let data = try Data(contentsOf: URL(fileURLWithPath: args[2]))
-    let selected = Set(args.dropFirst(4).compactMap { Int($0) }.map { $0 - 1 })
-    let pipeline = DigitizationPipeline(recognizer: VisionTextRecognizer())
+    let selected = Set(args.dropFirst(4).filter { !$0.hasPrefix("--") }.compactMap { Int($0) }.map { $0 - 1 })
+    // --multipass: the app's "Mehrfacherkennung" (second pass; words read differently become uncertain).
+    let pipeline = DigitizationPipeline(
+        recognizer: VisionTextRecognizer(), settings: PipelineSettings(multiPass: args.contains("--multipass")))
     let collector = PageCollector()
     try await pipeline.digitizePDFPages(data: data, pageIndices: selected.isEmpty ? nil : selected) { result, _, _ in
         if case .success(let page) = result {
@@ -83,6 +89,15 @@ struct Suggestions: Codable {
     /// Seconds of the model's answer (nil without --rerank).
     var rerankSeconds: Double?
     var known: [String: Bool] = [:]
+    /// The readings confirm the written word (D-047).
+    var confirmed = false
+    /// Cleaned candidates of the four readings (word on/off, line on/off).
+    var readings: [[String]] = []
+    /// Ranked candidates before the plausibility filter, and how many readings found each.
+    var ranked: [String] = []
+    var rankedReadings: [Int] = []
+    /// `WordReview.isKnownWord` per candidate (plausibility rule).
+    var knownWord: [String: Bool] = [:]
 }
 
 struct TokenRecord: Codable {
@@ -109,6 +124,7 @@ struct TokenRecord: Codable {
     var markedPlain: String?               // reason or nil
     var markedTerms: String?               // with the reference's unknown words as terms
     var markedSuggested: String?           // with TermSuggestions' terms adopted
+    var confirmable: Bool                  // a confirmed reading removes the plain mark (D-047)
     var suggestions: Suggestions?
 }
 
@@ -167,9 +183,18 @@ for pageNumber in pageKeys {
     default: []
     }
 
-    let plain = WordReview.review(lines, checker: checker)
-    let withTerms = WordReview.review(lines, checker: checker, terms: refTerms)
-    let withSuggested = WordReview.review(lines, checker: checker, terms: Set(suggestedTerms))
+    // As the app reviews a page (D-047): repeated words count as intended, also when they occur on another page.
+    let otherPageWords = pageKeys.filter { $0 != pageNumber }.reduce(into: Set<String>()) {
+        $0.formUnion(WordReview.repetitionKeys(of: allLines[String($1)] ?? []))
+    }
+    func review(_ terms: Set<String>) -> WordReview.Result {
+        WordReview.review(
+            lines, checker: checker, terms: terms, acceptsRepeatedWords: !args.contains("--no-repeated"),
+            otherPageWords: otherPageWords)
+    }
+    let plain = review([])
+    let withTerms = review(refTerms)
+    let withSuggested = review(Set(suggestedTerms))
 
     var covered = Set<Int>()
     var expectedEnd = 0
@@ -207,7 +232,8 @@ for pageNumber in pageKeys {
                 lineText: line.text, lineStatus: line.status.rawValue, lineOrigin: line.origin?.rawValue,
                 lineTokenCount: tokens.count, lineCost: cost, contextWords: ctxCount,
                 markedPlain: plain.reasons[reference]?.rawValue, markedTerms: withTerms.reasons[reference]?.rawValue,
-                markedSuggested: withSuggested.reasons[reference]?.rawValue, suggestions: nil)
+                markedSuggested: withSuggested.reasons[reference]?.rawValue,
+                confirmable: plain.confirmable.contains(reference), suggestions: nil)
 
             let marked = record.markedPlain != nil || record.markedTerms != nil || record.markedSuggested != nil
             if (wrong || marked) && !structural {
@@ -226,16 +252,24 @@ for pageNumber in pageKeys {
                     _ = timing.drain()
                 }
                 let start = Date()
-                let candidates = try await provider.candidates(for: request)
+                let result = try await provider.reread(for: request)
+                let candidates = result.candidates
                 s.seconds = Date().timeIntervalSince(start)
                 s.rerankSeconds = timing.drain().last
                 s.provider = candidates.map(\.text)
                 s.providerSources = candidates.map { $0.sources.map(\.rawValue).sorted() }
                 s.providerScores = candidates.map { ($0.score * 1000).rounded() / 1000 }
-                for c in s.local + s.localTerms + s.provider + [core] where s.known[c] == nil {
+                s.confirmed = result.readingConfirmed
+                s.readings = result.readings
+                s.ranked = result.ranked.map(\.text)
+                s.rankedReadings = result.ranked.map(\.readings)
+                for c in s.local + s.localTerms + s.provider + s.ranked + [core] where s.known[c] == nil {
                     s.known[c] = WordReview.review(
                         [RecognizedLine(text: c, rect: .zero, origin: .recognizer)], checker: checker, terms: refTerms
                     ).marks.isEmpty
+                }
+                for c in s.ranked + [core] where s.knownWord[c] == nil {
+                    s.knownWord[c] = WordReview.isKnownWord(c, checker: checker)
                 }
                 record.suggestions = s
             }

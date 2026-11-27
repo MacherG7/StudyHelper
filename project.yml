@@ -22,7 +22,7 @@ settings:
     # Beta or Final (D-032): Xcode and every commit build a beta; scripts/beta-release.sh --final a full version.
     STUDYHELPER_CHANNEL: Beta
     MARKETING_VERSION: "0.0.2"
-    CURRENT_PROJECT_VERSION: "9"
+    CURRENT_PROJECT_VERSION: "10"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES

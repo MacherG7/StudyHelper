@@ -68,6 +68,8 @@ public struct ReviewToken: Hashable, Sendable {
     public var isUserConfirmed: Bool
     /// Index into `RecognizedLine.words`, if this token has a recognized word.
     public var wordIndex: Int?
+    /// Why the recognizer doubts the word (the word's reasons, or the line's for a token without recognized word).
+    public var reasons: [ReviewReason] = []
 
     /// The word without surrounding punctuation and quotes ("„System" → "System").
     public var core: String { WordReview.splitPunctuation(text).core }
@@ -94,14 +96,37 @@ public enum WordReview {
         public var reasons: [WordReference: MarkReason]
         /// Empty lines the recognizer could not read at all ("unleserlich"); each is one open place.
         public var illegibleLines: [UUID]
+        /// Marked words that a confirmed reading of the ink removes (D-047): every spelling mark, and recognizer marks
+        /// of real dictionary words (the recognizer doubted a word that exists; reading it again the same way
+        /// settles it). Recognizer marks of unknown or illegible words stay.
+        public var confirmable: Set<WordReference>
 
         /// Open places: marked words plus illegible lines.
         public var openCount: Int { marks.values.reduce(0) { $0 + $1.count } + illegibleLines.count }
 
-        public init(marks: [UUID: [Int]] = [:], reasons: [WordReference: MarkReason] = [:], illegibleLines: [UUID] = []) {
+        public init(
+            marks: [UUID: [Int]] = [:], reasons: [WordReference: MarkReason] = [:], illegibleLines: [UUID] = [],
+            confirmable: Set<WordReference> = []
+        ) {
             self.marks = marks
             self.reasons = reasons
             self.illegibleLines = illegibleLines
+            self.confirmable = confirmable
+        }
+
+        /// The result without the confirmable marks among `confirmed` (words whose reading the ink confirmed).
+        public func removing(confirmed: Set<WordReference>) -> Result {
+            let removed = confirmed.intersection(confirmable)
+            guard !removed.isEmpty else { return self }
+            var result = self
+            for reference in removed {
+                guard var indexes = result.marks[reference.lineID] else { continue }
+                indexes.removeAll { $0 == reference.wordIndex }
+                result.marks[reference.lineID] = indexes.isEmpty ? nil : indexes
+                result.reasons[reference] = nil
+                result.confirmable.remove(reference)
+            }
+            return result
         }
     }
 
@@ -132,19 +157,22 @@ public enum WordReview {
             let rect: NormalizedRect
             let status: ConfidenceStatus
             let confirmed: Bool
+            let reasons: [ReviewReason]
             if let wordIndex {
                 let word = words[wordIndex]
                 rect = word.rect.isEmpty ? slice(of: line, range: token.range, total: total) : word.rect
                 status = word.status
                 confirmed = word.isUserConfirmed
+                reasons = word.reviewReasons
             } else {
                 rect = slice(of: line, range: token.range, total: total)
                 status = inheritedStatus(of: line)
                 confirmed = false
+                reasons = status == .confident ? [] : line.reviewReasons
             }
             result.append(ReviewToken(
                 index: index, text: token.original, range: token.range, rect: rect, status: status,
-                isUserConfirmed: confirmed, wordIndex: wordIndex))
+                isUserConfirmed: confirmed, wordIndex: wordIndex, reasons: reasons))
         }
         return result
     }
@@ -198,15 +226,30 @@ public enum WordReview {
     ///   - checker: the spell checker. Wrap it once in a `CachingSpellChecker` and reuse that to avoid asking the
     ///     checker again for the same words on every review; otherwise answers are cached for this call only.
     ///   - terms: subject terms ("Fachbegriffe"), compared case-insensitively; they count as spelled correctly.
+    ///   - acceptsRepeatedWords: a word the spell checker does not know counts as intended when it occurs at least
+    ///     twice on the page or also on another page of the subject (`otherPageWords`), D-047. Off for the term
+    ///     suggestions, which look for exactly those words.
+    ///   - otherPageWords: `repetitionKeys(of:)` of the subject's other pages.
     ///   - isEmbedded: exact lines (embedded PDF text, text boxes) that are never marked; default `isEmbedded(_:)`.
     public static func review(
         _ lines: [RecognizedLine], checker: any SpellChecking, terms: Set<String> = [],
+        acceptsRepeatedWords: Bool = false, otherPageWords: Set<String> = [],
         isEmbedded: (RecognizedLine) -> Bool = WordReview.isEmbedded
     ) -> Result {
         let cached = checker as? CachingSpellChecker ?? CachingSpellChecker(checker)
         let dictionary = Lexicon(checker: cached, terms: terms)
         let ordered = lines.sorted { $0.order < $1.order }
         let tokensByLine = ordered.map { tokens(of: $0) }
+        var pageCounts: [String: Int] = [:]
+        if acceptsRepeatedWords {
+            for (line, tokens) in zip(ordered, tokensByLine) where !isEmbedded(line) {
+                for token in tokens { if let key = repetitionKey(token.text) { pageCounts[key, default: 0] += 1 } }
+            }
+        }
+        func isRepeated(_ token: String) -> Bool {
+            guard acceptsRepeatedWords, let key = repetitionKey(token) else { return false }
+            return (pageCounts[key] ?? 0) >= 2 || otherPageWords.contains(key)
+        }
         var result = Result()
 
         for (position, line) in ordered.enumerated() {
@@ -222,9 +265,16 @@ public enum WordReview {
             let previous = position > 0 ? tokensByLine[position - 1].last : nil
             var marked: [Int] = []
             for token in tokens where !token.isUserConfirmed && !isStructural(token.text) {
+                let reference = WordReference(lineID: line.id, wordIndex: token.index)
                 let reason: MarkReason?
                 if token.status != .confident {
-                    reason = .recognizer
+                    let known = token.status == .uncertain && isKnownWord(token.text, dictionary: dictionary)
+                    if known, isWeaklyDoubtedShortWord(token) {
+                        reason = nil
+                    } else {
+                        reason = .recognizer
+                        if known { result.confirmable.insert(reference) }
+                    }
                 } else {
                     let isLast = token.index == tokens.count - 1
                     let isFirst = token.index == 0
@@ -237,18 +287,60 @@ public enum WordReview {
                             if let first = later.first { following.append(first.text) }
                         }
                     }
-                    reason = isSpelledCorrectly(
+                    let correct = isSpelledCorrectly(
                         token.text, dictionary: dictionary, nextLineStart: isLast ? next?.text : nil,
-                        previousLineEnd: isFirst ? previous?.text : nil, following: following) ? nil : .spelling
+                        previousLineEnd: isFirst ? previous?.text : nil, following: following)
+                    reason = correct || isRepeated(token.text) ? nil : .spelling
+                    if reason != nil { result.confirmable.insert(reference) }
                 }
                 if let reason {
                     marked.append(token.index)
-                    result.reasons[WordReference(lineID: line.id, wordIndex: token.index)] = reason
+                    result.reasons[reference] = reason
                 }
             }
             if !marked.isEmpty { result.marks[line.id] = marked }
         }
         return result
+    }
+
+    // MARK: Repetition and weak doubts (D-047)
+
+    /// Shortest word (letters) the repetition rule accepts: a short misreading ("za" for "zu") repeats easily.
+    static let minimumRepeatedLetters = 4
+    /// Longest known word that is not marked when the recognizer doubts it only weakly.
+    static let maximumWeaklyDoubtedLetters = 3
+    /// Doubts that do not concern the word itself: low confidence of the whole line (Vision gives no confidence per
+    /// word) and a different reading or box in the second pass of "Mehrfacherkennung" (tiny words easily miss the
+    /// box overlap the comparison needs; on the real export "ab" and "Das" were marked this way).
+    static let weakDoubts: Set<ReviewReason> = [.lowConfidence, .variesBetweenPasses]
+
+    /// The comparison form of a word for the repetition rule: the core lowercased (NFC), only for words of letters
+    /// and hyphens with at least `minimumRepeatedLetters` letters; nil otherwise.
+    static func repetitionKey(_ token: String) -> String? {
+        let core = splitPunctuation(token).core
+        guard core.filter(\.isLetter).count >= minimumRepeatedLetters,
+              core.allSatisfy({ $0.isLetter || $0 == "-" }) else { return nil }
+        return lowered(core)
+    }
+
+    /// The words of a page for the repetition rule of other pages (`review(…, otherPageWords:)`): comparison forms
+    /// of every word of the lines that are not embedded text.
+    public static func repetitionKeys(
+        of lines: [RecognizedLine], isEmbedded: (RecognizedLine) -> Bool = WordReview.isEmbedded
+    ) -> Set<String> {
+        var keys: Set<String> = []
+        for line in lines where !isEmbedded(line) {
+            for token in WordTokenizer.tokens(in: line.text) {
+                if let key = repetitionKey(token.original) { keys.insert(key) }
+            }
+        }
+        return keys
+    }
+
+    /// A short known word ("ab", "Das") that the recognizer doubts only weakly (`weakDoubts`) is not marked.
+    static func isWeaklyDoubtedShortWord(_ token: ReviewToken) -> Bool {
+        token.core.count <= maximumWeaklyDoubtedLetters && !token.reasons.isEmpty
+            && token.reasons.allSatisfy(weakDoubts.contains)
     }
 
     /// Tokens that are never marked: punctuation, arrows ("→", "->", "=>"), bullets, single letters and numbers or
@@ -314,6 +406,24 @@ public enum WordReview {
         let pieces = core.split(whereSeparator: { $0 == "-" || $0 == "/" || $0 == "–" }).map(String.init)
         if pieces.count > 1, pieces.allSatisfy({ $0.count <= 1 || dictionary.knows($0) }) { return true }
         return false
+    }
+
+    /// Whether a word (without context) is a real word: known to the dictionary or the terms (with the
+    /// capitalization variants and compounds of `Lexicon.knows`), or a hyphenated word or alternative whose pieces
+    /// are all known ("Kleine-Tiger-Syndrom"). Unlike the spell-check rule, abbreviations, numbers and capitals are
+    /// not accepted on their own.
+    static func isKnownWord(_ word: String, dictionary: Lexicon) -> Bool {
+        let core = splitPunctuation(word).core
+        guard !core.isEmpty, core.allSatisfy({ $0.isLetter || "-/–".contains($0) }) else { return false }
+        if dictionary.knows(core) { return true }
+        let pieces = core.split(whereSeparator: { $0 == "-" || $0 == "/" || $0 == "–" }).map(String.init)
+        return pieces.count > 1 && pieces.allSatisfy { $0.count > 1 && dictionary.knows($0) }
+    }
+
+    /// `isKnownWord` with a spell checker and subject terms.
+    public static func isKnownWord(_ word: String, checker: any SpellChecking, terms: Set<String> = []) -> Bool {
+        let cached = checker as? CachingSpellChecker ?? CachingSpellChecker(checker)
+        return isKnownWord(word, dictionary: Lexicon(checker: cached, terms: terms))
     }
 
     /// Whether `fragment` plus `word` (a continuation) or plus a last part of `word` with at least 4 letters (the

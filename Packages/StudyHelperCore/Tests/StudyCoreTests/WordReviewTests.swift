@@ -168,8 +168,89 @@ struct WordReviewMarkTests {
     func reReadLineWithoutWords() {
         let reRead = line("Die Folgen der Eingrifte", status: .uncertain, reasons: [.reReadSeparately], withWords: false)
         #expect(markedWords([reRead]) == ["Eingrifte"])
+        // Low confidence of the whole line: every word is doubted, except short known words (D-047).
         let low = line("Die Folgen", status: .uncertain, reasons: [.lowConfidence], withWords: false)
-        #expect(markedWords([low]) == ["Die", "Folgen"])
+        #expect(markedWords([low]) == ["Folgen"])
+    }
+}
+
+@Suite("Wortprüfung: Fehlalarme senken (D-047)")
+struct WordReviewFalseAlarmTests {
+    /// A line whose words carry their own status and reasons.
+    private func doubted(_ text: String, order: Int = 0, _ doubts: [Int: (ConfidenceStatus, [ReviewReason])]) -> RecognizedLine {
+        var l = line(text, y: 0.1 + 0.1 * Double(order), order: order)
+        for (index, doubt) in doubts {
+            l.words[index].status = doubt.0
+            l.words[index].reviewReasons = doubt.1
+        }
+        return l
+    }
+
+    @Test("Häufige Wörter gelten als gewollt: zweimal auf der Seite oder auch auf einer anderen Seite des Fachs")
+    func repeatedWords() {
+        let lines = [
+            line("Das Aralsee-Syndrom kommt", order: 0),
+            line("Aralsee-Syndrom: Lithosphäre za za", y: 0.2, order: 1),
+        ]
+        // Default (used by the term suggestions): repeated words stay marked.
+        #expect(markedWords(lines) == ["Aralsee-Syndrom", "Aralsee-Syndrom", "Lithosphäre", "za", "za"])
+
+        let on = WordReview.review(lines, checker: checker, acceptsRepeatedWords: true)
+        let tokens = lines.map { WordReview.tokens(of: $0) }
+        let marked = lines.enumerated().flatMap { i, l in (on.marks[l.id] ?? []).map { tokens[i][$0].core } }
+        // "za" repeats too, but short words never count as intended (a short misreading repeats easily).
+        #expect(marked == ["Lithosphäre", "za", "za"])
+
+        // Once here, once on another page of the subject.
+        let other = WordReview.repetitionKeys(of: [line("Die Lithosphäre der Erde")])
+        #expect(other.contains("lithosphäre") && !other.contains("die") && other.contains("erde"))
+        let across = WordReview.review(lines, checker: checker, acceptsRepeatedWords: true, otherPageWords: other)
+        #expect(across.openCount == 2)
+        // Embedded text does not count.
+        let typed = WordReview.repetitionKeys(of: [line("Lithosphäre")], isEmbedded: { _ in true })
+        #expect(typed.isEmpty)
+    }
+
+    @Test("Bestätigbar sind Rechtschreibmarken und unsichere bekannte Wörter, nicht unsichere unbekannte")
+    func confirmable() {
+        let l = doubted("Menschen Klimg Eingrifte Begriff", [
+            0: (.uncertain, [.variesBetweenPasses]), 2: (.uncertain, [.lowConfidence]), 3: (.illegible, [.unreadable]),
+        ])
+        let result = WordReview.review([l], checker: checker)
+        let ref = { WordReference(lineID: l.id, wordIndex: $0) }
+        #expect(result.marks[l.id] == [0, 1, 2, 3])
+        #expect(result.reasons[ref(0)] == .recognizer && result.reasons[ref(1)] == .spelling)
+        #expect(result.confirmable == [ref(0), ref(1)])
+
+        let confirmed = result.removing(confirmed: [ref(0), ref(1), ref(2)])
+        #expect(confirmed.marks[l.id] == [2, 3])
+        #expect(confirmed.reasons[ref(0)] == nil && confirmed.openCount == 2)
+        #expect(confirmed.confirmable.isEmpty)
+        #expect(result.removing(confirmed: []) == result)
+    }
+
+    @Test("Kurze bekannte Wörter mit schwachem Zweifel (Mehrfacherkennung, Zeilensicherheit) bleiben unmarkiert")
+    func weaklyDoubtedShortWords() {
+        let short = FakeSpellChecker(words: ["baut", "ab", "Das", "es"])
+        let l = doubted("baut ab Das Gle es", [
+            1: (.uncertain, [.variesBetweenPasses]), 2: (.uncertain, [.lowConfidence]),
+            3: (.uncertain, [.variesBetweenPasses]), 4: (.uncertain, [.mismatchWithReducedPDF]),
+        ])
+        let result = WordReview.review([l], checker: short)
+        // "Gle" is no word; "es" differs from the reduced PDF, a doubt about the word itself.
+        #expect(result.marks[l.id] == [3, 4])
+        #expect(result.confirmable == [WordReference(lineID: l.id, wordIndex: 4)])
+    }
+
+    @Test("Bekannte Wörter ohne Kontext: Wörterbuch, Fachbegriffe, Bindestrich-Teile; keine Kürzel oder Ziffern")
+    func knownWords() {
+        #expect(WordReview.isKnownWord("„Erde,", checker: checker))
+        #expect(WordReview.isKnownWord("Boden-Klima", checker: checker))
+        #expect(WordReview.isKnownWord("Pedosphäre", checker: checker, terms: ["pedosphäre"]))
+        #expect(!WordReview.isKnownWord("Erdeii", checker: checker))
+        #expect(!WordReview.isKnownWord("CO2", checker: checker))
+        #expect(!WordReview.isKnownWord("DNA", checker: checker))
+        #expect(!WordReview.isKnownWord("Erde-x", checker: checker))
     }
 }
 

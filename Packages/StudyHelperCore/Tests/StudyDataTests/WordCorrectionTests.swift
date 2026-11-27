@@ -129,13 +129,14 @@ struct WordCorrectionTests {
         try repo.saveDigitization(DigitizationResult(
             lines: [line], highlights: [], metadata: RecognitionMetadata(method: .vision, osVersion: "t", deviceModel: "t"),
             originalMarkdown: text, pageSize: pageSize), for: source)
-        #expect(try marks(source) == [1, 2, 4])
+        // "die" (no box) inherits only the line's low confidence: a short known word is not marked for that (D-047).
+        #expect(try marks(source) == [2, 4])
         try repo.correctWord(source: source, lineID: line.id, wordIndex: 2, newText: "Eingriffe")
         let stored = try #require(source.currentDigitization).lines[0]
         #expect(stored.words.count == 5)
         #expect(stored.words[2].text == "Eingriffe" && stored.words[2].isUserConfirmed)
         #expect(stored.origin == .recognizer)
-        #expect(try marks(source) == [1, 4])
+        #expect(try marks(source) == [4])
     }
 
     @Test("Neuerkennung: bestätigte Wörter behalten den Text des Nutzers, die anderen den neuen Text und Status")

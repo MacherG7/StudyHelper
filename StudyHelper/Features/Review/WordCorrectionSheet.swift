@@ -22,6 +22,8 @@ struct WordCorrectionSheet: View {
     @State private var remember = false
     @State private var crop: UIImage?
     @State private var candidates: [WordCandidate] = []
+    /// The ink was read again the same way: the word is most likely right as written (D-047).
+    @State private var readingConfirmed = false
     @State private var isLoading = true
     @State private var modelMissing = false
     @State private var errorMessage: String?
@@ -55,6 +57,9 @@ struct WordCorrectionSheet: View {
                     Section {
                         picture(token: token, line: line)
                     }
+                    if readingConfirmed {
+                        confirmedSection
+                    }
                     suggestionSection
                     Section {
                         TextField("Wort", text: $text)
@@ -71,8 +76,10 @@ struct WordCorrectionSheet: View {
                         Text("Dein Wort")
                     }
                     Section {
-                        Button("Wort ist richtig", systemImage: "checkmark.seal") { finish(with: word) }
-                            .accessibilityIdentifier("confirmWordButton")
+                        if !readingConfirmed {
+                            Button("Wort ist richtig", systemImage: "checkmark.seal") { finish(with: word) }
+                                .accessibilityIdentifier("confirmWordButton")
+                        }
                         Toggle("Als Fachbegriff merken", isOn: $remember)
                             .accessibilityIdentifier("rememberWordToggle")
                     } footer: {
@@ -140,11 +147,33 @@ struct WordCorrectionSheet: View {
 
     // MARK: Suggestions
 
+    /// The ink was read again the same way (D-047): "Wort ist richtig" comes first.
+    private var confirmedSection: some View {
+        Section {
+            Label("Lesung bestätigt – Wort ist wahrscheinlich richtig", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .accessibilityIdentifier("readingConfirmedNote")
+            Button(action: { finish(with: word) }) {
+                Label("Wort ist richtig", systemImage: "checkmark.seal").fontWeight(.semibold)
+            }
+            .accessibilityIdentifier("confirmWordButton")
+        } footer: {
+            Text("Die Texterkennung hat das Wort beim erneuten Lesen genauso gelesen.")
+        }
+    }
+
     @ViewBuilder
     private var suggestionSection: some View {
         let options = options
         Section {
-            if let best = options.first {
+            if readingConfirmed {
+                // Other real words only, no "Wahrscheinlich": the reading speaks for the word as written.
+                ForEach(Array(options.enumerated()), id: \.offset) { index, item in
+                    Button(item.text) { text = item.text }
+                        .accessibilityHint("Trägt das Wort unten ein")
+                        .accessibilityIdentifier("wordSuggestion-\(index)")
+                }
+            } else if let best = options.first {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Wahrscheinlich")
@@ -190,7 +219,9 @@ struct WordCorrectionSheet: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("wordCandidatesLoading")
             } else if options.isEmpty {
-                Text("Keine Vorschläge. Schreibe das Wort unten selbst.")
+                Text(readingConfirmed
+                     ? "Keine anderen Lesungen."
+                     : "Keine passenden Vorschläge. Ist das Wort richtig, tippe auf „Wort ist richtig“, sonst schreibe es unten selbst.")
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("noWordSuggestions")
             }
@@ -201,9 +232,9 @@ struct WordCorrectionSheet: View {
                     .accessibilityIdentifier("wordModelHint")
             }
         } header: {
-            Text("Vorschläge")
+            Text(readingConfirmed ? "Andere Lesungen" : "Vorschläge")
         } footer: {
-            Text("Die Vorschläge zeigen nur andere Lesarten dieses einen Wortes. Es wird nichts hinzugefügt.")
+            Text("Die Vorschläge zeigen nur andere Lesarten dieses einen Wortes, die echte Wörter sind. Es wird nichts hinzugefügt.")
         }
     }
 
@@ -228,22 +259,27 @@ struct WordCorrectionSheet: View {
     private func loadCandidates(context: WordCandidateContext?, line: RecognizedLine) async {
         defer { isLoading = false }
         guard let context, let job = context.job(lineID: lineID, wordIndex: wordIndex) else {
-            // No original to read from: the local readings only.
-            candidates = WordReview.localSuggestions(
-                line: line, wordIndex: wordIndex, checker: AppSpellChecker.shared,
-                terms: Set(source.batch?.subject?.confirmedTerms ?? []))
+            // No original to read from: the local readings only, and only real words (D-047).
+            let terms = Set(source.batch?.subject?.confirmedTerms ?? [])
+            let local = WordReview.localSuggestions(
+                line: line, wordIndex: wordIndex, checker: AppSpellChecker.shared, terms: terms)
                 .enumerated().map { WordCandidate(text: $1, score: 1 - Double($0) * 0.1, sources: [.spelling]) }
+            candidates = WordCandidateRanking.plausible(
+                local, written: word, checker: AppSpellChecker.shared, terms: terms,
+                limit: VisionWordCandidateProvider.plausibleCount)
             return
         }
         let cache = WordCandidateCache.shared
-        if let cached = cache.candidates(for: job.key) {
-            candidates = cached
+        if let cached = cache.result(for: job.key) {
+            candidates = cached.candidates
+            readingConfirmed = cached.readingConfirmed
             return
         }
         let result = await WordCandidateReader.read(job.request, with: AppWordCandidates.provider)
         guard !Task.isCancelled else { return }
         cache.store(result, for: job.key)
-        candidates = result
+        candidates = result.candidates
+        readingConfirmed = result.readingConfirmed
         modelMissing = context.rerankStatus.modelMissing
     }
 
@@ -271,7 +307,7 @@ struct WordCorrectionSheet: View {
 /// Runs the provider off the main actor (the sheet's task is on it).
 nonisolated enum WordCandidateReader {
     @concurrent
-    static func read(_ request: WordRereadRequest, with provider: any WordCandidateProviding) async -> [WordCandidate] {
-        (try? await provider.candidates(for: request)) ?? []
+    static func read(_ request: WordRereadRequest, with provider: any WordCandidateProviding) async -> WordRereadResult {
+        (try? await provider.reread(for: request)) ?? WordRereadResult()
     }
 }

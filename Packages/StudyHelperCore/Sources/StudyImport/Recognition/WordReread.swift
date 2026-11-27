@@ -41,6 +41,15 @@ public struct WordRereadRequest: Sendable {
 public protocol WordCandidateProviding: Sendable {
     /// Suggestions, best first, at most 8; never the written word itself.
     func candidates(for request: WordRereadRequest) async throws -> [WordCandidate]
+    /// Suggestions plus whether the readings confirm the written word (D-047).
+    func reread(for request: WordRereadRequest) async throws -> WordRereadResult
+}
+
+extension WordCandidateProviding {
+    /// Providers that do not read the ink never confirm a word.
+    public func reread(for request: WordRereadRequest) async throws -> WordRereadResult {
+        WordRereadResult(candidates: try await candidates(for: request))
+    }
 }
 
 /// Reads the word again from the original: renders only the ink of the word's row (Goodnotes strokes) or a crop of
@@ -53,6 +62,8 @@ public protocol WordCandidateProviding: Sendable {
 /// Readings of a line crop are kept for the next words of the same line.
 public struct VisionWordCandidateProvider: WordCandidateProviding {
     public static let maximumCount = 8
+    /// Suggestions shown after the plausibility filter (D-047).
+    public static let plausibleCount = 5
     /// Candidates the model may reorder.
     static let rerankCount = 6
     /// Seconds to wait for the model.
@@ -77,12 +88,16 @@ public struct VisionWordCandidateProvider: WordCandidateProviding {
     }
 
     public func candidates(for request: WordRereadRequest) async throws -> [WordCandidate] {
+        try await reread(for: request).candidates
+    }
+
+    public func reread(for request: WordRereadRequest) async throws -> WordRereadResult {
         let line = request.line
         let tokens = WordReview.tokens(of: line)
-        guard tokens.indices.contains(request.wordIndex) else { return [] }
+        guard tokens.indices.contains(request.wordIndex) else { return WordRereadResult() }
         let token = tokens[request.wordIndex]
         let written = token.core
-        guard !written.isEmpty else { return [] }
+        guard !written.isEmpty else { return WordRereadResult() }
         let pageLines = request.pageLines.filter { $0.id != line.id } + [line]
         let checker = request.spellChecker as? CachingSpellChecker ?? CachingSpellChecker(request.spellChecker)
         let terms = request.terms
@@ -132,7 +147,16 @@ public struct VisionWordCandidateProvider: WordCandidateProviding {
             }
             try Task.checkCancellation()
         }
-        return Array(ranked.prefix(Self.maximumCount))
+        let confirmed = WordCandidateRanking.isConfirmed(
+            written: written, vision: vision, checker: checker, terms: terms)
+        // After a confirmed reading an unknown alternative has nothing in its favour: only real words remain.
+        let plausible = WordCandidateRanking.plausible(
+            ranked, written: written, checker: checker, terms: terms, limit: Self.plausibleCount,
+            allowsUnknownBest: !confirmed)
+        return WordRereadResult(
+            candidates: plausible, readingConfirmed: confirmed,
+            readings: vision.map { $0.candidates.compactMap { WordCandidateRanking.clean($0) } },
+            ranked: Array(ranked.prefix(Self.maximumCount)))
     }
 
     private func read(

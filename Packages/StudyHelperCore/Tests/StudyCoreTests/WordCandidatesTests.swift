@@ -311,3 +311,90 @@ struct WordReviewFragmentTests {
         #expect(marked(["die Atmo-", "Erde"]) == ["Atmo"])
     }
 }
+
+@Suite("Wortvorschläge: bestätigte Lesung und plausible Kandidaten (D-047)")
+struct WordCandidateConfirmationTests {
+    @Test("Bestätigt: alle Lesungen lesen das geschriebene Wort zuerst (Groß/klein und Satzzeichen egal)")
+    func confirmed() {
+        #expect(WordCandidateRanking.isConfirmed(
+            written: "Lithosphäre", vision: vision(["Lithosphäre", "Lithophäre"], ["Lithosphäre"],
+                                                    wordOff: ["Lithosphäre"], lineOff: ["Lithosphäre"]),
+            checker: checker))
+        #expect(WordCandidateRanking.isConfirmed(
+            written: "Aralsee-Syndrom:", vision: vision(["Aralsee-Syndrom"], ["Aralsee-syndrom", "Aralsee-syndrem"]),
+            checker: checker))
+        // An unknown variant leads the word crops, the line crops read the written word: still the consensus.
+        #expect(WordCandidateRanking.isConfirmed(
+            written: "Hydro", vision: vision(["Hydros", "Hydro-s", "Hydro"], ["Hydro"], wordOff: ["Hydros"],
+                                              lineOff: ["Hydro"]),
+            checker: checker))
+    }
+
+    @Test("Nicht bestätigt: eine Lesung liest zuerst ein anderes bekanntes Wort, nur eine Lesung oder keine Mehrheit")
+    func notConfirmed() {
+        // "tasst": three readings repeat the misreading, the line crop with language correction reads "fasst".
+        #expect(!WordCandidateRanking.isConfirmed(
+            written: "tasst", vision: vision(["tasst", "tast"], ["fasst", "tasst"], wordOff: ["tasst"],
+                                              lineOff: ["tasst"]),
+            checker: checker))
+        #expect(!WordCandidateRanking.isConfirmed(
+            written: "Klimg", vision: vision(["Klima", "Klina"], ["Klimg"], wordOff: ["Klima"], lineOff: ["Klimg"]),
+            checker: checker))
+        // Only one reading has it first.
+        #expect(!WordCandidateRanking.isConfirmed(
+            written: "Pedosphäre", vision: vision(["Pedosphäre"]), checker: checker))
+        // Two readings have it first, but an unknown reading is stronger overall.
+        #expect(!WordCandidateRanking.isConfirmed(
+            written: "Gle", vision: vision(["Glo", "Gle"], ["Gle", "Glo"], wordOff: ["Glo"], lineOff: ["Gle", "Glo"]),
+            checker: checker))
+        #expect(!WordCandidateRanking.isConfirmed(written: "", vision: vision(["a"]), checker: checker))
+        #expect(!WordCandidateRanking.isConfirmed(written: "Erde", vision: [], checker: checker))
+    }
+
+    @Test("Plausibel: bekannte Wörter, unbekannt nur die beste Lesung mit zwei Lesungen; höchstens 5")
+    func plausible() {
+        let candidates = [
+            WordCandidate(text: "Pedosphäre", score: 1, sources: [.vision], readings: 2),
+            WordCandidate(text: "Pedophäre", score: 0.8, sources: [.vision], readings: 1),
+            WordCandidate(text: "Erde", score: 0.5, sources: [.spelling]),
+        ]
+        #expect(WordCandidateRanking.plausible(candidates, checker: checker).map(\.text) == ["Pedosphäre", "Erde"])
+        #expect(WordCandidateRanking.plausible(candidates, checker: checker, allowsUnknownBest: false).map(\.text)
+                == ["Erde"])
+        var weak = candidates
+        weak[0].readings = 1
+        #expect(WordCandidateRanking.plausible(weak, checker: checker).map(\.text) == ["Erde"])
+        let mutations = [
+            WordCandidate(text: "Erde", score: 1, sources: [.vision], readings: 2),
+            WordCandidate(text: "Erdei", score: 0.9, sources: [.vision], readings: 2),
+            WordCandidate(text: "Erdeii", score: 0.5, sources: [.vision], readings: 1),
+        ]
+        #expect(WordCandidateRanking.plausible(mutations, checker: checker).map(\.text) == ["Erde"])
+        let many = ["Erde", "Wandel", "Klima", "Wasser", "Folgen", "Menschen"].map {
+            WordCandidate(text: $0, score: 1, sources: [.spelling])
+        }
+        #expect(WordCandidateRanking.plausible(many, checker: checker).count == 5)
+        #expect(WordCandidateRanking.plausible([], checker: checker).isEmpty)
+    }
+
+    @Test("Ist das geschriebene Wort selbst ein Wort, zählen nur Kandidaten mit einer Lesung der Tinte")
+    func knownWritten() {
+        let shortWords = ListSpellChecker(words: ["ab", "am", "an", "db"])
+        let candidates = [
+            WordCandidate(text: "am", score: 1, sources: [.spelling]),
+            WordCandidate(text: "an", score: 0.8, sources: [.vision, .spelling], readings: 1),
+        ]
+        #expect(WordCandidateRanking.plausible(candidates, written: "ab", checker: shortWords).map(\.text) == ["an"])
+        #expect(WordCandidateRanking.plausible(candidates, written: "xb", checker: shortWords).map(\.text)
+                == ["am", "an"])
+    }
+
+    @Test("Die Rangfolge zählt die Lesungen je Kandidat")
+    func readingsCount() {
+        let ranked = WordCandidateRanking.rank(
+            written: "Klimg", vision: vision(["Klima", "Klina"], ["Klima"], wordOff: ["Klima"]),
+            local: .init(spelling: ["Kling"]), checker: checker)
+        #expect(ranked.first?.text == "Klima" && ranked.first?.readings == 3)
+        #expect(ranked.first { $0.text == "Kling" }?.readings == 0)
+    }
+}

@@ -87,14 +87,21 @@ struct ReviewPageView: View {
             }
             lines = digitization.lines.sorted { $0.order < $1.order }
             highlights = digitization.highlights
+            // Words of the subject's other pages (filled by the summaries in the background, D-047).
+            let otherPageWords = SubjectWords.shared.otherPageWords(
+                subjectID: source.batch?.subject?.id, excluding: source.id)
             review = PageWordReview.cached(
-                digitization: digitization, lines: lines, terms: Set(source.batch?.subject?.confirmedTerms ?? []))
+                digitization: digitization, lines: lines, terms: Set(source.batch?.subject?.confirmedTerms ?? []),
+                otherPageWords: otherPageWords)
             looseHighlights = highlights.filter { highlight in !lines.contains { highlight.applies(to: $0) } }
         }
     }
 
     var body: some View {
-        let snapshot = snapshotCache.value(key: source.id) { PageSnapshot(source) }
+        let stored = snapshotCache.value(key: source.id) { PageSnapshot(source) }
+        // Marks whose reading the ink confirmed are left out of what is shown and counted (D-047). The background
+        // reading keeps following the stored marks (`PrefetchKey`), so a confirmation does not restart it.
+        let snapshot = Self.withoutConfirmed(stored)
         let hasDigitization = snapshot.digitizationID != nil
         let damaged = snapshot.unreadable
         let lines = snapshot.lines
@@ -102,7 +109,7 @@ struct ReviewPageView: View {
         let isActive = coordinator.activeBatchID == batch.id && source.digitizationState == .pending
         let editingDisabled = isEditingDisabled(damaged: damaged)
         let prefetchKey = PrefetchKey(
-            digitizationID: snapshot.digitizationID, marks: snapshot.review.result.marks,
+            digitizationID: snapshot.digitizationID, marks: stored.review.result.marks,
             enabled: !editingDisabled && !damaged && hasDigitization,
             terms: (batch.subject?.confirmedTerms ?? []).hashValue)
 
@@ -327,6 +334,19 @@ struct ReviewPageView: View {
     }
 
     // MARK: Best reading
+
+    /// The snapshot without the marks whose reading is confirmed (`WordCandidateCache.isConfirmed`; views re-render
+    /// when a confirmation arrives).
+    private static func withoutConfirmed(_ snapshot: PageSnapshot) -> PageSnapshot {
+        guard let digitizationID = snapshot.digitizationID, !snapshot.review.result.confirmable.isEmpty else {
+            return snapshot
+        }
+        var copy = snapshot
+        copy.review = snapshot.review.excludingConfirmed(digitizationID: digitizationID) {
+            WordCandidateCache.shared.isConfirmed($0)
+        }
+        return copy
+    }
 
     /// The best reading found so far for each marked word of the page ("→ word?" next to it).
     private func guesses(in snapshot: PageSnapshot, enabled: Bool) -> [WordReference: String] {
