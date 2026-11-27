@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.2",
+          "buildVersion": "9",
+          "date": "2026-11-27T17:45:23Z",
+          "localizedDescription": "Wortprüfung verbessern: Wort aus der Tinte neu lesen, ein Tipp öffnet das Wort, schnellerer Start (D-046)",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.9/StudyHelper-0.0.2.9.ipa",
+          "size": 2306726,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.2",
           "buildVersion": "8",
           "date": "2026-11-26T20:49:05Z",
           "localizedDescription": "Wörter einzeln prüfen mit Vorschlägen, Erkennungsfehler melden, Nightly vor den Tests",
@@ -92,10 +101,10 @@
         }
       ],
       "version": "0.0.2",
-      "versionDate": "2026-11-26T20:49:05Z",
-      "versionDescription": "Wörter einzeln prüfen mit Vorschlägen, Erkennungsfehler melden, Nightly vor den Tests",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.8/StudyHelper-0.0.2.8.ipa",
-      "size": 2166986,
+      "versionDate": "2026-11-27T17:45:23Z",
+      "versionDescription": "Wortprüfung verbessern: Wort aus der Tinte neu lesen, ein Tipp öffnet das Wort, schnellerer Start (D-046)",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.9/StudyHelper-0.0.2.9.ipa",
+      "size": 2306726,
       "beta": true
     },
     {
@@ -137,8 +146,8 @@
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 8 · Stabil: noch keine · Beta: 0.0.2 Beta 8 · Nightly: 0.0.2 Nightly 9",
-      "date": "2026-11-27T12:43:16Z",
+      "caption": "Neueste: 0.0.2 Beta 9 · Stabil: noch keine · Beta: 0.0.2 Beta 9 · Nightly: 0.0.2 Nightly 9",
+      "date": "2026-11-27T17:45:23Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
