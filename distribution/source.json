@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.2",
+          "buildVersion": "14",
+          "date": "2026-11-28T17:28:06Z",
+          "localizedDescription": "App-Icon als Icon-Composer-Datei mit Ebenen (AppIcon.icon)",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.14/StudyHelper-0.0.2.14.ipa",
+          "size": 7300009,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.2",
           "buildVersion": "12",
           "date": "2026-11-28T16:43:11Z",
           "localizedDescription": "Wörter nacheinander prüfen (Abfrage-Stil), App-Icon aus der Source",
@@ -119,10 +128,10 @@
         }
       ],
       "version": "0.0.2",
-      "versionDate": "2026-11-28T16:43:11Z",
-      "versionDescription": "Wörter nacheinander prüfen (Abfrage-Stil), App-Icon aus der Source",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.12/StudyHelper-0.0.2.12.ipa",
-      "size": 2431116,
+      "versionDate": "2026-11-28T17:28:06Z",
+      "versionDescription": "App-Icon als Icon-Composer-Datei mit Ebenen (AppIcon.icon)",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.14/StudyHelper-0.0.2.14.ipa",
+      "size": 7300009,
       "beta": true
     },
     {
@@ -164,8 +173,8 @@
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 12 · Stabil: noch keine · Beta: 0.0.2 Beta 12 · Nightly: 0.0.2 Nightly 14",
-      "date": "2026-11-28T17:12:42Z",
+      "caption": "Neueste: 0.0.2 Beta 14 · Stabil: noch keine · Beta: 0.0.2 Beta 14 · Nightly: 0.0.2 Nightly 14",
+      "date": "2026-11-28T17:28:06Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
