@@ -1,0 +1,51 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:0.29020,0.50196,0.94118,1.00000",
+      "srgb:0.12941,0.28235,0.75294,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Markierung.svg",
+          "name" : "Markierung"
+        },
+        {
+          "image-name" : "Zeilen.svg",
+          "name" : "Zeilen"
+        }
+      ],
+      "name" : "Text",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "Buch.svg",
+          "name" : "Buch"
+        }
+      ],
+      "name" : "Buch",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

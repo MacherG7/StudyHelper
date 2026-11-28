@@ -55,3 +55,10 @@ https://raw.githubusercontent.com/MacherG7/StudyHelper/main/distribution/source.
 Hinweise zum kostenlosen Apple-Account: höchstens 3 aktive sideloaded Apps (die Store-App zählt mit) und
 10 App-IDs pro 7 Tage. Die Installation aus der Source ist eine eigene App neben der aus Xcode installierten,
 wenn die Store-App die Bundle-ID anpasst; Daten werden dann nicht übernommen (MT-S.4).
+
+## App-Icon
+
+Das App-Icon liegt als Icon-Composer-Datei in `StudyHelper/Resources/AppIcon.icon` (in Xcode doppelklicken öffnet Icon
+Composer). Hintergrund ist ein Farbverlauf, darüber die Ebenen `Buch.svg` (Gruppe „Buch“), `Zeilen.svg` und `Markierung.svg`
+(Gruppe „Text“); Ebenen, Hintergrund sowie Dunkel- und Tönungs-Varianten lassen sich dort ändern. Das Source-Icon (`distribution/icon.png`) für SideStore, AltStore und StikStore ist eine eigene
+Datei und wird bei Bedarf von Hand nachgezogen.
