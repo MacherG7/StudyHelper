@@ -29,6 +29,15 @@
       "versions": [
         {
           "version": "0.0.2",
+          "buildVersion": "12",
+          "date": "2026-11-28T16:43:11Z",
+          "localizedDescription": "Wörter nacheinander prüfen (Abfrage-Stil), App-Icon aus der Source",
+          "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.12/StudyHelper-0.0.2.12.ipa",
+          "size": 2431116,
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.0.2",
           "buildVersion": "10",
           "date": "2026-11-27T22:50:36Z",
           "localizedDescription": "Fehlalarme senken: bestätigte Lesung, häufige Wörter, nur plausible Kandidaten (D-047)",
@@ -110,10 +119,10 @@
         }
       ],
       "version": "0.0.2",
-      "versionDate": "2026-11-27T22:50:36Z",
-      "versionDescription": "Fehlalarme senken: bestätigte Lesung, häufige Wörter, nur plausible Kandidaten (D-047)",
-      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.10/StudyHelper-0.0.2.10.ipa",
-      "size": 2338935,
+      "versionDate": "2026-11-28T16:43:11Z",
+      "versionDescription": "Wörter nacheinander prüfen (Abfrage-Stil), App-Icon aus der Source",
+      "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/v0.0.2.12/StudyHelper-0.0.2.12.ipa",
+      "size": 2431116,
       "beta": true
     },
     {
@@ -155,8 +164,8 @@
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 10 · Stabil: noch keine · Beta: 0.0.2 Beta 10 · Nightly: 0.0.2 Nightly 12",
-      "date": "2026-11-28T16:27:43Z",
+      "caption": "Neueste: 0.0.2 Beta 12 · Stabil: noch keine · Beta: 0.0.2 Beta 12 · Nightly: 0.0.2 Nightly 12",
+      "date": "2026-11-28T16:43:11Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
