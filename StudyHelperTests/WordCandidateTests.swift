@@ -186,6 +186,16 @@ struct WordCandidateTests {
         }
     }
 
+    @Test("Nacheinander prüfen: die offenen Wörter in Lesereihenfolge, über mehrere Zeilen")
+    func sequenceQueueFollowsReadingOrder() {
+        let checker = UITestSpellChecker(unknown: ["lithosphäre", "klimg", "hydrox"])
+        let lines = page(["Die Lithosphäre und das Klimg", "Alles gut", "Hydrox hier"])
+        let review = PageWordReview(lines: lines, method: nil, terms: [], checker: checker)
+        let queue = WordRef.queue(lines: lines.reversed(), review: review)
+        #expect(queue.map(\.text) == ["Lithosphäre", "Klimg", "Hydrox"])
+        #expect(Set(queue.map(\.id)).count == 3)
+    }
+
     @Test("Bestätigte Wörter zählen nicht als offen; Wörter ohne Bestätigung bleiben markiert")
     func confirmedWordsAreNotOpen() {
         let checker = UITestSpellChecker(unknown: ["lithosphäre", "klimg"])

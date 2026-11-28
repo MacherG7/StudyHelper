@@ -169,6 +169,8 @@ Voraussetzung: mindestens ein Release steht in `distribution/source.json` (Sourc
 | MT-3.26 | Markiertes Wort öffnen, dessen Lesung bestätigt ist (z. B. vor Ende der Vorberechnung antippen) | „Lesung bestätigt – Wort ist wahrscheinlich richtig“, „Wort ist richtig“ steht zuerst, keine Unsinns-Varianten | |
 | MT-3.27 | Einstellung „Mehrfacherkennung“ an, echte Datei neu erkennen, Seite 6 | „ab“ in „baut Bodenschätze ab“ und „Das“ nicht markiert; bei richtigen Wörtern nie Vorschläge wie „db“ | |
 | MT-3.28 | Markiertes Wort ohne plausible Lesart (Seite 6: „za“) öffnen und „→ Wort?“ neben Wörtern prüfen | Nur „Wort ist richtig“ und Eingabefeld, höchstens 5 Vorschläge und nur echte Wörter; kein „→ Wort?“ mit Unsinn | |
+| MT-3.29 | In der Prüfansicht „Nacheinander prüfen“ tippen | „Wort 1 von N“ öffnet; nach Übernehmen / „Wort ist richtig“ folgt das nächste Wort, ohne dass das Fenster schließt; „Überspringen“ lässt es offen, „Beenden“ stoppt | |
+| MT-3.30 | App-Icon auf dem Home-Bildschirm und in den Einstellungen | Das Icon aus der Source (`distribution/icon.png`) wird angezeigt | |
 | MT-3.9 | Sicherung in der Dateien-App speichern, App löschen, neu installieren, wiederherstellen | Alles wieder da (Seiten, Korrekturen, Versionen, Themen, Einstellungen); Keys müssen neu eingegeben werden | |
 | MT-3.10 | Sicherung vom iPhone auf dem iPad wiederherstellen | Gleicher Stand auf dem iPad | |
 | MT-3.11 | KI-Transkription eines großen Imports: App schließen, Flugmodus an und wieder aus | Auftrag läuft nach dem Öffnen weiter bzw. wartet und setzt fort; Abbrechen wirkt sofort | |

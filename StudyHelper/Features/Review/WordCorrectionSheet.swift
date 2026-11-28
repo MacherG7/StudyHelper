@@ -11,6 +11,15 @@ struct WordCorrectionSheet: View {
     let source: Source
     let lineID: UUID
     let wordIndex: Int
+    /// Set when the sheet is a step of `WordCheckSequence`: "Wort 2 von 7", and finishing moves on instead of closing.
+    var progress: Progress?
+    var onDone: (() -> Void)?
+    var onSkip: (() -> Void)?
+
+    struct Progress: Equatable {
+        var position: Int
+        var total: Int
+    }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(ImportCoordinator.self) private var coordinator
@@ -91,12 +100,18 @@ struct WordCorrectionSheet: View {
                         description: Text("Die Zeile hat sich geändert. Schließe das Fenster und wähle das Wort noch einmal."))
                 }
             }
-            .navigationTitle("Wort prüfen")
+            .navigationTitle(progress.map { "Wort \($0.position) von \($0.total)" } ?? "Wort prüfen")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { dismiss() }
+                    Button(progress == nil ? "Abbrechen" : "Beenden") { dismiss() }
                         .accessibilityIdentifier("cancelWordButton")
+                }
+                if let onSkip {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Überspringen", action: onSkip)
+                            .accessibilityIdentifier("skipWordButton")
+                    }
                 }
             }
             .errorAlert($errorMessage)
@@ -297,7 +312,7 @@ struct WordCorrectionSheet: View {
             }
             // Topics whose entries took over the old text are now affected.
             coordinator.reportImpact(of: [source])
-            dismiss()
+            if let onDone { onDone() } else { dismiss() }
         } catch {
             errorMessage = error.localizedDescription
         }

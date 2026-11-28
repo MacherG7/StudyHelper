@@ -130,6 +130,32 @@ final class ReviewUITests: XCTestCase {
         XCTAssertFalse(app.buttons["imageWord-2-3"].exists)
     }
 
+    /// "Nacheinander prüfen": the open words one after the other, every step is the word sheet and moves on.
+    @MainActor
+    func testWordsAreCheckedOneAfterTheOther() throws {
+        let app = XCUIApplication()
+        openSeededReview(app, extraArguments: ["-uiTestMockAI"])
+        XCTAssertEqual(openCount(app).value as? String, "2")
+        let start = app.buttons["startWordCheckButton"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        start.tap()
+
+        XCTAssertTrue(app.navigationBars["Wort 1 von 2"].waitForExistence(timeout: 10))
+        let best = app.buttons["applyBestButton"]
+        XCTAssertTrue(best.waitForExistence(timeout: 10))
+        best.tap()
+
+        // The second word follows without closing the sheet.
+        XCTAssertTrue(app.navigationBars["Wort 2 von 2"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["skipWordButton"].exists)
+        let confirm = app.buttons["confirmWordButton"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        confirm.tap()
+
+        XCTAssertTrue(waitForValue("0", of: openCount(app), timeout: 10), "Zähler: \(String(describing: openCount(app).value))")
+        XCTAssertFalse(start.exists, "nichts mehr offen: kein Knopf")
+    }
+
     /// The best reading is computed in the background and shown next to the marked word as "→ word?"; one tap applies it.
     @MainActor
     func testQuickFixAppliesTheBestReadingWithoutOpeningTheWord() throws {

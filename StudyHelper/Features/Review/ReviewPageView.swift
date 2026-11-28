@@ -23,12 +23,14 @@ struct ReviewPageView: View {
         case correction(UUID)
         case highlights(UUID)
         case word(UUID, Int)
+        case wordSequence([WordRef])
         case unmatched
         var id: String {
             switch self {
             case .correction(let id): "c-\(id)"
             case .highlights(let id): "h-\(id)"
             case .word(let id, let index): "w-\(id)-\(index)"
+            case .wordSequence: "word-sequence"
             case .unmatched: "unmatched"
             }
         }
@@ -116,7 +118,7 @@ struct ReviewPageView: View {
         VStack(spacing: 0) {
             banners(snapshot: snapshot, isActive: isActive)
             if hasDigitization, !damaged {
-                header(review: snapshot.review)
+                header(review: snapshot.review, lines: lines, editingDisabled: editingDisabled)
                 Divider()
             }
             content(snapshot: snapshot, isActive: isActive, editingDisabled: editingDisabled)
@@ -152,6 +154,8 @@ struct ReviewPageView: View {
                 HighlightsSheet(source: source, lineID: id)
             case .word(let id, let index):
                 WordCorrectionSheet(source: source, lineID: id, wordIndex: index)
+            case .wordSequence(let queue):
+                WordCheckSequence(source: source, queue: queue)
             case .unmatched:
                 UnmatchedCorrectionsView(source: source)
             }
@@ -223,7 +227,7 @@ struct ReviewPageView: View {
 
     // MARK: Header
 
-    private func header(review: PageWordReview) -> some View {
+    private func header(review: PageWordReview, lines: [RecognizedLine], editingDisabled: Bool) -> some View {
         let open = review.open
         let status = Group {
             if open == 0 {
@@ -247,15 +251,27 @@ struct ReviewPageView: View {
         .toggleStyle(.button)
         .controlSize(.small)
         .accessibilityIdentifier("onlyOpenToggle")
+        // The open words one after the other, like a quiz.
+        let sequence = Button {
+            sheet = .wordSequence(WordRef.queue(lines: lines, review: review))
+        } label: {
+            Label("Nacheinander prüfen", systemImage: "list.number").font(.subheadline)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .accessibilityIdentifier("startWordCheckButton")
+        let showsSequence = review.openWords > 0 && !editingDisabled
         // Side by side if it fits, stacked at large text sizes (nothing is cut off).
         return ViewThatFits(in: .horizontal) {
             HStack(spacing: 10) {
                 status
                 Spacer(minLength: 4)
+                if showsSequence { sequence }
                 toggle
             }
             VStack(alignment: .leading, spacing: 8) {
                 status
+                if showsSequence { sequence }
                 toggle
             }
         }
