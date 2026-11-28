@@ -130,10 +130,10 @@
         }
       },
       "version": "0.0.2",
-      "versionDate": "2026-11-28T16:24:37Z",
-      "versionDescription": "Ungetesteter Stand (Nightly 11)",
+      "versionDate": "2026-11-28T16:27:43Z",
+      "versionDescription": "Ungetesteter Stand (Nightly 12)",
       "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/nightly/StudyHelper-nightly.ipa",
-      "size": 2420838,
+      "size": 2431118,
       "beta": true,
       "name": "StudyHelper Nightly",
       "subtitle": "Ungetesteter Stand zum Ausprobieren",
@@ -141,11 +141,11 @@
       "versions": [
         {
           "version": "0.0.2",
-          "buildVersion": "11",
-          "date": "2026-11-28T16:24:37Z",
-          "localizedDescription": "Ungetesteter Stand (Nightly 11)",
+          "buildVersion": "12",
+          "date": "2026-11-28T16:27:43Z",
+          "localizedDescription": "Ungetesteter Stand (Nightly 12)",
           "downloadURL": "https://github.com/MacherG7/StudyHelper/releases/download/nightly/StudyHelper-nightly.ipa",
-          "size": 2420838,
+          "size": 2431118,
           "minOSVersion": "18.0"
         }
       ]
@@ -155,8 +155,8 @@
     {
       "title": "Aktuelle Versionen",
       "identifier": "studyhelper-versionen",
-      "caption": "Neueste: 0.0.2 Beta 10 · Stabil: noch keine · Beta: 0.0.2 Beta 10 · Nightly: 0.0.2 Nightly 11",
-      "date": "2026-11-28T16:24:37Z",
+      "caption": "Neueste: 0.0.2 Beta 10 · Stabil: noch keine · Beta: 0.0.2 Beta 10 · Nightly: 0.0.2 Nightly 12",
+      "date": "2026-11-28T16:27:43Z",
       "tintColor": "#2F64E0",
       "appID": "MiloG.StudyHelper1",
       "notify": false
